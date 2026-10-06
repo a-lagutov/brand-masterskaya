@@ -1,4 +1,4 @@
-# Deploys the static site to brandmasterskaya.ru (reg.ru hosting) on every push to main.
+# Builds the site and deploys dist/ to brandmasterskaya.ru (reg.ru hosting) on every push to main.
 name: Deploy
 
 on:
@@ -16,6 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -28,10 +38,7 @@ jobs:
       - name: Sync files
         run: |
           rsync -avz --delete \
-            --exclude '.git/' \
-            --exclude '.github/' \
-            --exclude '.gitignore' \
             --exclude '.well-known/' \
             --exclude '.htaccess' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:www/brandmasterskaya.ru/"
+            dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:www/brandmasterskaya.ru/"
