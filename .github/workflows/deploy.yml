@@ -21,10 +21,15 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Install
+        run: npm ci
+
+      # Same checks as the pre-commit hook, in case it was bypassed.
+      - name: Lint and format check
+        run: npm run check
+
       - name: Build
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       - name: Configure SSH
         run: |
