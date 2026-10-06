@@ -40,9 +40,10 @@ jobs:
 
       # --delete keeps the server in sync with the repo; .well-known and .htaccess
       # are excluded so Let's Encrypt challenges and panel-managed rules survive.
+      # --checksum compares content, not mtime, so an identical build uploads nothing.
       - name: Sync files
         run: |
-          rsync -avz --delete \
+          rsync -avz --checksum --delete \
             --exclude '.well-known/' \
             --exclude '.htaccess' \
             -e "ssh -i ~/.ssh/deploy_key" \
