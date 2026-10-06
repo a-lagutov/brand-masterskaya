@@ -63,7 +63,9 @@ python3 -m http.server 4173 -d dist
 
 ## Деплой
 
-Каждый мерж в `main` запускает workflow **Deploy**:
+Мерж в `main` запускает workflow **Deploy**, если меняет `src/`, `scripts/`, `package.json`, `package-lock.json` или сам `deploy.yml`. Правки документации и конфигов линтеров сайт не трогают. Чтобы пропустить деплой разово, добавьте `[skip ci]` в сообщение merge-коммита.
+
+Шаги деплоя:
 
 1. проверки и сборка;
 2. загрузка `dist/` на хостинг reg.ru через rsync по SSH.

@@ -4,6 +4,13 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # Only changes that can affect the built site trigger a deploy.
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 concurrency:
