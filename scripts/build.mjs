@@ -1,5 +1,5 @@
 /**
- * Builds the static site into dist/.
+ * Builds the static site from src/ into dist/.
  *
  * - Converts PNG/JPEG to WebP; logos are downscaled to their display size.
  * - Minifies CSS and JS and adds a content hash to their file names.
@@ -13,8 +13,9 @@ import { transform } from 'esbuild';
 import { minify } from 'html-minifier-terser';
 import sharp from 'sharp';
 
-const ROOT_DIR = path.resolve(import.meta.dirname, '..');
-const DIST_DIR = path.join(ROOT_DIR, 'dist');
+const PROJECT_DIR = path.resolve(import.meta.dirname, '..');
+const SRC_DIR = path.join(PROJECT_DIR, 'src');
+const DIST_DIR = path.join(PROJECT_DIR, 'dist');
 // Max width per asset folder. Logos render at <=160px, so 480px covers 3x screens.
 // Folders not listed here keep their original size.
 const MAX_WIDTH_BY_FOLDER = {
@@ -33,12 +34,12 @@ function shortHash(content) {
 
 /**
  * Converts a raster image to WebP and writes it to dist.
- * @param {string} sourcePath Path relative to the project root.
+ * @param {string} sourcePath Path relative to src/.
  * @returns {Promise<string>} Output path relative to dist.
  */
 async function buildImage(sourcePath) {
   const outputPath = sourcePath.replace(/\.(png|jpe?g)$/i, '.webp');
-  const image = sharp(path.join(ROOT_DIR, sourcePath));
+  const image = sharp(path.join(SRC_DIR, sourcePath));
   const { width } = await image.metadata();
   const maxWidth = MAX_WIDTH_BY_FOLDER[path.dirname(sourcePath)];
   // Only shrink; never upscale small images.
@@ -49,12 +50,12 @@ async function buildImage(sourcePath) {
 
 /**
  * Minifies a CSS or JS file and writes it to dist under a hashed name.
- * @param {string} sourcePath Path relative to the project root.
+ * @param {string} sourcePath Path relative to src/.
  * @returns {Promise<string>} Output path relative to dist.
  */
 async function buildCode(sourcePath) {
   const extension = path.extname(sourcePath);
-  const source = await readFile(path.join(ROOT_DIR, sourcePath), 'utf8');
+  const source = await readFile(path.join(SRC_DIR, sourcePath), 'utf8');
   const { code } = await transform(source, {
     loader: extension.slice(1),
     minify: true,
@@ -68,17 +69,17 @@ async function buildCode(sourcePath) {
 
 /**
  * Copies a file to dist unchanged.
- * @param {string} sourcePath Path relative to the project root.
+ * @param {string} sourcePath Path relative to src/.
  * @returns {Promise<string>} Output path relative to dist.
  */
 async function copyAsset(sourcePath) {
-  await copyFile(path.join(ROOT_DIR, sourcePath), path.join(DIST_DIR, sourcePath));
+  await copyFile(path.join(SRC_DIR, sourcePath), path.join(DIST_DIR, sourcePath));
   return sourcePath;
 }
 
 /**
  * Picks the build step for an asset by its extension.
- * @param {string} sourcePath Path relative to the project root.
+ * @param {string} sourcePath Path relative to src/.
  * @returns {Promise<string>} Output path relative to dist.
  */
 async function buildAsset(sourcePath) {
@@ -102,9 +103,9 @@ async function build() {
   await rm(DIST_DIR, { recursive: true, force: true });
   await mkdir(DIST_DIR, { recursive: true });
 
-  let html = await readFile(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  let html = await readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
 
-  // Collect every local asset referenced from src/href attributes.
+  // Collect every local asset referenced from src and href attributes.
   const assetPaths = [
     ...new Set(
       [...html.matchAll(/(?:src|href)="((?:assets|css|js)\/[^"#?]+)"/g)].map((match) => match[1]),
@@ -116,7 +117,7 @@ async function build() {
   for (const sourcePath of assetPaths) {
     const outputPath = await buildAsset(sourcePath);
     html = html.replaceAll(`"${sourcePath}"`, `"${outputPath}"`);
-    const sourceSize = (await stat(path.join(ROOT_DIR, sourcePath))).size;
+    const sourceSize = (await stat(path.join(SRC_DIR, sourcePath))).size;
     const outputSize = (await stat(path.join(DIST_DIR, outputPath))).size;
     sourceBytes += sourceSize;
     outputBytes += outputSize;
