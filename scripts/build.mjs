@@ -105,7 +105,11 @@ async function build() {
   let html = await readFile(path.join(ROOT_DIR, 'index.html'), 'utf8');
 
   // Collect every local asset referenced from src/href attributes.
-  const assetPaths = [...new Set([...html.matchAll(/(?:src|href)="((?:assets|css|js)\/[^"#?]+)"/g)].map((match) => match[1]))];
+  const assetPaths = [
+    ...new Set(
+      [...html.matchAll(/(?:src|href)="((?:assets|css|js)\/[^"#?]+)"/g)].map((match) => match[1]),
+    ),
+  ];
 
   let sourceBytes = 0;
   let outputBytes = 0;
@@ -116,7 +120,9 @@ async function build() {
     const outputSize = (await stat(path.join(DIST_DIR, outputPath))).size;
     sourceBytes += sourceSize;
     outputBytes += outputSize;
-    console.log(`${sourcePath} -> ${outputPath} (${formatKilobytes(sourceSize)} -> ${formatKilobytes(outputSize)})`);
+    console.log(
+      `${sourcePath} -> ${outputPath} (${formatKilobytes(sourceSize)} -> ${formatKilobytes(outputSize)})`,
+    );
   }
 
   const minifiedHtml = await minify(html, {
