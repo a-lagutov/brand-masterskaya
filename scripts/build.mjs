@@ -2,11 +2,10 @@
  * Builds the static site from src/ into dist/.
  *
  * - Converts PNG/JPEG to WebP; logos are downscaled to their display size.
- * - Minifies CSS and JS and adds a content hash to their file names.
+ * - Minifies CSS and JS and inlines them into index.html.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that index.html actually references.
  */
-import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile, copyFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { transform } from 'esbuild';
@@ -22,15 +21,6 @@ const MAX_WIDTH_BY_FOLDER = {
   'assets/logos': 480,
 };
 const WEBP_QUALITY = 82;
-
-/**
- * Returns a short content hash for cache busting.
- * @param {string | Buffer} content
- * @returns {string}
- */
-function shortHash(content) {
-  return createHash('sha256').update(content).digest('hex').slice(0, 8);
-}
 
 /**
  * Converts a raster image to WebP and writes it to dist.
@@ -49,11 +39,11 @@ async function buildImage(sourcePath) {
 }
 
 /**
- * Minifies a CSS or JS file and writes it to dist under a hashed name.
+ * Minifies a CSS or JS file for inlining.
  * @param {string} sourcePath Path relative to src/.
- * @returns {Promise<string>} Output path relative to dist.
+ * @returns {Promise<string>} Minified code, safe to place inside <style>/<script>.
  */
-async function buildCode(sourcePath) {
+async function minifyCode(sourcePath) {
   const extension = path.extname(sourcePath);
   const source = await readFile(path.join(SRC_DIR, sourcePath), 'utf8');
   const { code } = await transform(source, {
@@ -62,9 +52,8 @@ async function buildCode(sourcePath) {
     charset: 'utf8',
     target: ['es2020', 'chrome90', 'safari14', 'firefox90'],
   });
-  const outputPath = sourcePath.replace(extension, `.${shortHash(code)}${extension}`);
-  await writeFile(path.join(DIST_DIR, outputPath), code);
-  return outputPath;
+  // A literal closing tag would end the inline element early.
+  return code.replace(/<\/(script|style)/gi, '<\\/$1').trim();
 }
 
 /**
@@ -85,7 +74,6 @@ async function copyAsset(sourcePath) {
 async function buildAsset(sourcePath) {
   await mkdir(path.join(DIST_DIR, path.dirname(sourcePath)), { recursive: true });
   if (/\.(png|jpe?g)$/i.test(sourcePath)) return buildImage(sourcePath);
-  if (/\.(css|js)$/i.test(sourcePath)) return buildCode(sourcePath);
   return copyAsset(sourcePath);
 }
 
@@ -104,15 +92,27 @@ async function build() {
   await mkdir(DIST_DIR, { recursive: true });
 
   let html = await readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
+  let sourceBytes = Buffer.byteLength(html);
+
+  // Inline stylesheets and scripts so the page needs a single HTML request.
+  const inlineTargets = [
+    { pattern: /<link rel="stylesheet" href="(css\/[^"]+)"\s*\/?>/g, tag: 'style' },
+    { pattern: /<script src="(js\/[^"]+)"><\/script>/g, tag: 'script' },
+  ];
+  for (const { pattern, tag } of inlineTargets) {
+    for (const [element, sourcePath] of [...html.matchAll(pattern)]) {
+      const code = await minifyCode(sourcePath);
+      sourceBytes += (await stat(path.join(SRC_DIR, sourcePath))).size;
+      html = html.replace(element, () => `<${tag}>${code}</${tag}>`);
+      console.log(`${sourcePath} -> inline <${tag}> (${formatKilobytes(Buffer.byteLength(code))})`);
+    }
+  }
 
   // Collect every local asset referenced from src and href attributes.
   const assetPaths = [
-    ...new Set(
-      [...html.matchAll(/(?:src|href)="((?:assets|css|js)\/[^"#?]+)"/g)].map((match) => match[1]),
-    ),
+    ...new Set([...html.matchAll(/(?:src|href)="(assets\/[^"#?]+)"/g)].map((match) => match[1])),
   ];
 
-  let sourceBytes = 0;
   let outputBytes = 0;
   for (const sourcePath of assetPaths) {
     const outputPath = await buildAsset(sourcePath);
@@ -134,11 +134,11 @@ async function build() {
     removeScriptTypeAttributes: true,
     removeStyleLinkTypeAttributes: true,
     useShortDoctype: true,
-    minifyCSS: true,
-    minifyJS: true,
+    // CSS and JS are already minified by esbuild.
+    minifyCSS: false,
+    minifyJS: false,
   });
   await writeFile(path.join(DIST_DIR, 'index.html'), minifiedHtml);
-  sourceBytes += Buffer.byteLength(html);
   outputBytes += Buffer.byteLength(minifiedHtml);
 
   console.log(`Total: ${formatKilobytes(sourceBytes)} -> ${formatKilobytes(outputBytes)}`);
