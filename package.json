@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "lint": "eslint . --max-warnings=0 && stylelint \"css/**/*.css\"",
+    "lint": "eslint . --max-warnings=0 && stylelint \"src/css/**/*.css\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run format:check",
