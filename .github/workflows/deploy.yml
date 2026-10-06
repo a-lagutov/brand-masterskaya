@@ -21,10 +21,15 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Install
+        run: npm ci
+
+      # Same checks as the pre-commit hook, in case it was bypassed.
+      - name: Lint and format check
+        run: npm run check
+
       - name: Build
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       - name: Configure SSH
         run: |
@@ -35,9 +40,10 @@ jobs:
 
       # --delete keeps the server in sync with the repo; .well-known and .htaccess
       # are excluded so Let's Encrypt challenges and panel-managed rules survive.
+      # --checksum compares content, not mtime, so an identical build uploads nothing.
       - name: Sync files
         run: |
-          rsync -avz --delete \
+          rsync -avz --checksum --delete \
             --exclude '.well-known/' \
             --exclude '.htaccess' \
             -e "ssh -i ~/.ssh/deploy_key" \

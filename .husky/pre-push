@@ -1,0 +1,9 @@
+# Blocks direct pushes to main: main deploys to the live site.
+# Bypass deliberately with: git push --no-verify
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "pre-push: push to main is blocked (main deploys to the live site). Use a branch + PR, or --no-verify." >&2
+    exit 1
+  fi
+done
+exit 0
