@@ -1,7 +1,7 @@
 /**
  * Builds the static site into dist/.
  *
- * - Converts PNG/JPEG to WebP (downscaling oversized images).
+ * - Converts PNG/JPEG to WebP; logos are downscaled to their display size.
  * - Minifies CSS and JS and adds a content hash to their file names.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that index.html actually references.
@@ -15,7 +15,11 @@ import sharp from 'sharp';
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
-const MAX_IMAGE_WIDTH = 1920;
+// Max width per asset folder. Logos render at <=160px, so 480px covers 3x screens.
+// Folders not listed here keep their original size.
+const MAX_WIDTH_BY_FOLDER = {
+  'assets/logos': 480,
+};
 const WEBP_QUALITY = 82;
 
 /**
@@ -36,8 +40,9 @@ async function buildImage(sourcePath) {
   const outputPath = sourcePath.replace(/\.(png|jpe?g)$/i, '.webp');
   const image = sharp(path.join(ROOT_DIR, sourcePath));
   const { width } = await image.metadata();
-  // Only shrink; never upscale small logos.
-  if (width > MAX_IMAGE_WIDTH) image.resize({ width: MAX_IMAGE_WIDTH });
+  const maxWidth = MAX_WIDTH_BY_FOLDER[path.dirname(sourcePath)];
+  // Only shrink; never upscale small images.
+  if (maxWidth && width > maxWidth) image.resize({ width: maxWidth });
   await image.webp({ quality: WEBP_QUALITY, effort: 6 }).toFile(path.join(DIST_DIR, outputPath));
   return outputPath;
 }
@@ -76,7 +81,8 @@ async function copyAsset(sourcePath) {
  * @param {string} sourcePath Path relative to the project root.
  * @returns {Promise<string>} Output path relative to dist.
  */
-function buildAsset(sourcePath) {
+async function buildAsset(sourcePath) {
+  await mkdir(path.join(DIST_DIR, path.dirname(sourcePath)), { recursive: true });
   if (/\.(png|jpe?g)$/i.test(sourcePath)) return buildImage(sourcePath);
   if (/\.(css|js)$/i.test(sourcePath)) return buildCode(sourcePath);
   return copyAsset(sourcePath);
@@ -94,12 +100,12 @@ function formatKilobytes(bytes) {
 /** Runs the full build. */
 async function build() {
   await rm(DIST_DIR, { recursive: true, force: true });
-  await mkdir(path.join(DIST_DIR, 'assets'), { recursive: true });
+  await mkdir(DIST_DIR, { recursive: true });
 
   let html = await readFile(path.join(ROOT_DIR, 'index.html'), 'utf8');
 
   // Collect every local asset referenced from src/href attributes.
-  const assetPaths = [...new Set([...html.matchAll(/(?:src|href)="(assets\/[^"#?]+)"/g)].map((match) => match[1]))];
+  const assetPaths = [...new Set([...html.matchAll(/(?:src|href)="((?:assets|css|js)\/[^"#?]+)"/g)].map((match) => match[1]))];
 
   let sourceBytes = 0;
   let outputBytes = 0;
