@@ -8,16 +8,24 @@
  * `contact` is an email or a phone, `telegram` is optional,
  * `electives` is a comma-separated list of titles.
  *
- * Forwarded to Salebot callback as a flat form with the same fields plus
- * plan_price, electives_price, total, currency, `email` or `phone` (Salebot
- * finds the client by them) and a fixed `message` that triggers the bot block.
+ * Delivery to Salebot takes two calls:
+ *   1. load_clients creates the client: platform_id is the phone digits or the
+ *      email, client_type and group_id come from the server config;
+ *   2. callback with the returned client_id, a fixed `message` that triggers
+ *      the bot block and the application fields (plan_price, electives_price,
+ *      total, currency, `email` or `phone`), which Salebot saves as variables.
+ * If load_clients returns no id, callback still finds the client by email or phone.
  *
  * Prices are never trusted: titles are looked up in the catalog below and
  * prices and total are recomputed before forwarding.
  *
- * #{api_key} in SALEBOT_URL is replaced with the key from the server config,
+ * #{api_key} in the Salebot URLs is replaced with the key from the server config,
  * which lives outside the site directory so deploys never touch it:
- *   ~/config/application.php  →  <?php return ['api_key' => '...'];
+ *   ~/config/application.php  →  <?php return [
+ *       'api_key' => '...',
+ *       'client_type' => 13,  // optional, Salebot messenger type, 13 = telephony
+ *       'group_id' => '',     // optional, from /api/<api_key>/connected_channels
+ *   ];
  */
 
 declare(strict_types=1);
@@ -43,7 +51,11 @@ const PHONE_MAX_DIGITS = 15;
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 600;
 const WEBHOOK_TIMEOUT_SECONDS = 10;
-const SALEBOT_URL = 'https://chatter.salebot.pro/api/#{api_key}/callback';
+const SALEBOT_LOAD_CLIENTS_URL = 'https://chatter.salebot.pro/api/#{api_key}/load_clients';
+const SALEBOT_CALLBACK_URL = 'https://chatter.salebot.pro/api/#{api_key}/callback';
+// Telephony needs no group; other channels need group_id in the config.
+const DEFAULT_CLIENT_TYPE = 13;
+const DEFAULT_GROUP_ID = '';
 const ELECTIVES_SEPARATOR = ', ';
 // Fixed callback text: the bot's block is triggered by it; details travel in variables.
 const CALLBACK_MESSAGE = 'zayavka';
@@ -188,31 +200,72 @@ function buildApplication(array $input): ?array
 }
 
 /**
- * Posts the application to Salebot as a flat form.
+ * Sends one POST request to Salebot.
  *
- * @param string $webhookUrl Salebot URL with the key filled in.
- * @param array $application Validated application.
- * @return bool True when Salebot answered with 2xx.
+ * @param string $url Salebot URL with the key filled in.
+ * @param string $body Encoded request body.
+ * @param string $contentType Content-Type of the body.
+ * @return array|null Decoded JSON answer (empty when not JSON), or null on a non-2xx status.
  */
-function forwardToWebhook(string $webhookUrl, array $application): bool
+function postToSalebot(string $url, string $body, string $contentType): ?array
 {
-    $curl = curl_init($webhookUrl);
+    $curl = curl_init($url);
     curl_setopt_array($curl, [
         CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query($application),
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_HTTPHEADER => ["Content-Type: $contentType"],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => WEBHOOK_TIMEOUT_SECONDS,
     ]);
     $responseBody = curl_exec($curl);
     $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
     $error = curl_error($curl);
+    // The key is part of the path, so log only the method name.
+    $method = basename((string) parse_url($url, PHP_URL_PATH));
     if ($status < 200 || $status >= 300) {
         // Salebot explains failures in the body, e.g. a missing required parameter.
         $reason = is_string($responseBody) ? mb_substr($responseBody, 0, 200) : '';
-        error_log("application webhook failed: status=$status error=$error body=$reason");
-        return false;
+        error_log("salebot $method failed: status=$status error=$error body=$reason");
+        return null;
     }
-    return true;
+    $decoded = is_string($responseBody) ? json_decode($responseBody, true) : null;
+    return is_array($decoded) ? $decoded : [];
+}
+
+/**
+ * Creates the client in Salebot via load_clients.
+ *
+ * @param string $apiKey Salebot API key.
+ * @param array $client ['platform_id' => ..., 'group_id' => ..., 'client_type' => ...].
+ * @return int|null Salebot client_id, or null when Salebot did not return one.
+ */
+function loadClient(string $apiKey, array $client): ?int
+{
+    $url = str_replace('#{api_key}', $apiKey, SALEBOT_LOAD_CLIENTS_URL);
+    $answer = postToSalebot($url, json_encode([$client], JSON_UNESCAPED_UNICODE), 'application/json');
+    // Success looks like {"status":"success","items":[{..., "status":"success", "id":1469409}]}.
+    $item = $answer['items'][0] ?? null;
+    if (!is_array($item) || !isset($item['id']) || !is_numeric($item['id'])) {
+        $reason = mb_substr((string) json_encode($answer, JSON_UNESCAPED_UNICODE), 0, 200);
+        error_log("salebot load_clients returned no id: $reason");
+        return null;
+    }
+    return (int) $item['id'];
+}
+
+/**
+ * Triggers the bot for the client and saves the application as variables.
+ *
+ * @param string $apiKey Salebot API key.
+ * @param array $application Validated application.
+ * @param int|null $clientId Salebot client_id; without it Salebot looks up the client by email or phone.
+ * @return bool True when Salebot answered with 2xx.
+ */
+function sendCallback(string $apiKey, array $application, ?int $clientId): bool
+{
+    $url = str_replace('#{api_key}', $apiKey, SALEBOT_CALLBACK_URL);
+    $fields = $clientId === null ? $application : ['client_id' => $clientId] + $application;
+    return postToSalebot($url, http_build_query($fields), 'application/x-www-form-urlencoded') !== null;
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -249,9 +302,17 @@ if (!is_string($apiKey) || !preg_match('/^[A-Za-z0-9]+$/', $apiKey)) {
     error_log('salebot api_key is not configured: ' . CONFIG_PATH);
     respond(503, ['ok' => false, 'error' => 'not_configured']);
 }
-$webhookUrl = str_replace('#{api_key}', $apiKey, SALEBOT_URL);
+$clientType = $config['client_type'] ?? DEFAULT_CLIENT_TYPE;
+$groupId = $config['group_id'] ?? DEFAULT_GROUP_ID;
+// load_clients expects the phone as bare digits, e.g. 79875555555.
+$platformId = isset($application['phone']) ? ltrim($application['phone'], '+') : $application['email'];
 
-if (!forwardToWebhook($webhookUrl, $application)) {
+$clientId = loadClient($apiKey, [
+    'platform_id' => $platformId,
+    'group_id' => $groupId,
+    'client_type' => $clientType,
+]);
+if (!sendCallback($apiKey, $application, $clientId)) {
     respond(502, ['ok' => false, 'error' => 'delivery_failed']);
 }
 

@@ -49,7 +49,12 @@ python3 -m http.server 4173 -d dist
 
 ## Заявки
 
-Форма отправляет плоский POST на `send.php`, а тот пересылает его в Salebot на `https://chatter.salebot.pro/api/#{api_key}/callback`:
+Форма отправляет плоский POST на `send.php`, а тот передаёт заявку в Salebot двумя запросами:
+
+1. `https://chatter.salebot.pro/api/#{api_key}/load_clients` создаёт клиента: `platform_id` — телефон цифрами (`79001234567`) или email, `client_type` и `group_id` берутся из конфига на сервере;
+2. `https://chatter.salebot.pro/api/#{api_key}/callback` запускает бота у этого клиента (`client_id` из ответа `load_clients`) и сохраняет поля заявки в переменные. Если `load_clients` не вернул id, Salebot ищет клиента по `email` / `phone`.
+
+Поля callback:
 
 | Поле              | Пример                                                           |
 | ----------------- | ---------------------------------------------------------------- |
@@ -73,9 +78,11 @@ python3 -m http.server 4173 -d dist
 
 ```bash
 mkdir -p ~/config && chmod 700 ~/config
-printf "<?php return ['api_key' => '%s'];\n" 'КЛЮЧ' > ~/config/application.php
+printf "<?php return ['api_key' => '%s', 'client_type' => 13, 'group_id' => ''];\n" 'КЛЮЧ' > ~/config/application.php
 chmod 600 ~/config/application.php
 ```
+
+`client_type` — тип мессенджера, куда загружается клиент (по умолчанию `13`, телефония, для неё `group_id` пустой). Для других каналов `group_id` берётся из `/api/<api_key>/connected_channels`. Ключу нужно право «Разрешение на изменение/удаление информации о клиентах».
 
 Пока файла нет, форма отвечает ошибкой «не удалось отправить».
 
