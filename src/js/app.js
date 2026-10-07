@@ -42,7 +42,6 @@ const form = document.querySelector('#application');
 const plan = document.querySelector('#plan');
 const extras = document.querySelector('#extra-options');
 const money = new Intl.NumberFormat('ru-RU');
-// Titles must match the catalog in send.php, which recomputes prices server-side.
 const PLANS = {
   watch: { title: 'Только смотрю', price: 89900 },
   work: { title: 'Смотрю и работаю', price: 219900 },
@@ -51,7 +50,8 @@ const ELECTIVES = {
   director: { title: 'Продвинутый бренд-директор', price: 69900 },
   business: { title: 'Бренд-ориентированный бизнес', price: 69900 },
 };
-const APPLICATION_ENDPOINT = 'send.php';
+// Salebot link to the Telegram bot; the application travels in the query string.
+const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
 
 /**
  * Builds the application from the current form state.
@@ -111,20 +111,16 @@ dialog.addEventListener('click', (e) => {
 });
 form.addEventListener('change', updateTotal);
 /**
- * Sends the application to send.php and reports the result in the form.
+ * Opens the Salebot link with the application passed as query parameters.
  * @param {SubmitEvent} event
  */
-async function submitApplication(event) {
+function submitApplication(event) {
   event.preventDefault();
-  const status = document.querySelector('#form-status');
-  const submitButton = form.querySelector('button[type="submit"]');
   const data = new FormData(form);
   const selection = collectSelection();
-  // Flat form POST: Salebot reads plain variables, not nested JSON.
   const application = new URLSearchParams({
     name: data.get('name').trim(),
     contact: data.get('contact').trim(),
-    telegram: data.get('telegram').trim(),
     plan: selection.plan.title,
     plan_price: selection.plan.price,
     electives: selection.electives.map((elective) => elective.title).join(', '),
@@ -132,33 +128,7 @@ async function submitApplication(event) {
     total: selection.total,
     currency: 'RUB',
   });
-  // Honeypot is sent only when filled, so real requests keep the documented shape.
-  if (data.get('website')) application.set('website', data.get('website'));
-
-  submitButton.disabled = true;
-  status.textContent = 'Отправляем заявку…';
-  try {
-    const response = await fetch(APPLICATION_ENDPOINT, {
-      method: 'POST',
-      body: application,
-    });
-    if (response.status === 422) {
-      status.textContent = 'Проверьте email или телефон: по ним мы свяжемся с вами.';
-      return;
-    }
-    if (response.status === 429) {
-      status.textContent = 'Слишком много попыток. Попробуйте через 10 минут.';
-      return;
-    }
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    form.reset();
-    updateTotal();
-    status.textContent = 'Заявка отправлена. Мы свяжемся с вами в ближайшее время.';
-  } catch {
-    status.textContent = 'Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.';
-  } finally {
-    submitButton.disabled = false;
-  }
+  window.location.assign(APPLICATION_LINK + '?' + application);
 }
 form.addEventListener('submit', submitApplication);
 updateTotal();

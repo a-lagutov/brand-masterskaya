@@ -660,23 +660,16 @@
           placeholder="Как к вам обращаться"
           required
           maxlength="100"
-        /><label for="app-contact">Email или телефон</label
+        /><label for="app-contact">Email или Telegram для связи</label
         ><input
           id="app-contact"
           name="contact"
-          placeholder="you@example.com или +7 900 000-00-00"
+          placeholder="you@example.com или @username"
           required
           maxlength="160"
-        /><label for="app-telegram">Telegram — необязательно</label
-        ><input id="app-telegram" name="telegram" placeholder="@username" maxlength="64" />
-        <div class="form-trap" aria-hidden="true">
-          <label for="app-website">Сайт</label
-          ><input id="app-website" name="website" tabindex="-1" autocomplete="off" />
-        </div>
+        />
         <button class="button primary" type="submit">Отправить заявку <span>↗</span></button>
-        <p class="form-note">
-          Организаторы свяжутся с вами по указанному контакту, чтобы подтвердить участие.
-        </p>
+        <p class="form-note">Откроется наш Telegram-бот — в нём заявка будет подтверждена.</p>
         <p id="form-status" role="status"></p>
       </form>
     </dialog>
