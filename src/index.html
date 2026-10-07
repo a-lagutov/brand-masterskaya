@@ -668,8 +668,14 @@
           required
           maxlength="160"
         />
+        <div class="form-trap" aria-hidden="true">
+          <label for="app-website">Сайт</label
+          ><input id="app-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
         <button class="button primary" type="submit">Отправить заявку <span>↗</span></button>
-        <p class="form-note">Откроется наш Telegram-бот — в нём заявка будет подтверждена.</p>
+        <p class="form-note">
+          Организаторы свяжутся с вами по указанному контакту, чтобы подтвердить участие.
+        </p>
         <p id="form-status" role="status"></p>
       </form>
     </dialog>
