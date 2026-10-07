@@ -46,7 +46,7 @@ const WEBHOOK_TIMEOUT_SECONDS = 10;
 const SALEBOT_URL = 'https://chatter.salebot.pro/api/#{api_key}/callback';
 const ELECTIVES_SEPARATOR = ', ';
 // Fixed callback text: the bot's block is triggered by it; details travel in variables.
-const CALLBACK_MESSAGE = 'Заявка с сайта brandmasterskaya.ru';
+const CALLBACK_MESSAGE = 'zayavka';
 
 $homeDir = dirname(__DIR__, 2);
 define('CONFIG_PATH', $homeDir . '/config/application.php');
