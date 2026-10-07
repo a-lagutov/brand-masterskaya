@@ -55,41 +55,54 @@ const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
 const emailInput = document.querySelector('#app-email');
 const phoneInput = document.querySelector('#app-phone');
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// International numbers have 10 to 15 digits; Russian ones are exactly 11 with the leading 7.
-const PHONE_MIN_DIGITS = 10;
-const PHONE_MAX_DIGITS = 15;
-const RUSSIAN_PHONE_DIGITS = 11;
+// Only Russian numbers: +7 and 10 local digits.
+const PHONE_PREFIX = '+7';
+const PHONE_LOCAL_DIGITS = 10;
 const EMAIL_ERROR = 'Укажите email в формате you@example.com';
 const PHONE_ERROR = 'Укажите телефон в формате +7 (900) 000-00-00';
 
 /**
- * Extracts phone digits, treating a leading 8 or a bare 9 as a Russian number.
+ * Extracts the 10 local digits of a Russian phone, dropping the country code.
  * @param {string} phone Raw field value.
- * @returns {string} Digits with the country code, e.g. 79001234567.
+ * @returns {string} Up to 10 digits after +7, e.g. 9001234567.
  */
-function phoneDigits(phone) {
-  const digits = phone.replace(/\D/g, '');
-  if (phone.trim().startsWith('+')) return digits;
-  if (digits.startsWith('8')) return '7' + digits.slice(1);
-  if (digits.startsWith('9')) return '7' + digits;
-  return digits;
+function phoneLocalDigits(phone) {
+  const value = phone.trim();
+  // Our own formatting or a pasted +7 number: the 7 is the country code.
+  const hasPrefix = value.startsWith(PHONE_PREFIX);
+  const digits = (hasPrefix ? value.slice(PHONE_PREFIX.length) : value).replace(/\D/g, '');
+  // A full number with 8 or 7 in front (typed without the plus, or pasted after the
+  // +7 prefill) carries the country code; after +7 a single 8 may start a city code like 812.
+  const withCountryCode =
+    /^[78]/.test(digits) && (!hasPrefix || digits.length > PHONE_LOCAL_DIGITS);
+  return (withCountryCode ? digits.slice(1) : digits).slice(0, PHONE_LOCAL_DIGITS);
 }
 
 /**
- * Formats a phone as the user types: +7 (900) 123-45-67 for Russia, +<digits> otherwise.
+ * Detects a number with a country code other than +7.
  * @param {string} phone Raw field value.
- * @returns {string} Formatted value; without digits only a lone plus survives.
+ * @returns {boolean} True for values like +44 20 7946 0958.
+ */
+function isForeignPhone(phone) {
+  const value = phone.trim();
+  // A lone plus is the start of +7 being typed.
+  return value.startsWith('+') && value.length > 1 && !value.startsWith(PHONE_PREFIX);
+}
+
+/**
+ * Formats a phone as the user types: +7 (900) 123-45-67.
+ * @param {string} phone Raw field value.
+ * @returns {string} Formatted value, the input as is for a foreign code, or an empty string
+ *   when there are no local digits.
  */
 function formatPhone(phone) {
-  const digits = phoneDigits(phone).slice(0, PHONE_MAX_DIGITS);
-  // Keep a lone plus so an international number can be started.
-  if (!digits) return phone.trim() === '+' ? '+' : '';
-  if (!digits.startsWith('7')) return '+' + digits;
-  const local = digits.slice(1, RUSSIAN_PHONE_DIGITS);
+  // Another country code is left as typed, so validation can reject it instead of rewriting it.
+  if (isForeignPhone(phone)) return phone.trim();
+  const local = phoneLocalDigits(phone);
+  if (!local) return '';
   // Groups of the local part: (900) 123-45-67.
   const groups = [local.slice(0, 3), local.slice(3, 6), local.slice(6, 8), local.slice(8, 10)];
-  let formatted = '+7';
-  if (groups[0]) formatted += ' (' + groups[0];
+  let formatted = PHONE_PREFIX + ' (' + groups[0];
   if (groups[1]) formatted += ') ' + groups[1];
   if (groups[2]) formatted += '-' + groups[2];
   if (groups[3]) formatted += '-' + groups[3];
@@ -97,16 +110,14 @@ function formatPhone(phone) {
 }
 
 /**
- * Checks the phone length and brings it to one format.
+ * Checks that the phone is a full Russian number and brings it to one format.
  * @param {string} phone Raw field value.
- * @returns {string|null} Phone as +79001234567, or null when it is too short or too long.
+ * @returns {string|null} Phone as +79001234567, or null for a foreign or incomplete number.
  */
 function normalizePhone(phone) {
-  const digits = phoneDigits(phone);
-  const valid = digits.startsWith('7')
-    ? digits.length === RUSSIAN_PHONE_DIGITS
-    : digits.length >= PHONE_MIN_DIGITS && digits.length <= PHONE_MAX_DIGITS;
-  return valid ? '+' + digits : null;
+  if (isForeignPhone(phone)) return null;
+  const local = phoneLocalDigits(phone);
+  return local.length === PHONE_LOCAL_DIGITS ? PHONE_PREFIX + local : null;
 }
 
 /**
@@ -187,6 +198,10 @@ phoneInput.addEventListener('input', () => {
 });
 // Autofill and paste can leave the caret elsewhere; tidy the value when the field is left.
 phoneInput.addEventListener('blur', () => (phoneInput.value = formatPhone(phoneInput.value)));
+// Start an empty field with +7 so only the local number is left to type.
+phoneInput.addEventListener('focus', () => {
+  if (!phoneInput.value) phoneInput.value = PHONE_PREFIX + ' ';
+});
 /**
  * Opens the Salebot link with the application passed as query parameters.
  * @param {SubmitEvent} event
