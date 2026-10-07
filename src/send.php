@@ -30,7 +30,6 @@ const PLAN_WITH_ELECTIVES = 'Смотрю и работаю';
 const CURRENCY = 'RUB';
 const NAME_MAX_LENGTH = 100;
 const CONTACT_MAX_LENGTH = 160;
-const ALLOWED_ORIGINS = ['https://brandmasterskaya.ru', 'https://www.brandmasterskaya.ru'];
 // Requests per IP within the window before the endpoint starts refusing.
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 600;
@@ -179,8 +178,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 }
 
 // Browsers always send Origin on POST; refuse requests from other sites.
+// Comparing with Host keeps local preview working too.
 $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
-if ($origin !== null && !in_array($origin, ALLOWED_ORIGINS, true)) {
+if ($origin !== null && parse_url($origin, PHP_URL_HOST) !== strtok($_SERVER['HTTP_HOST'] ?? '', ':')) {
     respond(403, ['ok' => false, 'error' => 'forbidden']);
 }
 
