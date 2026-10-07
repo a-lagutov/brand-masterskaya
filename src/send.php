@@ -1,16 +1,18 @@
 <?php
 
 /**
- * Receives an application from the landing form and forwards it to the Salebot webhook.
+ * Receives an application from the landing form and forwards it to Salebot tg_callback.
  *
- * Request (JSON, same-origin POST):
- *   { name, contact, plan: { title, price }, electives: [{ title, price }], total, currency }
+ * Request and forwarded body are the same flat form POST:
+ *   name, contact, plan, plan_price, electives, electives_price, total, currency
+ * `electives` is a comma-separated list of titles.
  *
  * Prices are never trusted: titles are looked up in the catalog below and
  * prices and total are recomputed before forwarding.
  *
- * The webhook URL lives outside the site directory, so deploys never touch it:
- *   ~/config/application.php  →  <?php return ['webhook_url' => 'https://...'];
+ * #{api_key} in SALEBOT_URL is replaced with the key from the server config,
+ * which lives outside the site directory so deploys never touch it:
+ *   ~/config/application.php  →  <?php return ['api_key' => '...'];
  */
 
 declare(strict_types=1);
@@ -33,6 +35,8 @@ const ALLOWED_ORIGINS = ['https://brandmasterskaya.ru', 'https://www.brandmaster
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 600;
 const WEBHOOK_TIMEOUT_SECONDS = 10;
+const SALEBOT_URL = 'https://chatter.salebot.pro/api/#{api_key}/tg_callback';
+const ELECTIVES_SEPARATOR = ', ';
 
 $homeDir = dirname(__DIR__, 2);
 define('CONFIG_PATH', $homeDir . '/config/application.php');
@@ -98,58 +102,63 @@ function isRateLimited(string $clientIp): bool
 }
 
 /**
- * Validates the request body and rebuilds the application from the catalog.
+ * Validates the form fields and rebuilds the application from the catalog.
  *
- * @param array $input Decoded request JSON.
- * @return array|null Application to forward, or null when the input is invalid.
+ * @param array $input Posted form fields.
+ * @return array|null Flat application to forward, or null when the input is invalid.
  */
 function buildApplication(array $input): ?array
 {
     $name = cleanText($input['name'] ?? null, NAME_MAX_LENGTH);
     $contact = cleanText($input['contact'] ?? null, CONTACT_MAX_LENGTH);
-    $planTitle = $input['plan']['title'] ?? null;
-    $electiveItems = $input['electives'] ?? [];
+    $planTitle = $input['plan'] ?? null;
+    $electivesField = $input['electives'] ?? '';
     if ($name === null || $contact === null || !is_string($planTitle) || !isset(PLANS[$planTitle])) {
         return null;
     }
-    if (!is_array($electiveItems) || ($electiveItems && $planTitle !== PLAN_WITH_ELECTIVES)) {
+    if (!is_string($electivesField)) {
+        return null;
+    }
+    $electiveTitles = $electivesField === '' ? [] : explode(ELECTIVES_SEPARATOR, $electivesField);
+    if ($electiveTitles && $planTitle !== PLAN_WITH_ELECTIVES) {
+        return null;
+    }
+    foreach ($electiveTitles as $title) {
+        if (!isset(ELECTIVES[$title])) {
+            return null;
+        }
+    }
+    if (count(array_unique($electiveTitles)) !== count($electiveTitles)) {
         return null;
     }
 
-    $electives = [];
-    foreach ($electiveItems as $item) {
-        $title = is_array($item) ? ($item['title'] ?? null) : null;
-        if (!is_string($title) || !isset(ELECTIVES[$title]) || isset($electives[$title])) {
-            return null;
-        }
-        $electives[$title] = ['title' => $title, 'price' => ELECTIVES[$title]];
-    }
-
     $planPrice = PLANS[$planTitle];
+    $electivesPrice = array_sum(array_map(fn(string $title) => ELECTIVES[$title], $electiveTitles));
     return [
         'name' => $name,
         'contact' => $contact,
-        'plan' => ['title' => $planTitle, 'price' => $planPrice],
-        'electives' => array_values($electives),
-        'total' => $planPrice + array_sum(array_column($electives, 'price')),
+        'plan' => $planTitle,
+        'plan_price' => $planPrice,
+        'electives' => implode(ELECTIVES_SEPARATOR, $electiveTitles),
+        'electives_price' => $electivesPrice,
+        'total' => $planPrice + $electivesPrice,
         'currency' => CURRENCY,
     ];
 }
 
 /**
- * Posts the application to the webhook.
+ * Posts the application to Salebot as a flat form.
  *
- * @param string $webhookUrl Target URL from the server config.
+ * @param string $webhookUrl Salebot URL with the key filled in.
  * @param array $application Validated application.
- * @return bool True when the webhook answered with 2xx.
+ * @return bool True when Salebot answered with 2xx.
  */
 function forwardToWebhook(string $webhookUrl, array $application): bool
 {
     $curl = curl_init($webhookUrl);
     curl_setopt_array($curl, [
         CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_POSTFIELDS => json_encode($application, JSON_UNESCAPED_UNICODE),
+        CURLOPT_POSTFIELDS => http_build_query($application),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => WEBHOOK_TIMEOUT_SECONDS,
     ]);
@@ -175,10 +184,7 @@ if ($origin !== null && !in_array($origin, ALLOWED_ORIGINS, true)) {
     respond(403, ['ok' => false, 'error' => 'forbidden']);
 }
 
-$input = json_decode(file_get_contents('php://input') ?: '', true);
-if (!is_array($input)) {
-    respond(400, ['ok' => false, 'error' => 'invalid_json']);
-}
+$input = $_POST;
 
 // Honeypot: humans never see this field, bots fill it. Pretend success.
 if (!empty($input['website'])) {
@@ -195,11 +201,12 @@ if ($application === null) {
 }
 
 $config = is_file(CONFIG_PATH) ? require CONFIG_PATH : [];
-$webhookUrl = is_array($config) ? ($config['webhook_url'] ?? '') : '';
-if (!is_string($webhookUrl) || !str_starts_with($webhookUrl, 'https://')) {
-    error_log('application webhook is not configured: ' . CONFIG_PATH);
+$apiKey = is_array($config) ? ($config['api_key'] ?? '') : '';
+if (!is_string($apiKey) || !preg_match('/^[A-Za-z0-9]+$/', $apiKey)) {
+    error_log('salebot api_key is not configured: ' . CONFIG_PATH);
     respond(503, ['ok' => false, 'error' => 'not_configured']);
 }
+$webhookUrl = str_replace('#{api_key}', $apiKey, SALEBOT_URL);
 
 if (!forwardToWebhook($webhookUrl, $application)) {
     respond(502, ['ok' => false, 'error' => 'delivery_failed']);

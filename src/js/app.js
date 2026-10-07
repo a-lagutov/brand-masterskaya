@@ -120,24 +120,26 @@ async function submitApplication(event) {
   const submitButton = form.querySelector('button[type="submit"]');
   const data = new FormData(form);
   const selection = collectSelection();
-  const application = {
+  // Flat form POST: Salebot reads plain variables, not nested JSON.
+  const application = new URLSearchParams({
     name: data.get('name').trim(),
     contact: data.get('contact').trim(),
-    plan: selection.plan,
-    electives: selection.electives,
+    plan: selection.plan.title,
+    plan_price: selection.plan.price,
+    electives: selection.electives.map((elective) => elective.title).join(', '),
+    electives_price: selection.total - selection.plan.price,
     total: selection.total,
     currency: 'RUB',
-  };
+  });
   // Honeypot is sent only when filled, so real requests keep the documented shape.
-  if (data.get('website')) application.website = data.get('website');
+  if (data.get('website')) application.set('website', data.get('website'));
 
   submitButton.disabled = true;
   status.textContent = 'Отправляем заявку…';
   try {
     const response = await fetch(APPLICATION_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(application),
+      body: application,
     });
     if (response.status === 429) {
       status.textContent = 'Слишком много попыток. Попробуйте через 10 минут.';
