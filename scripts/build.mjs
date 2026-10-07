@@ -5,6 +5,7 @@
  * - Minifies CSS and JS and inlines them into index.html.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that index.html actually references.
+ * - Copies server-side scripts (the form endpoint) as is.
  */
 import { mkdir, readFile, rm, writeFile, copyFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -21,6 +22,8 @@ const MAX_WIDTH_BY_FOLDER = {
   'assets/logos': 480,
 };
 const WEBP_QUALITY = 82;
+// Server-side files that index.html calls via fetch, so the asset scan cannot find them.
+const SERVER_FILES = ['send.php'];
 
 /**
  * Converts a raster image to WebP and writes it to dist.
@@ -124,6 +127,14 @@ async function build() {
     console.log(
       `${sourcePath} -> ${outputPath} (${formatKilobytes(sourceSize)} -> ${formatKilobytes(outputSize)})`,
     );
+  }
+
+  for (const sourcePath of SERVER_FILES) {
+    await copyAsset(sourcePath);
+    const size = (await stat(path.join(SRC_DIR, sourcePath))).size;
+    sourceBytes += size;
+    outputBytes += size;
+    console.log(`${sourcePath} -> ${sourcePath} (${formatKilobytes(size)})`);
   }
 
   const minifiedHtml = await minify(html, {

@@ -667,10 +667,14 @@
           placeholder="you@example.com или @username"
           required
           maxlength="160"
-        /><button class="button primary" type="submit">Скачать заявку <span>↓</span></button>
+        />
+        <div class="form-trap" aria-hidden="true">
+          <label for="app-website">Сайт</label
+          ><input id="app-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <button class="button primary" type="submit">Отправить заявку <span>↗</span></button>
         <p class="form-note">
-          Сохраните заявку, чтобы передать её организаторам. Отправка через сайт пока не подключена.
-          Данные не отправляются и не сохраняются на сайте.
+          Организаторы свяжутся с вами по указанному контакту, чтобы подтвердить участие.
         </p>
         <p id="form-status" role="status"></p>
       </form>

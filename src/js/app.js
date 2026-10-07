@@ -42,15 +42,40 @@ const form = document.querySelector('#application');
 const plan = document.querySelector('#plan');
 const extras = document.querySelector('#extra-options');
 const money = new Intl.NumberFormat('ru-RU');
-function computeTotal(type, count) {
-  return (type === 'work' ? 219900 : 89900) + (type === 'work' ? count * 69900 : 0);
+// Titles must match the catalog in send.php, which recomputes prices server-side.
+const PLANS = {
+  watch: { title: 'Только смотрю', price: 89900 },
+  work: { title: 'Смотрю и работаю', price: 219900 },
+};
+const ELECTIVES = {
+  director: { title: 'Продвинутый бренд-директор', price: 69900 },
+  business: { title: 'Бренд-ориентированный бизнес', price: 69900 },
+};
+const APPLICATION_ENDPOINT = 'send.php';
+
+/**
+ * Builds the application from the current form state.
+ * @returns {{plan: {title: string, price: number}, electives: {title: string, price: number}[], total: number}}
+ */
+function collectSelection() {
+  const selectedPlan = PLANS[plan.value];
+  const electives = [...extras.querySelectorAll('input:checked')].map(
+    (checkbox) => ELECTIVES[checkbox.name],
+  );
+  const total = electives.reduce((sum, elective) => sum + elective.price, selectedPlan.price);
+  return { plan: selectedPlan, electives, total };
 }
+
+/**
+ * Shows electives only for the full plan and refreshes the total.
+ * @returns {number} Current total in rubles.
+ */
 function updateTotal() {
   const working = plan.value === 'work';
   extras.hidden = !working;
   extras.disabled = !working;
   if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
-  const total = computeTotal(plan.value, extras.querySelectorAll('input:checked').length);
+  const total = collectSelection().total;
   document.querySelector('#total').value = money.format(total) + ' ₽';
   return total;
 }
@@ -85,36 +110,48 @@ dialog.addEventListener('click', (e) => {
   }
 });
 form.addEventListener('change', updateTotal);
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
+/**
+ * Sends the application to send.php and reports the result in the form.
+ * @param {SubmitEvent} event
+ */
+async function submitApplication(event) {
+  event.preventDefault();
+  const status = document.querySelector('#form-status');
+  const submitButton = form.querySelector('button[type="submit"]');
   const data = new FormData(form);
-  const total = updateTotal();
-  const lines = [
-    'ЗАЯВКА НА УЧАСТИЕ',
-    'Мастерская бренд-стратегии',
-    'Антон Аверьянов и Михаил Чернышов',
-    '',
-    'Имя: ' + data.get('name'),
-    'Контакт: ' + data.get('contact'),
-    'Формат: ' + (plan.value === 'work' ? 'Смотрю и работаю' : 'Только смотрю'),
-  ];
-  if (data.has('director')) lines.push('Факультатив: Продвинутый бренд-директор');
-  if (data.has('business')) lines.push('Факультатив: Бренд-ориентированный бизнес');
-  lines.push(
-    'Стоимость: ' + money.format(total) + ' ₽',
-    '',
-    'Заявка подготовлена для передачи организаторам. Через сайт не отправлена.',
-  );
-  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'masterskaya-application.txt';
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  document.querySelector('#form-status').textContent =
-    'Заявка подготовлена для скачивания. Передайте файл организаторам программы.';
-});
+  const selection = collectSelection();
+  const application = {
+    name: data.get('name').trim(),
+    contact: data.get('contact').trim(),
+    plan: selection.plan,
+    electives: selection.electives,
+    total: selection.total,
+    currency: 'RUB',
+  };
+  // Honeypot is sent only when filled, so real requests keep the documented shape.
+  if (data.get('website')) application.website = data.get('website');
+
+  submitButton.disabled = true;
+  status.textContent = 'Отправляем заявку…';
+  try {
+    const response = await fetch(APPLICATION_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(application),
+    });
+    if (response.status === 429) {
+      status.textContent = 'Слишком много попыток. Попробуйте через 10 минут.';
+      return;
+    }
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    form.reset();
+    updateTotal();
+    status.textContent = 'Заявка отправлена. Мы свяжемся с вами в ближайшее время.';
+  } catch {
+    status.textContent = 'Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.';
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+form.addEventListener('submit', submitApplication);
 updateTotal();
