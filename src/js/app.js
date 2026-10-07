@@ -42,15 +42,117 @@ const form = document.querySelector('#application');
 const plan = document.querySelector('#plan');
 const extras = document.querySelector('#extra-options');
 const money = new Intl.NumberFormat('ru-RU');
-function computeTotal(type, count) {
-  return (type === 'work' ? 219900 : 89900) + (type === 'work' ? count * 69900 : 0);
+const PLANS = {
+  watch: { title: 'Только смотрю', price: 89900 },
+  work: { title: 'Смотрю и работаю', price: 219900 },
+};
+const ELECTIVES = {
+  director: { title: 'Продвинутый бренд-директор', price: 69900 },
+  business: { title: 'Бренд-ориентированный бизнес', price: 69900 },
+};
+// Salebot link to the Telegram bot; the application travels in the query string.
+const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
+const emailInput = document.querySelector('#app-email');
+const phoneInput = document.querySelector('#app-phone');
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Only Russian numbers: +7 and 10 local digits.
+const PHONE_PREFIX = '+7';
+const PHONE_LOCAL_DIGITS = 10;
+const EMAIL_ERROR = 'Укажите email в формате you@example.com';
+const PHONE_ERROR = 'Укажите телефон в формате +7 (900) 000-00-00';
+
+/**
+ * Extracts the 10 local digits of a Russian phone, dropping the country code.
+ * @param {string} phone Raw field value.
+ * @returns {string} Up to 10 digits after +7, e.g. 9001234567.
+ */
+function phoneLocalDigits(phone) {
+  const value = phone.trim();
+  // Our own formatting or a pasted +7 number: the 7 is the country code.
+  const hasPrefix = value.startsWith(PHONE_PREFIX);
+  const digits = (hasPrefix ? value.slice(PHONE_PREFIX.length) : value).replace(/\D/g, '');
+  // A full number with 8 or 7 in front (typed without the plus, or pasted after the
+  // +7 prefill) carries the country code; after +7 a single 8 may start a city code like 812.
+  const withCountryCode =
+    /^[78]/.test(digits) && (!hasPrefix || digits.length > PHONE_LOCAL_DIGITS);
+  return (withCountryCode ? digits.slice(1) : digits).slice(0, PHONE_LOCAL_DIGITS);
 }
+
+/**
+ * Detects a number with a country code other than +7.
+ * @param {string} phone Raw field value.
+ * @returns {boolean} True for values like +44 20 7946 0958.
+ */
+function isForeignPhone(phone) {
+  const value = phone.trim();
+  // A lone plus is the start of +7 being typed.
+  return value.startsWith('+') && value.length > 1 && !value.startsWith(PHONE_PREFIX);
+}
+
+/**
+ * Formats a phone as the user types: +7 (900) 123-45-67.
+ * @param {string} phone Raw field value.
+ * @returns {string} Formatted value, the input as is for a foreign code, or an empty string
+ *   when there are no local digits.
+ */
+function formatPhone(phone) {
+  // Another country code is left as typed, so validation can reject it instead of rewriting it.
+  if (isForeignPhone(phone)) return phone.trim();
+  const local = phoneLocalDigits(phone);
+  if (!local) return '';
+  // Groups of the local part: (900) 123-45-67.
+  const groups = [local.slice(0, 3), local.slice(3, 6), local.slice(6, 8), local.slice(8, 10)];
+  let formatted = PHONE_PREFIX + ' (' + groups[0];
+  if (groups[1]) formatted += ') ' + groups[1];
+  if (groups[2]) formatted += '-' + groups[2];
+  if (groups[3]) formatted += '-' + groups[3];
+  return formatted;
+}
+
+/**
+ * Checks that the phone is a full Russian number and brings it to one format.
+ * @param {string} phone Raw field value.
+ * @returns {string|null} Phone as +79001234567, or null for a foreign or incomplete number.
+ */
+function normalizePhone(phone) {
+  if (isForeignPhone(phone)) return null;
+  const local = phoneLocalDigits(phone);
+  return local.length === PHONE_LOCAL_DIGITS ? PHONE_PREFIX + local : null;
+}
+
+/**
+ * Shows the field's error in the browser bubble and focuses it.
+ * @param {HTMLInputElement} input Field to report.
+ * @param {string} message Error text.
+ */
+function reportFieldError(input, message) {
+  input.setCustomValidity(message);
+  input.reportValidity();
+}
+
+/**
+ * Builds the application from the current form state.
+ * @returns {{plan: {title: string, price: number}, electives: {title: string, price: number}[], total: number}}
+ */
+function collectSelection() {
+  const selectedPlan = PLANS[plan.value];
+  const electives = [...extras.querySelectorAll('input:checked')].map(
+    (checkbox) => ELECTIVES[checkbox.name],
+  );
+  const total = electives.reduce((sum, elective) => sum + elective.price, selectedPlan.price);
+  return { plan: selectedPlan, electives, total };
+}
+
+/**
+ * Shows electives only for the full plan and refreshes the total.
+ * @returns {number} Current total in rubles.
+ */
 function updateTotal() {
   const working = plan.value === 'work';
   extras.hidden = !working;
   extras.disabled = !working;
   if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
-  const total = computeTotal(plan.value, extras.querySelectorAll('input:checked').length);
+  const total = collectSelection().total;
   document.querySelector('#total').value = money.format(total) + ' ₽';
   return total;
 }
@@ -85,36 +187,51 @@ dialog.addEventListener('click', (e) => {
   }
 });
 form.addEventListener('change', updateTotal);
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const data = new FormData(form);
-  const total = updateTotal();
-  const lines = [
-    'ЗАЯВКА НА УЧАСТИЕ',
-    'Мастерская бренд-стратегии',
-    'Антон Аверьянов и Михаил Чернышов',
-    '',
-    'Имя: ' + data.get('name'),
-    'Контакт: ' + data.get('contact'),
-    'Формат: ' + (plan.value === 'work' ? 'Смотрю и работаю' : 'Только смотрю'),
-  ];
-  if (data.has('director')) lines.push('Факультатив: Продвинутый бренд-директор');
-  if (data.has('business')) lines.push('Факультатив: Бренд-ориентированный бизнес');
-  lines.push(
-    'Стоимость: ' + money.format(total) + ' ₽',
-    '',
-    'Заявка подготовлена для передачи организаторам. Через сайт не отправлена.',
-  );
-  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'masterskaya-application.txt';
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  document.querySelector('#form-status').textContent =
-    'Заявка подготовлена для скачивания. Передайте файл организаторам программы.';
+// Drop the error as soon as the user edits a field, so the next submit re-checks it.
+emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+phoneInput.addEventListener('input', () => {
+  phoneInput.setCustomValidity('');
+  // Reformat only while typing at the end, so edits in the middle keep the caret in place.
+  if (phoneInput.selectionStart === phoneInput.value.length) {
+    phoneInput.value = formatPhone(phoneInput.value);
+  }
 });
+// Autofill and paste can leave the caret elsewhere; tidy the value when the field is left.
+phoneInput.addEventListener('blur', () => (phoneInput.value = formatPhone(phoneInput.value)));
+// Start an empty field with +7 so only the local number is left to type.
+phoneInput.addEventListener('focus', () => {
+  if (!phoneInput.value) phoneInput.value = PHONE_PREFIX + ' ';
+});
+/**
+ * Opens the Salebot link with the application passed as query parameters.
+ * @param {SubmitEvent} event
+ */
+function submitApplication(event) {
+  event.preventDefault();
+  const email = emailInput.value.trim();
+  if (!EMAIL_PATTERN.test(email)) {
+    reportFieldError(emailInput, EMAIL_ERROR);
+    return;
+  }
+  const phone = normalizePhone(phoneInput.value);
+  if (!phone) {
+    reportFieldError(phoneInput, PHONE_ERROR);
+    return;
+  }
+  const data = new FormData(form);
+  const selection = collectSelection();
+  const application = new URLSearchParams({
+    name: data.get('name').trim(),
+    email,
+    phone,
+    plan: selection.plan.title,
+    plan_price: selection.plan.price,
+    electives: selection.electives.map((elective) => elective.title).join(', '),
+    electives_price: selection.total - selection.plan.price,
+    total: selection.total,
+    currency: 'RUB',
+  });
+  window.location.assign(APPLICATION_LINK + '?' + application);
+}
+form.addEventListener('submit', submitApplication);
 updateTotal();

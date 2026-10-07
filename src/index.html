@@ -660,18 +660,31 @@
           placeholder="Как к вам обращаться"
           required
           maxlength="100"
-        /><label for="app-contact">Email или Telegram для связи</label
+        /><label for="app-email">Email</label
         ><input
-          id="app-contact"
-          name="contact"
-          placeholder="you@example.com или @username"
+          id="app-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="you@example.com"
           required
           maxlength="160"
-        /><button class="button primary" type="submit">Скачать заявку <span>↓</span></button>
-        <p class="form-note">
-          Сохраните заявку, чтобы передать её организаторам. Отправка через сайт пока не подключена.
-          Данные не отправляются и не сохраняются на сайте.
-        </p>
+        /><label for="app-phone">Телефон</label
+        ><input
+          id="app-phone"
+          name="phone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="+7 (900) 000-00-00"
+          required
+          maxlength="24"
+        />
+        <button class="button primary" type="submit">Подтвердить в Telegram <span>↗</span></button>
+        <p class="form-note">Откроется наш Telegram-бот — в нём заявка будет подтверждена.</p>
         <p id="form-status" role="status"></p>
       </form>
     </dialog>
