@@ -161,12 +161,13 @@ function forwardToWebhook(string $webhookUrl, array $application): bool
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => WEBHOOK_TIMEOUT_SECONDS,
     ]);
-    curl_exec($curl);
+    $responseBody = curl_exec($curl);
     $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
     $error = curl_error($curl);
-    curl_close($curl);
     if ($status < 200 || $status >= 300) {
-        error_log("application webhook failed: status=$status error=$error");
+        // Salebot explains failures in the body, e.g. a missing required parameter.
+        $reason = is_string($responseBody) ? mb_substr($responseBody, 0, 200) : '';
+        error_log("application webhook failed: status=$status error=$error body=$reason");
         return false;
     }
     return true;
