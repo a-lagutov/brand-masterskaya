@@ -10,7 +10,7 @@
  *
  * Forwarded to Salebot callback as a flat form with the same fields plus
  * plan_price, electives_price, total, currency, `email` or `phone` (Salebot
- * finds or creates the client by them) and a readable `message`.
+ * finds the client by them) and a fixed `message` that triggers the bot block.
  *
  * Prices are never trusted: titles are looked up in the catalog below and
  * prices and total are recomputed before forwarding.
@@ -45,6 +45,8 @@ const RATE_LIMIT_WINDOW_SECONDS = 600;
 const WEBHOOK_TIMEOUT_SECONDS = 10;
 const SALEBOT_URL = 'https://chatter.salebot.pro/api/#{api_key}/callback';
 const ELECTIVES_SEPARATOR = ', ';
+// Fixed callback text: the bot's block is triggered by it; details travel in variables.
+const CALLBACK_MESSAGE = 'Заявка с сайта brandmasterskaya.ru';
 
 $homeDir = dirname(__DIR__, 2);
 define('CONFIG_PATH', $homeDir . '/config/application.php');
@@ -103,41 +105,6 @@ function parseContact(string $contact): ?array
     }
     $length = strlen($digits);
     return $length >= PHONE_MIN_DIGITS && $length <= PHONE_MAX_DIGITS ? ['phone' => '+' . $digits] : null;
-}
-
-/**
- * Formats a ruble amount the way the form shows it, e.g. "219 900 ₽".
- *
- * @param int $amount Amount in rubles.
- * @return string
- */
-function formatRubles(int $amount): string
-{
-    return number_format($amount, 0, '', "\u{00A0}") . "\u{00A0}₽";
-}
-
-/**
- * Builds the human-readable message that Salebot shows for the application.
- *
- * @param array $application Validated application without the message.
- * @return string
- */
-function buildMessage(array $application): string
-{
-    $lines = [
-        'Заявка с сайта brandmasterskaya.ru',
-        'Имя: ' . $application['name'],
-        'Контакт: ' . $application['contact'],
-    ];
-    if ($application['telegram'] !== '') {
-        $lines[] = 'Telegram: ' . $application['telegram'];
-    }
-    $lines[] = 'Формат: ' . $application['plan'] . ' — ' . formatRubles($application['plan_price']);
-    if ($application['electives'] !== '') {
-        $lines[] = 'Факультативы: ' . $application['electives'] . ' — ' . formatRubles($application['electives_price']);
-    }
-    $lines[] = 'Итого: ' . formatRubles($application['total']);
-    return implode("\n", $lines);
 }
 
 /**
@@ -217,7 +184,7 @@ function buildApplication(array $input): ?array
         'total' => $planPrice + $electivesPrice,
         'currency' => CURRENCY,
     ];
-    return $application + $contactFields + ['message' => buildMessage($application)];
+    return $application + $contactFields + ['message' => CALLBACK_MESSAGE];
 }
 
 /**
