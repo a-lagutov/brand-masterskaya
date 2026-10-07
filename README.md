@@ -48,7 +48,7 @@ python3 -m http.server 4173 -d dist
 
 ## Заявки
 
-По кнопке «Отправить заявку» браузер открывает ссылку Salebot на Telegram-бота и передаёт заявку в параметрах:
+По кнопке «Подтвердить в Telegram» браузер открывает ссылку Salebot на Telegram-бота и передаёт заявку в параметрах:
 
 ```
 https://link.brandmasterskaya.ru/r/zayavka_1?name=…&contact=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB
