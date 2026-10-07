@@ -11,7 +11,6 @@ src/                исходники сайта
   index.html
   css/style.css
   js/app.js
-  send.php          приём заявок с формы
   assets/images/    фотографии (без уменьшения)
   assets/logos/     логотипы (уменьшаются до 480 px)
 scripts/build.mjs   сборка src/ → dist/
@@ -45,13 +44,17 @@ python3 -m http.server 4173 -d dist
 - CSS и JS минифицируются через esbuild и встраиваются в `index.html`;
 - HTML минифицируется;
 - PNG и JPEG конвертируются в WebP, логотипы уменьшаются до 480 px по ширине;
-- в `dist/` попадают только файлы, на которые ссылается страница, и `send.php`.
+- в `dist/` попадают только файлы, на которые ссылается страница.
 
 ## Заявки
 
-Форма отправляет плоский POST на `send.php`, а тот пересылает его в Salebot на `https://chatter.salebot.pro/api/#{api_key}`:
+По кнопке «Отправить заявку» браузер открывает ссылку Salebot на Telegram-бота и передаёт заявку в параметрах:
 
-| Поле              | Пример                                                   |
+```
+https://link.brandmasterskaya.ru/r/zayavka_1?name=…&contact=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB
+```
+
+| Параметр          | Пример                                                   |
 | ----------------- | -------------------------------------------------------- |
 | `name`            | Иван Петров                                              |
 | `contact`         | @ivanpetrov                                              |
@@ -62,19 +65,7 @@ python3 -m http.server 4173 -d dist
 | `total`           | 359700                                                   |
 | `currency`        | RUB                                                      |
 
-`send.php` проверяет заявку и пересчитывает цены по своему каталогу. Названия тарифов и цены заданы в двух местах — `src/js/app.js` и `src/send.php`, менять нужно оба.
-
-Защита от спама: скрытое поле-ловушка, не больше 5 заявок с одного IP за 10 минут, запросы только со своего домена.
-
-`#{api_key}` подставляется из конфига на сервере. Он лежит вне папки сайта, деплой его не трогает, в браузер ключ не попадает. Создать один раз:
-
-```bash
-mkdir -p ~/config && chmod 700 ~/config
-printf "<?php return ['api_key' => '%s'];\n" 'КЛЮЧ' > ~/config/application.php
-chmod 600 ~/config/application.php
-```
-
-Пока файла нет, форма отвечает ошибкой «не удалось отправить».
+Тарифы и цены заданы в `src/js/app.js` (`PLANS`, `ELECTIVES`).
 
 ## Проверки
 

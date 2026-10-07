@@ -2300,12 +2300,3 @@ input[type='checkbox'] {
     font-size: clamp(8.5px, 2.75vw, 11px);
   }
 }
-
-/* Honeypot field: off-screen for people, still filled in by bots. */
-.form-trap {
-  position: absolute;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
