@@ -57,7 +57,7 @@ https://link.brandmasterskaya.ru/r/zayavka_1?name=…&contact=…&plan=…&plan_
 | Параметр          | Пример                                                   |
 | ----------------- | -------------------------------------------------------- |
 | `name`            | Иван Петров                                              |
-| `contact`         | @ivanpetrov                                              |
+| `contact`         | ivan@example.com или +7 900 123-45-67                    |
 | `plan`            | Смотрю и работаю                                         |
 | `plan_price`      | 219900                                                   |
 | `electives`       | Продвинутый бренд-директор, Бренд-ориентированный бизнес |
