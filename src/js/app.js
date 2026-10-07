@@ -52,28 +52,71 @@ const ELECTIVES = {
 };
 // Salebot link to the Telegram bot; the application travels in the query string.
 const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
-const contactInput = document.querySelector('#app-contact');
+const emailInput = document.querySelector('#app-email');
+const phoneInput = document.querySelector('#app-phone');
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^\+?[\d\s()-]+$/;
-// International numbers have 10 to 15 digits.
+// International numbers have 10 to 15 digits; Russian ones are exactly 11 with the leading 7.
 const PHONE_MIN_DIGITS = 10;
 const PHONE_MAX_DIGITS = 15;
-const CONTACT_ERROR = 'Укажите email (you@example.com) или телефон (+7 900 000-00-00)';
+const RUSSIAN_PHONE_DIGITS = 11;
+const EMAIL_ERROR = 'Укажите email в формате you@example.com';
+const PHONE_ERROR = 'Укажите телефон в формате +7 (900) 000-00-00';
 
 /**
- * Checks that the contact is an email or a phone and brings it to one format.
- * @param {string} contact Raw field value.
- * @returns {string|null} Email as typed or phone as +79001234567, or null when it is neither.
+ * Extracts phone digits, treating a leading 8 or a bare 9 as a Russian number.
+ * @param {string} phone Raw field value.
+ * @returns {string} Digits with the country code, e.g. 79001234567.
  */
-function normalizeContact(contact) {
-  const value = contact.trim();
-  if (EMAIL_PATTERN.test(value)) return value;
-  if (!PHONE_PATTERN.test(value)) return null;
-  let digits = value.replace(/\D/g, '');
-  // Russian numbers are often typed with a leading 8 instead of +7.
-  if (digits.length === 11 && digits.startsWith('8')) digits = '7' + digits.slice(1);
-  if (digits.length < PHONE_MIN_DIGITS || digits.length > PHONE_MAX_DIGITS) return null;
-  return '+' + digits;
+function phoneDigits(phone) {
+  const digits = phone.replace(/\D/g, '');
+  if (phone.trim().startsWith('+')) return digits;
+  if (digits.startsWith('8')) return '7' + digits.slice(1);
+  if (digits.startsWith('9')) return '7' + digits;
+  return digits;
+}
+
+/**
+ * Formats a phone as the user types: +7 (900) 123-45-67 for Russia, +<digits> otherwise.
+ * @param {string} phone Raw field value.
+ * @returns {string} Formatted value; without digits only a lone plus survives.
+ */
+function formatPhone(phone) {
+  const digits = phoneDigits(phone).slice(0, PHONE_MAX_DIGITS);
+  // Keep a lone plus so an international number can be started.
+  if (!digits) return phone.trim() === '+' ? '+' : '';
+  if (!digits.startsWith('7')) return '+' + digits;
+  const local = digits.slice(1, RUSSIAN_PHONE_DIGITS);
+  // Groups of the local part: (900) 123-45-67.
+  const groups = [local.slice(0, 3), local.slice(3, 6), local.slice(6, 8), local.slice(8, 10)];
+  let formatted = '+7';
+  if (groups[0]) formatted += ' (' + groups[0];
+  if (groups[1]) formatted += ') ' + groups[1];
+  if (groups[2]) formatted += '-' + groups[2];
+  if (groups[3]) formatted += '-' + groups[3];
+  return formatted;
+}
+
+/**
+ * Checks the phone length and brings it to one format.
+ * @param {string} phone Raw field value.
+ * @returns {string|null} Phone as +79001234567, or null when it is too short or too long.
+ */
+function normalizePhone(phone) {
+  const digits = phoneDigits(phone);
+  const valid = digits.startsWith('7')
+    ? digits.length === RUSSIAN_PHONE_DIGITS
+    : digits.length >= PHONE_MIN_DIGITS && digits.length <= PHONE_MAX_DIGITS;
+  return valid ? '+' + digits : null;
+}
+
+/**
+ * Shows the field's error in the browser bubble and focuses it.
+ * @param {HTMLInputElement} input Field to report.
+ * @param {string} message Error text.
+ */
+function reportFieldError(input, message) {
+  input.setCustomValidity(message);
+  input.reportValidity();
 }
 
 /**
@@ -133,25 +176,39 @@ dialog.addEventListener('click', (e) => {
   }
 });
 form.addEventListener('change', updateTotal);
-// Drop the error as soon as the user edits the field, so the next submit re-checks it.
-contactInput.addEventListener('input', () => contactInput.setCustomValidity(''));
+// Drop the error as soon as the user edits a field, so the next submit re-checks it.
+emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+phoneInput.addEventListener('input', () => {
+  phoneInput.setCustomValidity('');
+  // Reformat only while typing at the end, so edits in the middle keep the caret in place.
+  if (phoneInput.selectionStart === phoneInput.value.length) {
+    phoneInput.value = formatPhone(phoneInput.value);
+  }
+});
+// Autofill and paste can leave the caret elsewhere; tidy the value when the field is left.
+phoneInput.addEventListener('blur', () => (phoneInput.value = formatPhone(phoneInput.value)));
 /**
  * Opens the Salebot link with the application passed as query parameters.
  * @param {SubmitEvent} event
  */
 function submitApplication(event) {
   event.preventDefault();
-  const contact = normalizeContact(contactInput.value);
-  if (!contact) {
-    contactInput.setCustomValidity(CONTACT_ERROR);
-    contactInput.reportValidity();
+  const email = emailInput.value.trim();
+  if (!EMAIL_PATTERN.test(email)) {
+    reportFieldError(emailInput, EMAIL_ERROR);
+    return;
+  }
+  const phone = normalizePhone(phoneInput.value);
+  if (!phone) {
+    reportFieldError(phoneInput, PHONE_ERROR);
     return;
   }
   const data = new FormData(form);
   const selection = collectSelection();
   const application = new URLSearchParams({
     name: data.get('name').trim(),
-    contact,
+    email,
+    phone,
     plan: selection.plan.title,
     plan_price: selection.plan.price,
     electives: selection.electives.map((elective) => elective.title).join(', '),

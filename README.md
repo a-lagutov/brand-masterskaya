@@ -51,13 +51,14 @@ python3 -m http.server 4173 -d dist
 По кнопке «Подтвердить в Telegram» браузер открывает ссылку Salebot на Telegram-бота и передаёт заявку в параметрах:
 
 ```
-https://link.brandmasterskaya.ru/r/zayavka_1?name=…&contact=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB
+https://link.brandmasterskaya.ru/r/zayavka_1?name=…&email=…&phone=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB
 ```
 
 | Параметр          | Пример                                                   |
 | ----------------- | -------------------------------------------------------- |
 | `name`            | Иван Петров                                              |
-| `contact`         | ivan@example.com или +79001234567                        |
+| `email`           | ivan@example.com                                         |
+| `phone`           | +79001234567                                             |
 | `plan`            | Смотрю и работаю                                         |
 | `plan_price`      | 219900                                                   |
 | `electives`       | Продвинутый бренд-директор, Бренд-ориентированный бизнес |
@@ -65,7 +66,7 @@ https://link.brandmasterskaya.ru/r/zayavka_1?name=…&contact=…&plan=…&plan_
 | `total`           | 359700                                                   |
 | `currency`        | RUB                                                      |
 
-`contact` проверяется в браузере: принимается email или телефон из 10–15 цифр. Телефон приводится к виду `+79001234567`, ведущая 8 заменяется на 7.
+Email и телефон обязательны и проверяются в браузере. Телефон форматируется при вводе как `+7 (900) 123-45-67`, ведущая 8 или 9 считается российским номером, международные номера — 10–15 цифр после `+`. В ссылку телефон уходит как `+79001234567`.
 
 Тарифы и цены заданы в `src/js/app.js` (`PLANS`, `ELECTIVES`).
 
