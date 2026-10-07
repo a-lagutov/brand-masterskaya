@@ -124,6 +124,7 @@ async function submitApplication(event) {
   const application = new URLSearchParams({
     name: data.get('name').trim(),
     contact: data.get('contact').trim(),
+    telegram: data.get('telegram').trim(),
     plan: selection.plan.title,
     plan_price: selection.plan.price,
     electives: selection.electives.map((elective) => elective.title).join(', '),
@@ -141,6 +142,10 @@ async function submitApplication(event) {
       method: 'POST',
       body: application,
     });
+    if (response.status === 422) {
+      status.textContent = 'Проверьте email или телефон: по ним мы свяжемся с вами.';
+      return;
+    }
     if (response.status === 429) {
       status.textContent = 'Слишком много попыток. Попробуйте через 10 минут.';
       return;

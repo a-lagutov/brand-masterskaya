@@ -660,14 +660,15 @@
           placeholder="Как к вам обращаться"
           required
           maxlength="100"
-        /><label for="app-contact">Email или Telegram для связи</label
+        /><label for="app-contact">Email или телефон</label
         ><input
           id="app-contact"
           name="contact"
-          placeholder="you@example.com или @username"
+          placeholder="you@example.com или +7 900 000-00-00"
           required
           maxlength="160"
-        />
+        /><label for="app-telegram">Telegram — необязательно</label
+        ><input id="app-telegram" name="telegram" placeholder="@username" maxlength="64" />
         <div class="form-trap" aria-hidden="true">
           <label for="app-website">Сайт</label
           ><input id="app-website" name="website" tabindex="-1" autocomplete="off" />

@@ -3,9 +3,14 @@
 /**
  * Receives an application from the landing form and forwards it to the Salebot API.
  *
- * Request and forwarded body are the same flat form POST:
- *   name, contact, plan, plan_price, electives, electives_price, total, currency
+ * Request (flat form POST):
+ *   name, contact, telegram, plan, electives
+ * `contact` is an email or a phone, `telegram` is optional,
  * `electives` is a comma-separated list of titles.
+ *
+ * Forwarded to Salebot callback as a flat form with the same fields plus
+ * plan_price, electives_price, total, currency, `email` or `phone` (Salebot
+ * finds or creates the client by them) and a readable `message`.
  *
  * Prices are never trusted: titles are looked up in the catalog below and
  * prices and total are recomputed before forwarding.
@@ -30,6 +35,10 @@ const PLAN_WITH_ELECTIVES = 'Смотрю и работаю';
 const CURRENCY = 'RUB';
 const NAME_MAX_LENGTH = 100;
 const CONTACT_MAX_LENGTH = 160;
+const TELEGRAM_MAX_LENGTH = 64;
+// International numbers have 10 to 15 digits.
+const PHONE_MIN_DIGITS = 10;
+const PHONE_MAX_DIGITS = 15;
 // Requests per IP within the window before the endpoint starts refusing.
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 600;
@@ -74,6 +83,64 @@ function cleanText(mixed $value, int $maxLength): ?string
 }
 
 /**
+ * Detects whether the contact is an email or a phone.
+ *
+ * @param string $contact Cleaned contact field.
+ * @return array|null ['email' => ...] or ['phone' => ...], or null when it is neither.
+ */
+function parseContact(string $contact): ?array
+{
+    if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+        return ['email' => $contact];
+    }
+    if (!preg_match('/^\+?[\d\s()\-]+$/', $contact)) {
+        return null;
+    }
+    $digits = preg_replace('/\D/', '', $contact);
+    // Russian numbers are often typed with a leading 8 instead of +7.
+    if (strlen($digits) === 11 && $digits[0] === '8') {
+        $digits = '7' . substr($digits, 1);
+    }
+    $length = strlen($digits);
+    return $length >= PHONE_MIN_DIGITS && $length <= PHONE_MAX_DIGITS ? ['phone' => '+' . $digits] : null;
+}
+
+/**
+ * Formats a ruble amount the way the form shows it, e.g. "219 900 ₽".
+ *
+ * @param int $amount Amount in rubles.
+ * @return string
+ */
+function formatRubles(int $amount): string
+{
+    return number_format($amount, 0, '', "\u{00A0}") . "\u{00A0}₽";
+}
+
+/**
+ * Builds the human-readable message that Salebot shows for the application.
+ *
+ * @param array $application Validated application without the message.
+ * @return string
+ */
+function buildMessage(array $application): string
+{
+    $lines = [
+        'Заявка с сайта brandmasterskaya.ru',
+        'Имя: ' . $application['name'],
+        'Контакт: ' . $application['contact'],
+    ];
+    if ($application['telegram'] !== '') {
+        $lines[] = 'Telegram: ' . $application['telegram'];
+    }
+    $lines[] = 'Формат: ' . $application['plan'] . ' — ' . formatRubles($application['plan_price']);
+    if ($application['electives'] !== '') {
+        $lines[] = 'Факультативы: ' . $application['electives'] . ' — ' . formatRubles($application['electives_price']);
+    }
+    $lines[] = 'Итого: ' . formatRubles($application['total']);
+    return implode("\n", $lines);
+}
+
+/**
  * Counts this IP's recent requests and records the current one.
  *
  * @param string $clientIp Client address.
@@ -110,9 +177,15 @@ function buildApplication(array $input): ?array
 {
     $name = cleanText($input['name'] ?? null, NAME_MAX_LENGTH);
     $contact = cleanText($input['contact'] ?? null, CONTACT_MAX_LENGTH);
+    $contactFields = $contact === null ? null : parseContact($contact);
+    $telegramField = $input['telegram'] ?? '';
+    $telegram = $telegramField === '' ? '' : cleanText($telegramField, TELEGRAM_MAX_LENGTH);
     $planTitle = $input['plan'] ?? null;
     $electivesField = $input['electives'] ?? '';
-    if ($name === null || $contact === null || !is_string($planTitle) || !isset(PLANS[$planTitle])) {
+    if ($contactFields === null || $telegram === null) {
+        return null;
+    }
+    if ($name === null || !is_string($planTitle) || !isset(PLANS[$planTitle])) {
         return null;
     }
     if (!is_string($electivesField)) {
@@ -133,9 +206,10 @@ function buildApplication(array $input): ?array
 
     $planPrice = PLANS[$planTitle];
     $electivesPrice = array_sum(array_map(fn(string $title) => ELECTIVES[$title], $electiveTitles));
-    return [
+    $application = [
         'name' => $name,
         'contact' => $contact,
+        'telegram' => $telegram,
         'plan' => $planTitle,
         'plan_price' => $planPrice,
         'electives' => implode(ELECTIVES_SEPARATOR, $electiveTitles),
@@ -143,6 +217,7 @@ function buildApplication(array $input): ?array
         'total' => $planPrice + $electivesPrice,
         'currency' => CURRENCY,
     ];
+    return $application + $contactFields + ['message' => buildMessage($application)];
 }
 
 /**
