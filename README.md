@@ -49,7 +49,7 @@ python3 -m http.server 4173 -d dist
 
 ## Заявки
 
-Форма отправляет плоский POST на `send.php`, а тот пересылает его в Salebot на `https://chatter.salebot.pro/api/#{api_key}/tg_callback`:
+Форма отправляет плоский POST на `send.php`, а тот пересылает его в Salebot на `https://chatter.salebot.pro/api/#{api_key}`:
 
 | Поле              | Пример                                                   |
 | ----------------- | -------------------------------------------------------- |

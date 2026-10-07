@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Receives an application from the landing form and forwards it to Salebot tg_callback.
+ * Receives an application from the landing form and forwards it to the Salebot API.
  *
  * Request and forwarded body are the same flat form POST:
  *   name, contact, plan, plan_price, electives, electives_price, total, currency
@@ -34,7 +34,7 @@ const CONTACT_MAX_LENGTH = 160;
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 600;
 const WEBHOOK_TIMEOUT_SECONDS = 10;
-const SALEBOT_URL = 'https://chatter.salebot.pro/api/#{api_key}/tg_callback';
+const SALEBOT_URL = 'https://chatter.salebot.pro/api/#{api_key}';
 const ELECTIVES_SEPARATOR = ', ';
 
 $homeDir = dirname(__DIR__, 2);
