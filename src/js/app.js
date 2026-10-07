@@ -52,6 +52,29 @@ const ELECTIVES = {
 };
 // Salebot link to the Telegram bot; the application travels in the query string.
 const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
+const contactInput = document.querySelector('#app-contact');
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^\+?[\d\s()-]+$/;
+// International numbers have 10 to 15 digits.
+const PHONE_MIN_DIGITS = 10;
+const PHONE_MAX_DIGITS = 15;
+const CONTACT_ERROR = 'Укажите email (you@example.com) или телефон (+7 900 000-00-00)';
+
+/**
+ * Checks that the contact is an email or a phone and brings it to one format.
+ * @param {string} contact Raw field value.
+ * @returns {string|null} Email as typed or phone as +79001234567, or null when it is neither.
+ */
+function normalizeContact(contact) {
+  const value = contact.trim();
+  if (EMAIL_PATTERN.test(value)) return value;
+  if (!PHONE_PATTERN.test(value)) return null;
+  let digits = value.replace(/\D/g, '');
+  // Russian numbers are often typed with a leading 8 instead of +7.
+  if (digits.length === 11 && digits.startsWith('8')) digits = '7' + digits.slice(1);
+  if (digits.length < PHONE_MIN_DIGITS || digits.length > PHONE_MAX_DIGITS) return null;
+  return '+' + digits;
+}
 
 /**
  * Builds the application from the current form state.
@@ -110,17 +133,25 @@ dialog.addEventListener('click', (e) => {
   }
 });
 form.addEventListener('change', updateTotal);
+// Drop the error as soon as the user edits the field, so the next submit re-checks it.
+contactInput.addEventListener('input', () => contactInput.setCustomValidity(''));
 /**
  * Opens the Salebot link with the application passed as query parameters.
  * @param {SubmitEvent} event
  */
 function submitApplication(event) {
   event.preventDefault();
+  const contact = normalizeContact(contactInput.value);
+  if (!contact) {
+    contactInput.setCustomValidity(CONTACT_ERROR);
+    contactInput.reportValidity();
+    return;
+  }
   const data = new FormData(form);
   const selection = collectSelection();
   const application = new URLSearchParams({
     name: data.get('name').trim(),
-    contact: data.get('contact').trim(),
+    contact,
     plan: selection.plan.title,
     plan_price: selection.plan.price,
     electives: selection.electives.map((elective) => elective.title).join(', '),
