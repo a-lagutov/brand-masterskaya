@@ -1505,6 +1505,18 @@ input[type='checkbox'] {
     font-size: 17px;
   }
 
+  .mobile-nav-contacts {
+    border-top: 1px solid var(--line);
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+
+  .mobile-nav .mobile-nav-contacts a {
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
   .hero {
     padding-top: 22px;
     padding-bottom: 30px;
