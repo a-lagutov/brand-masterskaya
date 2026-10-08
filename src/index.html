@@ -627,6 +627,17 @@
         ><span>МАСТЕРСКАЯ <br />БРЕНД-СТРАТЕГИИ</span></a
       >
       <p>Прикладной опыт. Совместная работа.</p>
+      <div class="footer-legal">
+        <p>ИП Аверьянова Ольга Владимировна, ИНН 420526003907</p>
+        <p>
+          <a href="mailto:contact@brandmasterskaya.ru">contact@brandmasterskaya.ru</a>
+          <a href="tel:+79998011420">+7 999 801-14-20</a>
+        </p>
+        <p>
+          <a href="oferta.html">Договор-оферта</a>
+          <a href="privacy.html">Политика обработки персональных данных</a>
+        </p>
+      </div>
       <a href="#">Наверх ↑</a>
     </footer>
     <dialog id="enroll" aria-labelledby="enroll-title">
@@ -683,8 +694,17 @@
           required
           maxlength="24"
         />
+        <label class="consent"
+          ><input type="checkbox" name="consent" required /> Даю
+          <a href="privacy.html#consent" target="_blank"
+            >согласие на обработку персональных данных</a
+          ></label
+        >
         <button class="button primary" type="submit">Подтвердить в Telegram <span>↗</span></button>
-        <p class="form-note">Откроется наш Telegram-бот — в нём заявка будет подтверждена.</p>
+        <p class="form-note">
+          Откроется наш Telegram-бот — в нём заявка будет подтверждена. Оплачивая участие, вы
+          принимаете условия <a href="oferta.html" target="_blank">договора-оферты</a>.
+        </p>
         <p id="form-status" role="status"></p>
       </form>
     </dialog>
