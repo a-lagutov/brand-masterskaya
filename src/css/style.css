@@ -217,7 +217,9 @@ fieldset label span {
 .elective-week > span {
   font-family: 'Courier New', monospace;
   color: var(--red);
-  font-size: 12px;
+  font-size: 10px;
+  white-space: nowrap;
+  padding-top: 4px;
 }
 
 .price span {
@@ -765,6 +767,7 @@ summary::-webkit-details-marker {
 .curriculum summary {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 30px;
   padding: 28px 0;
 }
@@ -774,6 +777,23 @@ summary::-webkit-details-marker {
   font-size: 10px;
   white-space: nowrap;
   color: var(--muted);
+}
+
+.lecture-date {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* In the curriculum it sits on its own line under the week number and title. */
+.curriculum .lecture-date {
+  flex-basis: 100%;
+  margin-top: -14px;
+}
+
+.lecture-date time {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .curriculum h3 {
@@ -881,6 +901,11 @@ details[open] summary .expand {
   max-width: 280px;
 }
 
+.electives-title p.electives-weeks {
+  font-size: 17px;
+  color: var(--red);
+}
+
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--line);
@@ -934,6 +959,11 @@ details[open] summary .expand {
 
 .elective-week p.result {
   color: var(--ink);
+}
+
+.elective-week p.lecture-date {
+  font-size: 11px;
+  margin: 0 0 8px;
 }
 
 .elective-foot {
