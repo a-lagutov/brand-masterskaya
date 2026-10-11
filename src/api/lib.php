@@ -15,18 +15,13 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     exit;
 }
 
-// Prices are checked here, not trusted from the browser. Keep in sync with PLANS and
-// ELECTIVES in src/js/app.js.
-const PLANS = [
-    'watch' => ['title' => 'Только смотрю', 'price' => 89900],
-    'work' => ['title' => 'Смотрю и работаю', 'price' => 219900],
-];
-const ELECTIVES = [
-    'director' => ['title' => 'Продвинутый бренд-директор', 'price' => 69900],
-    'business' => ['title' => 'Бренд-ориентированный бизнес', 'price' => 69900],
-];
+// Plans and prices from src/prices.json, copied next to this file by the build.
+// Prices are checked here, not trusted from the browser.
+define('PRICES', json_decode((string) file_get_contents(__DIR__ . '/prices.json'), true, 512, JSON_THROW_ON_ERROR));
+const PLANS = PRICES['plans'];
+const ELECTIVES = PRICES['electives'];
 // Electives can only be added to this plan.
-const ELECTIVES_PLAN = 'work';
+const ELECTIVES_PLAN = PRICES['electivesPlan'];
 const PRODUCT_NAME = 'Мастерская бренд-стратегии';
 // Salebot link to the Telegram bot; the application travels in the query string.
 const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';

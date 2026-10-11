@@ -14,7 +14,7 @@ return [
     'customer_code' => '',
     // 15 digits; `node scripts/tochka.mjs retailers`. Needed when there are several retail points.
     'merchant_id' => '',
-    // Receipt settings (54-FZ). Check with the accountant.
+    // Receipt settings (54-FZ), agreed with the client: USN income, full payment.
     // osn | usn_income | usn_income_outcome | esn | patent
     'tax_system_code' => 'usn_income',
     // none | vat0 | vat5 | vat7 | vat10 | vat22 | …

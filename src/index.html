@@ -404,7 +404,7 @@
                 </button>
               </div>
               <div id="panel-director" role="tabpanel" aria-labelledby="tab-director">
-                <h4>Продвинутый бренд-директор</h4>
+                <h4>{{title:director}}</h4>
                 <div class="elective-week">
                   <span>06</span>
                   <div>
@@ -427,7 +427,7 @@
                 <div class="ai-label">✳ ИИ-агент для сканирования культуры</div>
               </div>
               <div id="panel-business" role="tabpanel" aria-labelledby="tab-business" hidden>
-                <h4>Бренд-ориентированный бизнес</h4>
+                <h4>{{title:business}}</h4>
                 <div class="elective-week">
                   <span>06</span>
                   <div>
@@ -453,9 +453,11 @@
                   </div>
                 </div>
               </div>
-              <p class="elective-foot">2 лекции + 2 Q&amp;A-сессии <strong>+ 69 900 ₽</strong></p>
+              <p class="elective-foot">
+                2 лекции + 2 Q&amp;A-сессии <strong>+ {{price:director}} ₽</strong>
+              </p>
               <button type="button" class="button primary add-elective">
-                <span class="button-label">Добавить факультатив к формату «Смотрю и работаю»</span
+                <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
                 ><span aria-hidden="true">↗</span>
               </button>
             </div>
@@ -520,11 +522,11 @@
               <div class="card-top">
                 <span class="eyebrow">ФОРМАТ 01</span><span>ДЛЯ САМОСТОЯТЕЛЬНОЙ РАБОТЫ</span>
               </div>
-              <h3>Только смотрю</h3>
+              <h3>{{title:watch}}</h3>
               <p class="price-intro">
                 Для тех, кому нужен доступ к системе, способу мышления и рабочим приёмам.
               </p>
-              <div class="price">89 900 <span>₽</span></div>
+              <div class="price">{{price:watch}} <span>₽</span></div>
               <a href="#enroll" class="button outline choose-plan" data-plan="watch"
                 >Выбрать формат <span>↗</span></a
               >
@@ -540,16 +542,16 @@
               <div class="card-top">
                 <span class="eyebrow">ФОРМАТ 02 / ОСНОВНОЙ</span><span class="places">20 МЕСТ</span>
               </div>
-              <h3>Смотрю и работаю</h3>
+              <h3>{{title:work}}</h3>
               <p class="price-intro">
                 Приносите свой бренд или клиентский проект и шесть недель работаете вместе с нами.
               </p>
-              <div class="price">219 900 <span>₽</span></div>
+              <div class="price">{{price:work}} <span>₽</span></div>
               <a href="#enroll" class="button primary choose-plan" data-plan="work"
                 >Начать свою работу <span>↗</span></a
               >
               <ul class="features">
-                <li>Всё из формата «Только смотрю»</li>
+                <li>Всё из формата «{{title:watch}}»</li>
                 <li>5 рабочих Q&amp;A-сессий с авторами</li>
                 <li>Задания между сессиями с разборами</li>
                 <li>Закрытая группа потока</li>
@@ -564,13 +566,13 @@
             <span aria-hidden="true">+</span>
             <p>
               К рабочему формату можно добавить факультатив: <br /><strong
-                >«Продвинутый бренд-директор»</strong
+                >«{{title:director}}»</strong
               >
-              или <strong>«Бренд-ориентированный бизнес»</strong>.
+              или <strong>«{{title:business}}»</strong>.
             </p>
-            <b>69 900 ₽<small>за каждый факультатив</small></b
+            <b>{{price:director}} ₽<small>за каждый факультатив</small></b
             ><button type="button" class="button primary add-elective">
-              <span class="button-label">Добавить факультатив к формату «Смотрю и работаю»</span
+              <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
               ><span aria-hidden="true">↗</span>
             </button>
           </div>
@@ -591,7 +593,7 @@
           <details>
             <summary>Как устроена работа в течение недели?<span class="expand"></span></summary>
             <p>
-              В субботу — 3 часа лекций и обсуждений с двумя авторами. В формате «Смотрю и работаю»
+              В субботу — 3 часа лекций и обсуждений с двумя авторами. В формате «{{title:work}}»
               между встречами вы выполняете задания, а на Q&amp;A разбираете результаты и получаете
               обратную связь.
             </p>
@@ -651,21 +653,22 @@
       <form id="application">
         <label for="plan">Основная программа</label
         ><select id="plan" name="plan">
-          <option value="watch">Только смотрю — 89 900 ₽</option>
-          <option value="work">Смотрю и работаю — 219 900 ₽</option>
+          <option value="watch">{{title:watch}} — {{price:watch}} ₽</option>
+          <option value="work">{{title:work}} — {{price:work}} ₽</option>
         </select>
         <fieldset id="extra-options" hidden disabled="">
           <legend>Добавить факультатив</legend>
           <label
-            ><input type="checkbox" name="director" /> Продвинутый бренд-директор
-            <span>+ 69 900 ₽</span></label
+            ><input type="checkbox" name="director" /> {{title:director}}
+            <span>+ {{price:director}} ₽</span></label
           ><label
-            ><input type="checkbox" name="business" /> Бренд-ориентированный бизнес
-            <span>+ 69 900 ₽</span></label
+            ><input type="checkbox" name="business" /> {{title:business}}
+            <span>+ {{price:business}} ₽</span></label
           >
         </fieldset>
         <div class="total-row">
-          <span>Стоимость участия</span><output id="total" aria-live="polite">89&nbsp;900 ₽</output>
+          <span>Стоимость участия</span
+          ><output id="total" aria-live="polite">{{price:watch}} ₽</output>
         </div>
         <label for="app-name">Ваше имя</label
         ><input

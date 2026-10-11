@@ -42,15 +42,11 @@ const form = document.querySelector('#application');
 const plan = document.querySelector('#plan');
 const extras = document.querySelector('#extra-options');
 const money = new Intl.NumberFormat('ru-RU');
-// Shown in the form; src/api/lib.php holds the same prices and charges by them.
-const PLANS = {
-  watch: { title: 'Только смотрю', price: 89900 },
-  work: { title: 'Смотрю и работаю', price: 219900 },
-};
-const ELECTIVES = {
-  director: { title: 'Продвинутый бренд-директор', price: 69900 },
-  business: { title: 'Бренд-ориентированный бизнес', price: 69900 },
-};
+// Plans and prices from src/prices.json, substituted by the build (scripts/build.mjs).
+const PLANS = __PRICES__.plans;
+const ELECTIVES = __PRICES__.electives;
+// Electives can only be added to this plan.
+const ELECTIVES_PLAN = __PRICES__.electivesPlan;
 // Creates the order and returns the bank's payment page; see src/api/pay.php.
 const PAYMENT_ENDPOINT = 'api/pay.php';
 const PAYMENT_ERROR = 'Не удалось перейти к оплате. Попробуйте ещё раз или напишите нам.';
@@ -151,7 +147,7 @@ function collectSelection() {
  * @returns {number} Current total in rubles.
  */
 function updateTotal() {
-  const working = plan.value === 'work';
+  const working = plan.value === ELECTIVES_PLAN;
   extras.hidden = !working;
   extras.disabled = !working;
   if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
@@ -170,7 +166,7 @@ document.querySelectorAll('.choose-plan').forEach((button) =>
 );
 document.querySelectorAll('.add-elective').forEach((button) =>
   button.addEventListener('click', () => {
-    plan.value = 'work';
+    plan.value = ELECTIVES_PLAN;
     const activeTab = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
     const elective = activeTab?.id === 'tab-business' ? 'business' : 'director';
     const checkbox = extras.querySelector('input[name="' + elective + '"]');

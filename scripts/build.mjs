@@ -5,6 +5,8 @@
  * - Minifies CSS and JS and inlines them into each page.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that the pages actually reference.
+ * - Fills plan titles and prices from src/prices.json into HTML ({{title:key}},
+ *   {{price:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
  * - Copies the PHP payment endpoints from src/api/ as is.
  */
 import { mkdir, readFile, rm, writeFile, copyFile, stat, readdir } from 'node:fs/promises';
@@ -26,6 +28,12 @@ const WEBP_QUALITY = 82;
 const PAGES = ['index.html', 'oferta.html', 'privacy.html', 'spasibo.html'];
 // Server-side payment endpoints; secrets live outside the web root, not here.
 const API_DIR = 'api';
+// Single source of plan titles and prices for the page, the form and the payment endpoint.
+const PRICES_FILE = 'prices.json';
+const PRICES = JSON.parse(await readFile(path.join(SRC_DIR, PRICES_FILE), 'utf8'));
+// Plans and electives by key, for the HTML placeholders.
+const PRICE_ITEMS = { ...PRICES.plans, ...PRICES.electives };
+const RUBLES = new Intl.NumberFormat('ru-RU');
 
 /**
  * Converts a raster image to WebP and writes it to dist.
@@ -56,6 +64,7 @@ async function minifyCode(sourcePath) {
     minify: true,
     charset: 'utf8',
     target: ['es2020', 'chrome90', 'safari14', 'firefox90'],
+    define: { __PRICES__: JSON.stringify(PRICES) },
   });
   // A literal closing tag would end the inline element early.
   return code.replace(/<\/(script|style)/gi, '<\\/$1').trim();
@@ -92,6 +101,21 @@ function formatKilobytes(bytes) {
 }
 
 /**
+ * Replaces {{title:key}} and {{price:key}} with values from src/prices.json.
+ * @param {string} html Page source.
+ * @param {string} pageName For the error message.
+ * @returns {string} HTML with prices like 89 900 (non-breaking space).
+ * @throws {Error} On an unknown key, so a typo never reaches the site.
+ */
+function fillPrices(html, pageName) {
+  return html.replace(/\{\{(title|price):(\w+)\}\}/g, (placeholder, field, key) => {
+    const item = PRICE_ITEMS[key];
+    if (!item) throw new Error(`${pageName}: unknown ${placeholder}, see src/${PRICES_FILE}`);
+    return field === 'price' ? RUBLES.format(item.price) : item.title;
+  });
+}
+
+/**
  * Builds one page: inlines its CSS and JS, builds its assets and minifies the HTML.
  * @param {string} pageName File name inside src/.
  * @param {Map<string, string>} builtAssets Source path -> output path of assets already
@@ -101,6 +125,7 @@ function formatKilobytes(bytes) {
 async function buildPage(pageName, builtAssets) {
   let html = await readFile(path.join(SRC_DIR, pageName), 'utf8');
   let sourceBytes = Buffer.byteLength(html);
+  html = fillPrices(html, pageName);
 
   // Inline stylesheets and scripts so the page needs a single HTML request.
   const inlineTargets = [
@@ -160,7 +185,7 @@ async function buildPage(pageName, builtAssets) {
 }
 
 /**
- * Copies the PHP endpoints to dist unchanged.
+ * Copies the PHP endpoints to dist unchanged, with the price list they charge by.
  * @returns {Promise<void>}
  */
 async function copyApi() {
@@ -169,6 +194,7 @@ async function copyApi() {
     name.endsWith('.php'),
   );
   for (const fileName of files) await copyAsset(path.join(API_DIR, fileName));
+  await copyFile(path.join(SRC_DIR, PRICES_FILE), path.join(DIST_DIR, API_DIR, PRICES_FILE));
   console.log(`${API_DIR}/: ${files.join(', ')}`);
 }
 
