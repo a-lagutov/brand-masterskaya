@@ -1191,6 +1191,7 @@ details[open] summary .expand {
   padding-top: 20px;
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 8px 40px;
   font-size: 11px;
   color: var(--muted);
