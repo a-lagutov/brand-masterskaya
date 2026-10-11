@@ -28,7 +28,7 @@ return [
     // Sender of the "payment received" email; a mailbox on the site's domain.
     'mail_from' => 'noreply@brandmasterskaya.ru',
     // Where to send a copy of every paid order; empty to skip.
-    'notify_email' => 'contact@brandmasterskaya.ru',
+    'notify_email' => 'noreply@brandmasterskaya.ru',
     // Test site only: charge this many rubles per receipt line instead of the real price.
     'test_item_price' => null,
 ];

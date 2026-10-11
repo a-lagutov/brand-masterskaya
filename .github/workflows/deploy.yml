@@ -74,6 +74,8 @@ jobs:
             "customer_code" => getenv("TOCHKA_CUSTOMER_CODE"),
             "merchant_id" => getenv("TOCHKA_MERCHANT_ID"),
             "site_url" => "https://" . getenv("SITE"),
+            // A copy of every paid order lands in this mailbox as a backup.
+            "notify_email" => "noreply@brandmasterskaya.ru",
             "test_item_price" => getenv("TEST_ITEM_PRICE") === "" ? null : (int) getenv("TEST_ITEM_PRICE"),
           ], true) . ";\n";' > config.php
           ssh -i ~/.ssh/deploy_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
