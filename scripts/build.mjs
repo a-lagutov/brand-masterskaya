@@ -5,8 +5,9 @@
  * - Minifies CSS and JS and inlines them into each page.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that the pages actually reference.
+ * - Copies the PHP payment endpoints from src/api/ as is.
  */
-import { mkdir, readFile, rm, writeFile, copyFile, stat } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile, copyFile, stat, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { transform } from 'esbuild';
 import { minify } from 'html-minifier-terser';
@@ -21,8 +22,10 @@ const MAX_WIDTH_BY_FOLDER = {
   'assets/logos': 480,
 };
 const WEBP_QUALITY = 82;
-// Landing plus the legal documents linked from its footer and form.
-const PAGES = ['index.html', 'oferta.html', 'privacy.html'];
+// Landing, the legal documents linked from its footer and form, and the page after payment.
+const PAGES = ['index.html', 'oferta.html', 'privacy.html', 'spasibo.html'];
+// Server-side payment endpoints; secrets live outside the web root, not here.
+const API_DIR = 'api';
 
 /**
  * Converts a raster image to WebP and writes it to dist.
@@ -156,6 +159,19 @@ async function buildPage(pageName, builtAssets) {
   return { sourceBytes, outputBytes };
 }
 
+/**
+ * Copies the PHP endpoints to dist unchanged.
+ * @returns {Promise<void>}
+ */
+async function copyApi() {
+  await mkdir(path.join(DIST_DIR, API_DIR), { recursive: true });
+  const files = (await readdir(path.join(SRC_DIR, API_DIR))).filter((name) =>
+    name.endsWith('.php'),
+  );
+  for (const fileName of files) await copyAsset(path.join(API_DIR, fileName));
+  console.log(`${API_DIR}/: ${files.join(', ')}`);
+}
+
 /** Runs the full build. */
 async function build() {
   await rm(DIST_DIR, { recursive: true, force: true });
@@ -169,6 +185,7 @@ async function build() {
     sourceBytes += sizes.sourceBytes;
     outputBytes += sizes.outputBytes;
   }
+  await copyApi();
 
   console.log(`Total: ${formatKilobytes(sourceBytes)} -> ${formatKilobytes(outputBytes)}`);
 }

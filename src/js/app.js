@@ -42,6 +42,7 @@ const form = document.querySelector('#application');
 const plan = document.querySelector('#plan');
 const extras = document.querySelector('#extra-options');
 const money = new Intl.NumberFormat('ru-RU');
+// Shown in the form; src/api/lib.php holds the same prices and charges by them.
 const PLANS = {
   watch: { title: 'Только смотрю', price: 89900 },
   work: { title: 'Смотрю и работаю', price: 219900 },
@@ -50,8 +51,10 @@ const ELECTIVES = {
   director: { title: 'Продвинутый бренд-директор', price: 69900 },
   business: { title: 'Бренд-ориентированный бизнес', price: 69900 },
 };
-// Salebot link to the Telegram bot; the application travels in the query string.
-const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
+// Creates the order and returns the bank's payment page; see src/api/pay.php.
+const PAYMENT_ENDPOINT = 'api/pay.php';
+const PAYMENT_ERROR = 'Не удалось перейти к оплате. Попробуйте ещё раз или напишите нам.';
+const submitButton = form.querySelector('button[type="submit"]');
 const emailInput = document.querySelector('#app-email');
 const phoneInput = document.querySelector('#app-phone');
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -160,7 +163,7 @@ document.querySelectorAll('.choose-plan').forEach((button) =>
   button.addEventListener('click', (e) => {
     e.preventDefault();
     plan.value = button.dataset.plan;
-    document.querySelector('#form-status').textContent = '';
+    showFormStatus('');
     updateTotal();
     dialog.showModal();
   }),
@@ -172,7 +175,7 @@ document.querySelectorAll('.add-elective').forEach((button) =>
     const elective = activeTab?.id === 'tab-business' ? 'business' : 'director';
     const checkbox = extras.querySelector('input[name="' + elective + '"]');
     checkbox.checked = true;
-    document.querySelector('#form-status').textContent = '';
+    showFormStatus('');
     updateTotal();
     dialog.showModal();
     checkbox.focus();
@@ -203,10 +206,19 @@ phoneInput.addEventListener('focus', () => {
   if (!phoneInput.value) phoneInput.value = PHONE_PREFIX + ' ';
 });
 /**
- * Opens the Salebot link with the application passed as query parameters.
+ * Shows a message under the submit button.
+ * @param {string} message Empty string clears it.
+ */
+function showFormStatus(message) {
+  document.querySelector('#form-status').textContent = message;
+}
+
+/**
+ * Sends the application to the server, which creates a Tochka payment link,
+ * and takes the user to the bank's payment page.
  * @param {SubmitEvent} event
  */
-function submitApplication(event) {
+async function submitApplication(event) {
   event.preventDefault();
   const email = emailInput.value.trim();
   if (!EMAIL_PATTERN.test(email)) {
@@ -219,19 +231,37 @@ function submitApplication(event) {
     return;
   }
   const data = new FormData(form);
-  const selection = collectSelection();
-  const application = new URLSearchParams({
+  // The server recalculates prices from these keys; amounts from the browser are not trusted.
+  const application = {
     name: data.get('name').trim(),
     email,
     phone,
-    plan: selection.plan.title,
-    plan_price: selection.plan.price,
-    electives: selection.electives.map((elective) => elective.title).join(', '),
-    electives_price: selection.total - selection.plan.price,
-    total: selection.total,
-    currency: 'RUB',
-  });
-  window.location.assign(APPLICATION_LINK + '?' + application);
+    plan: plan.value,
+    electives: [...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
+  };
+  submitButton.disabled = true;
+  showFormStatus('Создаём платёж…');
+  try {
+    const response = await fetch(PAYMENT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(application),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.paymentLink) throw new Error(result.error || PAYMENT_ERROR);
+    window.location.assign(result.paymentLink);
+  } catch (error) {
+    // A failed fetch or broken JSON has a technical message; show ours instead.
+    showFormStatus(
+      error instanceof SyntaxError || error instanceof TypeError ? PAYMENT_ERROR : error.message,
+    );
+    submitButton.disabled = false;
+  }
 }
 form.addEventListener('submit', submitApplication);
 updateTotal();
+// The bank sends the user back here with ?payment=failed when the payment did not go through.
+if (new URLSearchParams(window.location.search).get('payment') === 'failed') {
+  dialog.showModal();
+  showFormStatus('Оплата не прошла. Проверьте данные и попробуйте ещё раз.');
+}

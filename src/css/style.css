@@ -2412,3 +2412,15 @@ input[type='checkbox'] {
   border-bottom: 1px solid var(--line);
   padding: 8px 12px 8px 0;
 }
+
+/* Thank-you page after payment. */
+.thanks {
+  min-height: 50vh;
+}
+
+.wrap.thanks .button {
+  margin-top: 16px;
+
+  /* A button, not a link in running text. */
+  text-decoration: none;
+}

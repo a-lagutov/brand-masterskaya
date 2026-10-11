@@ -11,11 +11,16 @@ src/                исходники сайта
   index.html        лендинг
   oferta.html       договор-оферта
   privacy.html      политика обработки персональных данных и согласие
+  spasibo.html      страница после оплаты
+  api/              PHP: создание платежа, вебхук Точки, статус заказа
   css/style.css
-  js/app.js
+  js/app.js         лендинг и форма заявки
+  js/thanks.js      страница после оплаты
   assets/images/    фотографии (без уменьшения)
   assets/logos/     логотипы (уменьшаются до 480 px)
 scripts/build.mjs   сборка src/ → dist/
+scripts/tochka.mjs  настройка Точки: customerCode, merchantId, вебхук
+config.example.php  образец настроек оплаты
 .github/workflows/  CI и деплой
 .husky/             git-хуки
 ```
@@ -46,14 +51,22 @@ python3 -m http.server 4173 -d dist
 - страницы перечислены в `PAGES`; CSS и JS минифицируются через esbuild и встраиваются в каждую;
 - HTML минифицируется;
 - PNG и JPEG конвертируются в WebP, логотипы уменьшаются до 480 px по ширине;
-- в `dist/` попадают только файлы, на которые ссылаются страницы.
+- в `dist/` попадают только файлы, на которые ссылаются страницы, и PHP из `src/api/`.
 
-## Заявки
+## Оплата
 
-По кнопке «Подтвердить в Telegram» браузер открывает ссылку Salebot на Telegram-бота и передаёт заявку в параметрах:
+Оплата идёт через интернет-эквайринг банка Точка ([API](https://developers.tochka.com/docs/tochka-api/opisanie-metodov/platyozhnye-ssylki)): платёжная ссылка с чеком по 54-ФЗ, карта и СБП.
+
+1. Форма на сайте отправляет `POST api/pay.php` с именем, email, телефоном, ключом тарифа и факультативов.
+2. `pay.php` проверяет данные, считает сумму по своим ценам, сохраняет заказ и создаёт платёжную ссылку (`/acquiring/v1.0/payments_with_receipt`). Номер заказа передаётся в Точку как `paymentLinkId`.
+3. Браузер уходит на страницу оплаты банка. При неудаче банк возвращает на `/?payment=failed#pricing`, форма открывается с сообщением.
+4. После оплаты банк возвращает на `spasibo.html?order=…`. Страница опрашивает `api/order.php`, пока заказ не оплачен, и показывает кнопку перехода в Telegram-бота.
+5. Банк присылает вебхук `acquiringInternetPayment` на `api/webhook.php` (JWT, подпись RS256 проверяется по [ключу Точки](https://enter.tochka.com/doc/openapi/static/keys/public)). Заказ помечается оплаченным, клиенту уходит письмо со ссылкой на бота, организаторам — копия. Если вебхук задержался, то же самое делает `order.php`, сверив статус платежа в API. Письмо отправляется один раз.
+
+Ссылка на бота — Salebot с заявкой в параметрах:
 
 ```
-https://link.brandmasterskaya.ru/r/zayavka_1?name=…&email=…&phone=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB
+https://link.brandmasterskaya.ru/r/zayavka_1?name=…&email=…&phone=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB&order=…
 ```
 
 | Параметр          | Пример                                                   |
@@ -67,16 +80,43 @@ https://link.brandmasterskaya.ru/r/zayavka_1?name=…&email=…&phone=…&plan=�
 | `electives_price` | 139800                                                   |
 | `total`           | 359700                                                   |
 | `currency`        | RUB                                                      |
+| `order`           | 32 hex-символа, номер заказа и `paymentLinkId` в Точке   |
 
-Email и телефон обязательны и проверяются в браузере. Принимаются только российские номера: поле начинается с `+7`, номер форматируется при вводе как `+7 (900) 123-45-67`, ведущая 8 заменяется на +7, другие коды стран отклоняются. В ссылку телефон уходит как `+79001234567`.
+Email и телефон обязательны и проверяются в браузере и на сервере. Принимаются только российские номера: поле начинается с `+7`, номер форматируется при вводе как `+7 (900) 123-45-67`, ведущая 8 заменяется на +7, другие коды стран отклоняются. На сервер телефон уходит как `+79001234567`.
 
-Тарифы и цены заданы в `src/js/app.js` (`PLANS`, `ELECTIVES`).
+Тарифы и цены заданы в двух местах: `src/js/app.js` (`PLANS`, `ELECTIVES`) для показа в форме и `src/api/lib.php` для списания. Меняйте оба.
+
+### Настройка на хостинге
+
+Нужен PHP 8.1+ с `curl` и `openssl` (выбирается в панели reg.ru).
+
+Ключи и заказы лежат вне `www/`, в `~/brandmasterskaya-private/`: деплой их не трогает, по HTTP они недоступны.
+
+1. В интернет-банке Точки: «Сервисы» → «Интеграции и API» → создать JWT-ключ с правами `MakeAcquiringOperation`, `ReadAcquiringData`, `ReadCustomerData`, `ManageWebhookData`. Сохранить JWT и `client_id`.
+2. Узнать `customerCode` и `merchantId`:
+   ```bash
+   TOCHKA_JWT=… node scripts/tochka.mjs customers
+   TOCHKA_JWT=… node scripts/tochka.mjs retailers <customerCode>
+   ```
+3. На сервере создать `~/brandmasterskaya-private/config.php` по образцу [config.example.php](config.example.php), права `600`.
+4. Создать ящик отправителя (`mail_from`, по умолчанию `noreply@brandmasterskaya.ru`).
+5. После деплоя подключить вебхук (банк сразу пришлёт тестовый и ждёт ответ 200):
+   ```bash
+   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-set
+   ```
+
+Журнал платежей: `~/brandmasterskaya-private/payments.log`, заказы: `~/brandmasterskaya-private/orders/`.
+
+Для проверки без денег поставьте в конфиге `'sandbox' => true` и `customer_code`/`merchant_id` из песочницы (`1234567ab`, `200000000001098` с `payment_modes` `['sbp']`). Песочница сразу отвечает «оплачено».
+
+При перевыпуске JWT меняются и токен, и `client_id`: обновите `config.php` и заново выполните `webhook-set`.
 
 ## Проверки
 
 - **Prettier** — форматирование.
 - **ESLint** — JS.
 - **Stylelint** (`stylelint-config-standard`) — CSS.
+- **php -l** (только в CI) — синтаксис PHP.
 
 Хук `pre-commit` проверяет изменённые файлы через lint-staged и не пропускает коммит с ошибками. Хук `pre-push` запрещает пушить в `main` напрямую.
 
