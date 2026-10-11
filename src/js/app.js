@@ -53,12 +53,16 @@ const PAYMENT_ERROR = 'Не удалось перейти к оплате. По�
 const submitButton = form.querySelector('button[type="submit"]');
 const emailInput = document.querySelector('#app-email');
 const phoneInput = document.querySelector('#app-phone');
+const telegramInput = document.querySelector('#app-telegram');
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Only Russian numbers: +7 and 10 local digits.
 const PHONE_PREFIX = '+7';
 const PHONE_LOCAL_DIGITS = 10;
 const EMAIL_ERROR = 'Укажите email в формате you@example.com';
 const PHONE_ERROR = 'Укажите телефон в формате +7 (900) 000-00-00';
+// Telegram usernames: 5–32 Latin letters, digits and underscores.
+const TELEGRAM_PATTERN = /^[A-Za-z0-9_]{5,32}$/;
+const TELEGRAM_ERROR = 'Укажите ник в Telegram, например @username';
 
 /**
  * Extracts the 10 local digits of a Russian phone, dropping the country code.
@@ -117,6 +121,19 @@ function normalizePhone(phone) {
   if (isForeignPhone(phone)) return null;
   const local = phoneLocalDigits(phone);
   return local.length === PHONE_LOCAL_DIGITS ? PHONE_PREFIX + local : null;
+}
+
+/**
+ * Brings a Telegram username to a bare form: strips @ and a t.me link.
+ * @param {string} telegram Raw field value.
+ * @returns {string|null} Username without @, or null when blank or invalid.
+ */
+function normalizeTelegram(telegram) {
+  const username = telegram
+    .trim()
+    .replace(/^(https?:\/\/)?(t\.me|telegram\.me)\//i, '')
+    .replace(/^@/, '');
+  return TELEGRAM_PATTERN.test(username) ? username : null;
 }
 
 /**
@@ -188,6 +205,7 @@ dialog.addEventListener('click', (e) => {
 form.addEventListener('change', updateTotal);
 // Drop the error as soon as the user edits a field, so the next submit re-checks it.
 emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+telegramInput.addEventListener('input', () => telegramInput.setCustomValidity(''));
 phoneInput.addEventListener('input', () => {
   phoneInput.setCustomValidity('');
   // Reformat only while typing at the end, so edits in the middle keep the caret in place.
@@ -226,12 +244,18 @@ async function submitApplication(event) {
     reportFieldError(phoneInput, PHONE_ERROR);
     return;
   }
+  const telegram = normalizeTelegram(telegramInput.value);
+  if (!telegram) {
+    reportFieldError(telegramInput, TELEGRAM_ERROR);
+    return;
+  }
   const data = new FormData(form);
   // The server recalculates prices from these keys; amounts from the browser are not trusted.
   const application = {
     name: data.get('name').trim(),
     email,
     phone,
+    telegram,
     plan: plan.value,
     electives: [...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
   };

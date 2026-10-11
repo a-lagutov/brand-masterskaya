@@ -2,7 +2,7 @@
 /**
  * Creates an order and a Tochka payment link with a receipt.
  *
- * POST JSON {name, email, phone, plan, electives: string[]}
+ * POST JSON {name, email, phone, telegram, plan, electives: string[]}
  * 200 {paymentLink} — the browser goes there to pay.
  * 4xx/5xx {error} — a message to show in the form.
  */
@@ -24,6 +24,8 @@ if (!is_array($input)) {
 $name = trim((string) ($input['name'] ?? ''));
 $email = trim((string) ($input['email'] ?? ''));
 $phone = (string) ($input['phone'] ?? '');
+// Stored without @ or a t.me link, like the form sends it.
+$telegram = preg_replace('~^(https?://)?(t\.me|telegram\.me)/|^@~i', '', trim((string) ($input['telegram'] ?? '')));
 $planKey = (string) ($input['plan'] ?? '');
 $electiveKeys = array_values(array_unique(array_map('strval', (array) ($input['electives'] ?? []))));
 
@@ -36,6 +38,9 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 160) {
 }
 if (!preg_match('/^\+7\d{10}$/', $phone)) {
     respond_json(422, ['error' => 'Укажите телефон в формате +7 (900) 000-00-00']);
+}
+if (!preg_match('/^[A-Za-z0-9_]{5,32}$/', $telegram)) {
+    respond_json(422, ['error' => 'Укажите ник в Telegram, например @username']);
 }
 if (!isset(PLANS[$planKey])) {
     respond_json(422, ['error' => 'Выберите формат участия']);
@@ -62,6 +67,7 @@ $order = [
     'name' => $name,
     'email' => $email,
     'phone' => $phone,
+    'telegram' => $telegram,
     'plan' => $plan,
     'electives' => $electives,
     'total' => $total,

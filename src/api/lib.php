@@ -192,6 +192,7 @@ function telegram_link(array $order): string
         'name' => $order['name'],
         'email' => $order['email'],
         'phone' => $order['phone'],
+        'telegram' => $order['telegram'] ?? '',
         'plan' => $order['plan']['title'],
         'plan_price' => $order['plan']['price'],
         'electives' => implode(', ', $electiveTitles),
@@ -207,9 +208,10 @@ function telegram_link(array $order): string
  * @param string $to Recipient address.
  * @param string $subject
  * @param string $text Body.
+ * @param string $bcc Hidden copy, e.g. to keep sent mail in a mailbox; empty for none.
  * @return bool Whether sendmail accepted the message.
  */
-function send_mail(string $to, string $subject, string $text): bool
+function send_mail(string $to, string $subject, string $text, string $bcc = ''): bool
 {
     $from = config()['mail_from'];
     $headers = [
@@ -218,6 +220,9 @@ function send_mail(string $to, string $subject, string $text): bool
         'Content-Type' => 'text/plain; charset=UTF-8',
         'Content-Transfer-Encoding' => 'base64',
     ];
+    if ($bcc !== '') {
+        $headers['Bcc'] = $bcc;
+    }
     $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
     // -f sets the envelope sender so SPF on the domain applies.
     return mail($to, $encodedSubject, chunk_split(base64_encode($text)), $headers, '-f' . $from);
@@ -271,15 +276,24 @@ function notify_paid(array $order): void
         . "Чтобы завершить регистрацию, откройте Telegram-бота по ссылке:\n$link\n\n"
         . "Кассовый чек банк пришлёт отдельным письмом.\n\n"
         . "Если остались вопросы, напишите нам: contact@brandmasterskaya.ru";
-    if (!send_mail($order['email'], 'Оплата получена — ' . PRODUCT_NAME, $customerText)) {
+    $notifyEmail = (string) config()['notify_email'];
+    // mail() keeps no "Sent" copy, so a hidden copy shows the organizers what the customer got.
+    if (!send_mail($order['email'], 'Оплата получена — ' . PRODUCT_NAME, $customerText, $notifyEmail)) {
         log_event("mail failed order={$order['id']} to={$order['email']}");
     }
-    $notifyEmail = config()['notify_email'];
     if ($notifyEmail) {
+        // One line per purchased part with its price, as on the receipt.
+        $lines = array_map(
+            fn($item) => "— {$item['title']}: " . number_format($item['price'], 0, ',', ' ') . ' ₽',
+            array_merge([$order['plan']], $order['electives'])
+        );
         $ownerText = "Новая оплата\n\nЗаказ: {$order['id']}\nИмя: {$order['name']}\n"
-            . "Email: {$order['email']}\nТелефон: {$order['phone']}\nФормат: $format\n"
-            . "Сумма: $total\nОперация Точки: {$order['operationId']}";
-        send_mail($notifyEmail, "Оплата $total — {$order['name']}", $ownerText);
+            . "Email: {$order['email']}\nТелефон: {$order['phone']}\n"
+            . "Telegram: @" . ($order['telegram'] ?? '') . "\n\n"
+            . "Состав:\n" . implode("\n", $lines) . "\nИтого: $total\n\n"
+            . "Операция Точки: {$order['operationId']}";
+        // The fixed "Новая оплата" prefix lets a mailbox filter sort these into a folder.
+        send_mail($notifyEmail, "Новая оплата: $total — {$order['name']}", $ownerText);
     }
 }
 
