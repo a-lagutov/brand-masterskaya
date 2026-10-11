@@ -1,7 +1,8 @@
 <?php
 /**
- * Payment settings. Copy to ~/brandmasterskaya-private/config.php on the hosting
- * (next to www/, not inside it) and fill in. Never commit the real file.
+ * Payment settings, ~/private/<site folder>/config.php on the hosting, e.g.
+ * ~/private/brandmasterskaya.ru/config.php. The deploy workflow writes it from repository
+ * secrets; this file documents the keys. Never commit the real file.
  */
 
 return [
@@ -28,4 +29,6 @@ return [
     'mail_from' => 'noreply@brandmasterskaya.ru',
     // Where to send a copy of every paid order; empty to skip.
     'notify_email' => 'contact@brandmasterskaya.ru',
+    // Test site only: charge this many rubles per receipt line instead of the real price.
+    'test_item_price' => null,
 ];

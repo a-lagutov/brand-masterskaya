@@ -95,9 +95,9 @@ Email и телефон обязательны и проверяются в бр
 
 ### Настройка на хостинге
 
-Нужен PHP 8.1+ с `curl` и `openssl` (выбирается в панели reg.ru).
+Нужен PHP 8.1+ с `curl` и `openssl` (выбирается в панели reg.ru для каждого сайта).
 
-Ключи и заказы лежат вне `www/`, в `~/brandmasterskaya-private/`: деплой их не трогает, по HTTP они недоступны.
+Ключи и заказы лежат вне `www/`, в `~/private/<папка сайта>/` (`~/private/brandmasterskaya.ru/`, `~/private/test.brandmasterskaya.ru/`): rsync их не трогает, по HTTP они недоступны. `config.php` там пишет деплой из секретов репозитория, вручную его не правят. Ключи настроек описаны в [config.example.php](config.example.php).
 
 1. В интернет-банке Точки: «Сервисы» → «Интеграции и API» → создать JWT-ключ с правами `MakeAcquiringOperation`, `ReadAcquiringData`, `ReadCustomerData`, `ManageWebhookData`. Сохранить JWT и `client_id`.
 2. Узнать `customerCode` и `merchantId`:
@@ -105,18 +105,20 @@ Email и телефон обязательны и проверяются в бр
    TOCHKA_JWT=… node scripts/tochka.mjs customers
    TOCHKA_JWT=… node scripts/tochka.mjs retailers <customerCode>
    ```
-3. На сервере создать `~/brandmasterskaya-private/config.php` по образцу [config.example.php](config.example.php), права `600`.
+3. Положить их в секреты репозитория `TOCHKA_JWT`, `TOCHKA_CUSTOMER_CODE`, `TOCHKA_MERCHANT_ID`.
 4. Создать ящик отправителя (`mail_from`, по умолчанию `noreply@brandmasterskaya.ru`).
-5. После деплоя подключить вебхук (банк сразу пришлёт тестовый и ждёт ответ 200):
+5. После деплоя подключить вебхук (банк сразу пришлёт тестовый и ждёт ответ 200). У ключа один адрес вебхука: сначала на тестовый сайт, при запуске — перенести на боевой.
    ```bash
-   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-set
+   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-set https://test.brandmasterskaya.ru/api/webhook.php
+   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-edit https://brandmasterskaya.ru/api/webhook.php
    ```
+   Без вебхука оплата тоже засчитывается: страница «Спасибо» сверяет статус через API.
 
-Журнал платежей: `~/brandmasterskaya-private/payments.log`, заказы: `~/brandmasterskaya-private/orders/`.
+Журнал платежей: `~/private/<папка сайта>/payments.log`, заказы: `~/private/<папка сайта>/orders/`.
 
-Для проверки без денег поставьте в конфиге `'sandbox' => true` и `customer_code`/`merchant_id` из песочницы (`1234567ab`, `200000000001098` с `payment_modes` `['sbp']`). Песочница сразу отвечает «оплачено».
+Для локальной проверки без денег: `BM_PRIVATE_DIR` указывает на папку с `config.php`, в нём `'sandbox' => true` и `customer_code`/`merchant_id` из песочницы (`1234567ab`, `200000000001098` с `payment_modes` `['sbp']`). Песочница сразу отвечает «оплачено».
 
-При перевыпуске JWT меняются и токен, и `client_id`: обновите `config.php` и заново выполните `webhook-set`.
+При перевыпуске JWT меняются и токен, и `client_id`: обновите секрет `TOCHKA_JWT`, перезапустите деплой и заново подключите вебхук.
 
 ## Проверки
 
@@ -136,16 +138,24 @@ Email и телефон обязательны и проверяются в бр
 
 ## Деплой
 
-Мерж в `main` запускает workflow **Deploy**, если меняет `src/`, `scripts/`, `package.json`, `package-lock.json` или сам `deploy.yml`. Правки документации и конфигов линтеров сайт не трогают. Чтобы пропустить деплой разово, добавьте `[skip ci]` в сообщение merge-коммита.
+Workflow **Deploy** запускается на пуш, если меняются `src/`, `scripts/`, `package.json`, `package-lock.json`, `config.example.php` или сам `deploy.yml`. Правки документации и конфигов линтеров сайт не трогают. Чтобы пропустить деплой разово, добавьте `[skip ci]` в сообщение коммита.
+
+| Ветка        | Сайт                                                         | Цены                   |
+| ------------ | ------------------------------------------------------------ | ---------------------- |
+| `main`       | [brandmasterskaya.ru](https://brandmasterskaya.ru)           | настоящие              |
+| любая другая | [test.brandmasterskaya.ru](https://test.brandmasterskaya.ru) | 10 ₽ за позицию в чеке |
+
+Тестовый сайт — общий для всех веток, там последний пуш. Платежи на нём настоящие (через боевой API Точки), но на 10 ₽ за тариф и каждый факультатив; на странице показываются обычные цены. Тестовый сайт закрыт от поисковиков (`robots.txt`).
 
 Шаги деплоя:
 
 1. проверки и сборка;
-2. загрузка `dist/` на хостинг reg.ru через rsync по SSH.
+2. запись `~/private/<сайт>/config.php` из секретов;
+3. загрузка `dist/` в `~/www/<сайт>/` через rsync по SSH.
 
 Rsync сравнивает файлы по содержимому и удаляет на сервере лишнее. Папка `.well-known/` и файл `.htaccess` на сервере не трогаются.
 
-Доступ к серверу хранится в секретах репозитория: `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`, `SSH_HOST`, `SSH_USER`. Деплой можно запустить и вручную: Actions → Deploy → Run workflow.
+Секреты репозитория: доступ к серверу — `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`, `SSH_HOST`, `SSH_USER`; Точка — `TOCHKA_JWT`, `TOCHKA_CUSTOMER_CODE`, `TOCHKA_MERCHANT_ID`. Деплой можно запустить и вручную: Actions → Deploy → Run workflow (выберите ветку).
 
 ## Лицензия
 

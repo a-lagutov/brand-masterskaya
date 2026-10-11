@@ -46,8 +46,15 @@ foreach ($electiveKeys as $electiveKey) {
     }
 }
 
+$config = config();
 $plan = PLANS[$planKey];
 $electives = array_map(fn($key) => ELECTIVES[$key], $electiveKeys);
+// The test site charges a token amount per line instead of the real price.
+if ($config['test_item_price']) {
+    $testPrice = fn($item) => ['title' => $item['title'], 'price' => $config['test_item_price']];
+    $plan = $testPrice($plan);
+    $electives = array_map($testPrice, $electives);
+}
 $total = $plan['price'] + array_sum(array_map(fn($item) => $item['price'], $electives));
 $order = [
     'id' => bin2hex(random_bytes(16)),
@@ -62,7 +69,6 @@ $order = [
     'paidAt' => null,
 ];
 
-$config = config();
 // One receipt line per purchased part, so the receipt mirrors the order.
 $receiptItems = array_map(fn($item) => [
     'name' => PRODUCT_NAME . ': ' . $item['title'],

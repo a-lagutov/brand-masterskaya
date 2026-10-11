@@ -36,7 +36,8 @@ const PUBLIC_KEY_REFRESH_SECONDS = 300;
 const ORDER_ID_PATTERN = '/^[a-f0-9]{32}$/';
 
 /**
- * Directory with config.php, orders/ and caches, outside the web root.
+ * Directory with config.php, orders/ and caches, outside the web root:
+ * ~/private/<site folder>, so the live and the test site keep separate data.
  * @return string Absolute path without a trailing slash.
  */
 function private_dir(): string
@@ -45,8 +46,8 @@ function private_dir(): string
     if ($override) {
         return rtrim($override, '/');
     }
-    // api/ -> site root -> www/ -> home directory.
-    return dirname(__DIR__, 3) . '/brandmasterskaya-private';
+    // api/ -> site root (www/<domain>) -> www/ -> home directory.
+    return dirname(__DIR__, 3) . '/private/' . basename(dirname(__DIR__));
 }
 
 /**
@@ -70,6 +71,7 @@ function config(): array
             'site_url' => 'https://brandmasterskaya.ru',
             'mail_from' => 'noreply@brandmasterskaya.ru',
             'notify_email' => '',
+            'test_item_price' => null,
         ], $loaded);
     }
     return $config;

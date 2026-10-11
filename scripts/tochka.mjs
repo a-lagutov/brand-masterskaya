@@ -4,13 +4,15 @@
  *   TOCHKA_JWT=… node scripts/tochka.mjs customers
  *   TOCHKA_JWT=… node scripts/tochka.mjs retailers <customerCode>
  *   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-get
- *   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-set
+ *   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-set [url]
+ *   TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-edit [url]
  *
  * The JWT and client_id come from the internet bank: Сервисы → Интеграции и API → JWT-ключи.
  */
 
 const API_URL = 'https://enter.tochka.com/uapi';
-const WEBHOOK_URL = 'https://brandmasterskaya.ru/api/webhook.php';
+// The bank keeps one webhook URL per key; pass the test site's URL to point it there.
+const DEFAULT_WEBHOOK_URL = 'https://brandmasterskaya.ru/api/webhook.php';
 const WEBHOOK_EVENTS = ['acquiringInternetPayment'];
 
 /**
@@ -58,7 +60,13 @@ const COMMANDS = {
   'webhook-set': () =>
     callApi('PUT', `/webhook/v1.0/${requireEnv('TOCHKA_CLIENT_ID')}`, {
       webhooksList: WEBHOOK_EVENTS,
-      url: WEBHOOK_URL,
+      url: argument ?? DEFAULT_WEBHOOK_URL,
+    }),
+  // POST moves an existing webhook, e.g. from the test site to the live one.
+  'webhook-edit': () =>
+    callApi('POST', `/webhook/v1.0/${requireEnv('TOCHKA_CLIENT_ID')}`, {
+      webhooksList: WEBHOOK_EVENTS,
+      url: argument ?? DEFAULT_WEBHOOK_URL,
     }),
 };
 
