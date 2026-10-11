@@ -66,6 +66,8 @@ jobs:
           TOCHKA_JWT: ${{ secrets.TOCHKA_JWT }}
           TOCHKA_CUSTOMER_CODE: ${{ secrets.TOCHKA_CUSTOMER_CODE }}
           TOCHKA_MERCHANT_ID: ${{ secrets.TOCHKA_MERCHANT_ID }}
+          # Without it the site keeps sending buyers to Salebot.
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_MASTERSKAYA_TOKEN }}
           # Rubles per receipt line on the test site; the live site charges real prices.
           TEST_ITEM_PRICE: ${{ github.ref == 'refs/heads/main' && '' || '1' }}
         run: |
@@ -73,6 +75,7 @@ jobs:
             "tochka_jwt" => getenv("TOCHKA_JWT"),
             "customer_code" => getenv("TOCHKA_CUSTOMER_CODE"),
             "merchant_id" => getenv("TOCHKA_MERCHANT_ID"),
+            "telegram_bot_token" => (string) getenv("TELEGRAM_BOT_TOKEN"),
             "site_url" => "https://" . getenv("SITE"),
             // A copy of every paid order lands in this mailbox as a backup.
             "notify_email" => "noreply@brandmasterskaya.ru",

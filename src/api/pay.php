@@ -70,6 +70,9 @@ $order = [
     'telegram' => $telegram,
     'plan' => $plan,
     'electives' => $electives,
+    // Keys from src/prices.json; the bot maps them to chats via src/telegram.json.
+    'planKey' => $planKey,
+    'electiveKeys' => $electiveKeys,
     'total' => $total,
     'operationId' => null,
     'paidAt' => null,

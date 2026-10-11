@@ -31,4 +31,8 @@ return [
     'notify_email' => 'noreply@brandmasterskaya.ru',
     // Test site only: charge this many rubles per receipt line instead of the real price.
     'test_item_price' => null,
+    // Bot token from @BotFather. Empty — the site sends buyers to Salebot instead of the bot.
+    'telegram_bot_token' => '',
+    // The bot's @username without @, for the t.me link.
+    'telegram_bot_username' => 'masterskaya_brand_strategy_bot',
 ];

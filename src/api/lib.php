@@ -1,7 +1,7 @@
 <?php
 /**
- * Shared code for the payment endpoints: catalog, config, order storage,
- * Tochka API calls, webhook signature check and emails.
+ * Shared code for the payment endpoints and the bot: catalog, config, order storage,
+ * Tochka and Telegram API calls, webhook signature check and emails.
  *
  * Secrets and orders live outside the web root (see private_dir()), so a deploy
  * with rsync --delete never touches them and they are never served over HTTP.
@@ -22,8 +22,11 @@ const PLANS = PRICES['plans'];
 const ELECTIVES = PRICES['electives'];
 // Electives can only be added to this plan.
 const ELECTIVES_PLAN = PRICES['electivesPlan'];
+// Bot texts, program chats and which purchase opens which chat, from src/telegram.json.
+define('TELEGRAM', json_decode((string) file_get_contents(__DIR__ . '/telegram.json'), true, 512, JSON_THROW_ON_ERROR));
 const PRODUCT_NAME = 'Мастерская бренд-стратегии';
-// Salebot link to the Telegram bot; the application travels in the query string.
+// Salebot link to the Telegram bot, used while no bot token is configured;
+// the application travels in the query string.
 const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
 const TOCHKA_PRODUCTION_URL = 'https://enter.tochka.com/uapi';
 const TOCHKA_SANDBOX_URL = 'https://enter.tochka.com/sandbox/v2';
@@ -34,6 +37,7 @@ const PUBLIC_KEY_CACHE_SECONDS = 86400;
 // After a failed check, refetch at most this often, so junk requests do not hammer the bank.
 const PUBLIC_KEY_REFRESH_SECONDS = 300;
 const ORDER_ID_PATTERN = '/^[a-f0-9]{32}$/';
+const TELEGRAM_API_URL = 'https://api.telegram.org/bot';
 
 /**
  * Directory with config.php, orders/ and caches, outside the web root:
@@ -72,6 +76,8 @@ function config(): array
             'mail_from' => 'noreply@brandmasterskaya.ru',
             'notify_email' => '',
             'test_item_price' => null,
+            'telegram_bot_token' => '',
+            'telegram_bot_username' => 'masterskaya_brand_strategy_bot',
         ], $loaded);
     }
     return $config;
@@ -180,11 +186,27 @@ function save_order(array $order): void
 }
 
 /**
- * Builds the Salebot link the customer opens after paying.
+ * Builds the link the customer opens after paying: the bot with the order id as the
+ * /start parameter, or the old Salebot link while the bot is not configured.
  * @param array<string, mixed> $order
  * @return string
  */
 function telegram_link(array $order): string
+{
+    if (config()['telegram_bot_token'] !== '') {
+        // The id is the order's only access token, as on the thank-you page; the bot
+        // reads the order itself, so nothing in the link can be forged.
+        return 'https://t.me/' . config()['telegram_bot_username'] . '?start=' . $order['id'];
+    }
+    return salebot_link($order);
+}
+
+/**
+ * Builds the Salebot link with the application in the query string.
+ * @param array<string, mixed> $order
+ * @return string
+ */
+function salebot_link(array $order): string
 {
     $electiveTitles = array_map(fn($item) => $item['title'], $order['electives']);
     $electivesPrice = array_sum(array_map(fn($item) => $item['price'], $order['electives']));
@@ -201,6 +223,63 @@ function telegram_link(array $order): string
         'currency' => 'RUB',
         'order' => $order['id'],
     ], '', '&', PHP_QUERY_RFC3986);
+}
+
+/**
+ * Calls the Telegram Bot API.
+ * @param string $method E.g. sendMessage.
+ * @param array<string, mixed> $parameters
+ * @return mixed The "result" field of the response.
+ * @throws RuntimeException On network errors and responses with ok=false.
+ */
+function telegram_request(string $method, array $parameters = []): mixed
+{
+    $curl = curl_init(TELEGRAM_API_URL . config()['telegram_bot_token'] . '/' . $method);
+    curl_setopt_array($curl, [
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode($parameters, JSON_UNESCAPED_UNICODE),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $raw = curl_exec($curl);
+    if ($raw === false) {
+        throw new RuntimeException("Telegram $method: " . curl_error($curl));
+    }
+    $response = json_decode((string) $raw, true);
+    if (empty($response['ok'])) {
+        throw new RuntimeException("Telegram $method: " . ($response['description'] ?? $raw));
+    }
+    return $response['result'];
+}
+
+/**
+ * Secret Telegram sends with every webhook call, derived from the token so it needs no
+ * separate setting; scripts/telegram.mjs registers the same value.
+ * @return string 64 hex characters.
+ */
+function telegram_webhook_secret(): string
+{
+    return hash_hmac('sha256', 'telegram-webhook', (string) config()['telegram_bot_token']);
+}
+
+/**
+ * Runs an update of an order while holding its lock, so concurrent requests
+ * (webhook, thank-you page, bot) change it one at a time.
+ * @param string $orderId A known order id.
+ * @param callable(): mixed $update Re-reads the order, changes and saves it.
+ * @return mixed What $update returns.
+ */
+function with_order_lock(string $orderId, callable $update): mixed
+{
+    $lock = fopen(order_path($orderId) . '.lock', 'c');
+    flock($lock, LOCK_EX);
+    try {
+        return $update();
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
 }
 
 /**
@@ -240,9 +319,7 @@ function mark_paid(string $orderId, string $paymentType = ''): ?array
     if (!load_order($orderId)) {
         return null;
     }
-    $lock = fopen(order_path($orderId) . '.lock', 'c');
-    flock($lock, LOCK_EX);
-    try {
+    return with_order_lock($orderId, function () use ($orderId, $paymentType) {
         // Re-read under the lock: another request may have finished first.
         $order = load_order($orderId);
         if (!empty($order['paidAt'])) {
@@ -254,10 +331,7 @@ function mark_paid(string $orderId, string $paymentType = ''): ?array
         log_event("paid order=$orderId total={$order['total']} type=$paymentType");
         notify_paid($order);
         return $order;
-    } finally {
-        flock($lock, LOCK_UN);
-        fclose($lock);
-    }
+    });
 }
 
 /**
