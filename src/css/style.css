@@ -901,11 +901,6 @@ details[open] summary .expand {
   max-width: 280px;
 }
 
-.electives-title p.electives-weeks {
-  font-size: 17px;
-  color: var(--red);
-}
-
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--line);
