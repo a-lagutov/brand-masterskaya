@@ -67,7 +67,7 @@ jobs:
           TOCHKA_CUSTOMER_CODE: ${{ secrets.TOCHKA_CUSTOMER_CODE }}
           TOCHKA_MERCHANT_ID: ${{ secrets.TOCHKA_MERCHANT_ID }}
           # Rubles per receipt line on the test site; the live site charges real prices.
-          TEST_ITEM_PRICE: ${{ github.ref == 'refs/heads/main' && '' || '10' }}
+          TEST_ITEM_PRICE: ${{ github.ref == 'refs/heads/main' && '' || '1' }}
         run: |
           php -r 'echo "<?php\n// Written by the deploy workflow; edits are overwritten.\nreturn " . var_export([
             "tochka_jwt" => getenv("TOCHKA_JWT"),
