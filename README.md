@@ -17,9 +17,10 @@ src/                исходники сайта
   css/style.css
   js/app.js         лендинг и форма заявки
   js/thanks.js      страница после оплаты
-  assets/images/    фотографии (без уменьшения)
+  assets/images/    фотографии (без уменьшения) и og.jpg — превью ссылки в соцсетях
   assets/logos/     логотипы (уменьшаются до 480 px)
 scripts/build.mjs   сборка src/ → dist/
+scripts/og-image.*  шаблон и рендер превью для соцсетей → src/assets/images/og.jpg
 scripts/tochka.mjs  настройка Точки: customerCode, merchantId, вебхук
 admin/              админка Payload и Telegram-бот (Node.js), см. admin/README.md
 worker/             Cloudflare Worker — посредник между ботом и api.telegram.org
@@ -39,6 +40,7 @@ npm install         # зависимости и git-хуки
 npm run build       # сборка в dist/
 npm run check       # линтеры и проверка форматирования
 npm run format      # отформатировать всё через Prettier
+npm run og-image    # перерисовать превью для соцсетей (нужен Google Chrome)
 ```
 
 Посмотреть сборку локально:
@@ -54,6 +56,7 @@ python3 -m http.server 4173 -d dist
 - страницы перечислены в `PAGES`; CSS и JS минифицируются через esbuild и встраиваются в каждую;
 - HTML минифицируется;
 - PNG и JPEG конвертируются в WebP, логотипы уменьшаются до 480 px по ширине;
+- картинка из `og:image` копируется без конвертации (не все соцсети читают WebP), ссылка на неё становится абсолютной `https://brandmasterskaya.ru/…`;
 - в `dist/` попадают только файлы, на которые ссылаются страницы, и PHP из `src/api/`.
 
 ## Оплата

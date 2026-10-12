@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "og-image": "node scripts/og-image.mjs",
     "lint": "eslint . --max-warnings=0 && stylelint \"src/css/**/*.css\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
