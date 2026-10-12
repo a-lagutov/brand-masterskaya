@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto';
 
-import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload';
+import {
+  APIError,
+  type CollectionBeforeChangeHook,
+  type CollectionBeforeDeleteHook,
+  type CollectionConfig,
+} from 'payload';
 
 import { relationIds } from '../bot/relations';
 
@@ -20,6 +25,13 @@ const stampMemberChange: CollectionBeforeChangeHook = ({ data, originalDoc }) =>
 };
 
 /**
+ * Refuses to delete an order for good: orders are kept, the trash can only be restored from.
+ */
+const refuseDelete: CollectionBeforeDeleteHook = () => {
+  throw new APIError('Заказы нельзя удалить из корзины, только восстановить.', 403, null, true);
+};
+
+/**
  * Orders from the site, copied here by the bot every minute (src/bot/orders.ts), and orders
  * added by hand, e.g. paid by invoice. Edits made here stay: the sync overwrites only what
  * changes on the site afterwards, such as the payment.
@@ -28,21 +40,27 @@ export const Orders: CollectionConfig = {
   slug: 'orders',
   labels: { singular: 'Заказ', plural: 'Заказы' },
   admin: {
+    components: {
+      beforeList: ['/components/HideTrashDelete#HideTrashDelete'],
+      edit: { beforeDocumentControls: ['/components/HideTrashDelete#HideTrashDelete'] },
+    },
     useAsTitle: 'name',
     defaultColumns: ['name', 'products', 'total', 'paidAt', 'member'],
     listSearchableFields: ['name', 'email', 'phone', 'telegram', 'orderId'],
     description:
       'Заказы с сайта обновляются раз в минуту; правки здесь сохраняются. Заказ можно добавить ' +
       'вручную — ссылку на бота с его номером отправьте человеку. Чтобы заказ можно было ' +
-      'привязать к другому аккаунту Telegram, очистите поле «Аккаунт Telegram».',
+      'привязать к другому аккаунту Telegram, очистите поле «Аккаунт Telegram». Удалённые ' +
+      'заказы лежат в корзине и не дают доступа в чаты; из корзины их можно только восстановить.',
   },
   defaultSort: '-createdOnSite',
-  access: {
-    // A deleted site order would come back with the next sync.
-    delete: () => false,
-  },
+  // Deleted orders go to the trash and can only be restored from there.
+  trash: true,
+  // The delete access stays open so the panel shows the delete button; refuseDelete stops
+  // permanent deletes, moving to the trash is an update and passes.
   hooks: {
     beforeChange: [stampMemberChange],
+    beforeDelete: [refuseDelete],
   },
   fields: [
     { name: 'name', type: 'text', label: 'Имя' },

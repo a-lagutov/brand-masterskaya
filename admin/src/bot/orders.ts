@@ -135,8 +135,13 @@ async function upsertOrder(payload: Payload, siteOrder: SiteOrder): Promise<Orde
       where: { orderId: { equals: siteOrder.id } },
       limit: 1,
       depth: 0,
+      // A trashed order stays in the trash instead of coming back as a new one.
+      trash: true,
     })
   ).docs[0];
+  if (existing?.deletedAt) {
+    return existing;
+  }
   if (existing) {
     const lastCopy = (existing.siteCopy ?? {}) as Record<string, unknown>;
     const changed = Object.fromEntries(
@@ -188,12 +193,14 @@ async function readSiteOrder(orderId: string): Promise<SiteOrder | null> {
  * is already seen; orders added in the panel have no file.
  * @param payload
  * @param orderId Untrusted id from /start.
- * @returns The order in the panel, or null when there is no such order.
+ * @returns The order in the panel, or null when there is no such order or it is in the trash.
  */
 export async function loadOrder(payload: Payload, orderId: string): Promise<Order | null> {
   const siteOrder = await readSiteOrder(orderId);
   if (siteOrder) {
-    return upsertOrder(payload, siteOrder);
+    const order = await upsertOrder(payload, siteOrder);
+    // An order deleted in the panel gives nothing.
+    return order.deletedAt ? null : order;
   }
   if (!ORDER_ID_PATTERN.test(orderId)) {
     return null;

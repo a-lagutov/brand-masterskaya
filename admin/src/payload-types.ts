@@ -91,8 +91,7 @@ export interface Config {
     scenarios: ScenariosSelect<false> | ScenariosSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
-    'payload-locked-documents':
-      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
+    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
@@ -135,7 +134,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Заказы с сайта обновляются раз в минуту; правки здесь сохраняются. Заказ можно добавить вручную — ссылку на бота с его номером отправьте человеку. Чтобы заказ можно было привязать к другому аккаунту Telegram, очистите поле «Аккаунт Telegram».
+ * Заказы с сайта обновляются раз в минуту; правки здесь сохраняются. Заказ можно добавить вручную — ссылку на бота с его номером отправьте человеку. Чтобы заказ можно было привязать к другому аккаунту Telegram, очистите поле «Аккаунт Telegram». Удалённые заказы лежат в корзине и не дают доступа в чаты; из корзины их можно только восстановить.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "orders".
@@ -177,6 +176,7 @@ export interface Order {
     | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Список берётся с сайта. Здесь меняются цены (на сайте и в оплате — сразу после сохранения) и чаты, в которые бот пускает купивших.
@@ -462,6 +462,7 @@ export interface OrdersSelect<T extends boolean = true> {
   siteCopy?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -689,6 +690,7 @@ export interface CollectionsWidget {
 export interface Auth {
   [k: string]: unknown;
 }
+
 
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}
