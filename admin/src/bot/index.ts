@@ -29,6 +29,7 @@ import { fillText, loadTexts } from './texts';
 import type { Member, Scenario } from '../payload-types';
 
 const ORDER_SYNC_INTERVAL_MS = 60_000;
+const POLLING_RETRY_MS = 30_000;
 
 /**
  * Replies in the private chat with a text from "Тексты бота".
@@ -288,10 +289,15 @@ async function syncFromSite(payload: Payload): Promise<void> {
  */
 export function startBackgroundWork(payload: Payload): void {
   const processState = globalThis as typeof globalThis & { brandMasterskayaBotStarted?: boolean };
-  if (!settings.runBot || processState.brandMasterskayaBotStarted) {
+  if (!settings.runBot) {
+    payload.logger.info('background work off: RUN_BOT is not 1');
+    return;
+  }
+  if (processState.brandMasterskayaBotStarted) {
     return;
   }
   processState.brandMasterskayaBotStarted = true;
+  payload.logger.info('background work: starting order sync and bot');
 
   void syncFromSite(payload);
   setInterval(() => void syncFromSite(payload), ORDER_SYNC_INTERVAL_MS);
@@ -302,14 +308,26 @@ export function startBackgroundWork(payload: Payload): void {
   }
   const bot = createBot(payload);
   void refreshCommandMenu(payload);
-  // start() also removes the webhook, so updates come here instead of the old PHP bot.
-  bot
-    .start({
-      allowed_updates: ['message', 'callback_query', 'chat_join_request', 'my_chat_member'],
-      onStart: (info) => payload.logger.info(`bot: @${info.username} polling`),
-    })
-    .catch((error: unknown) => {
-      payload.logger.error({ err: error }, 'bot: polling stopped');
-      processState.brandMasterskayaBotStarted = false;
-    });
+  void keepPolling(payload, bot);
+}
+
+/**
+ * Polls Telegram for updates and starts again after a failure, e.g. a network error or a
+ * 409 while the previous process of a deploy still polls.
+ * @param payload
+ * @param bot
+ */
+async function keepPolling(payload: Payload, bot: Bot): Promise<void> {
+  for (;;) {
+    try {
+      // start() also removes the webhook, so updates come here instead of the old PHP bot.
+      await bot.start({
+        allowed_updates: ['message', 'callback_query', 'chat_join_request', 'my_chat_member'],
+        onStart: (info) => payload.logger.info(`bot: @${info.username} polling`),
+      });
+    } catch (error) {
+      payload.logger.error({ err: error }, 'bot: polling stopped, restarting');
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLLING_RETRY_MS));
+  }
 }

@@ -8,6 +8,7 @@ and the next request finds the Node app still running.
 Paths come from the deploy workflow (.github/workflows/admin.yml), which copies this file into
 ~/www/<admin site>/ next to .htaccess.
 """
+import fcntl
 import http.client
 import json
 import os
@@ -67,6 +68,16 @@ def ensure_app():
     """Starts the Node app unless it already runs, and waits until it accepts connections."""
     if app_is_up():
         return
+    # Passenger may run several Python processes; only one of them starts Node, otherwise two
+    # bots would poll Telegram and take each other's updates.
+    with open(os.path.join(PRIVATE_DIR, 'app.lock'), 'w') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not app_is_up():
+            start_app()
+
+
+def start_app():
+    """Starts the Node app and waits until it accepts connections."""
     # Secrets and paths written by the deploy, outside the web root.
     with open(os.path.join(PRIVATE_DIR, 'env.json')) as env_file:
         app_environment = json.load(env_file)
