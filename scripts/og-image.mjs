@@ -72,7 +72,9 @@ async function render() {
     }
     await sharp(screenshotPath)
       .resize(WIDTH, HEIGHT, { fit: 'cover', position: 'top' })
-      .jpeg({ quality: JPEG_QUALITY, mozjpeg: true })
+      // Baseline, not progressive (mozjpeg turns it on): some link preview crawlers
+      // skip progressive JPEG.
+      .jpeg({ quality: JPEG_QUALITY, progressive: false })
       .toFile(OUTPUT_PATH);
     console.log(`${path.relative(PROJECT_DIR, OUTPUT_PATH)} (${WIDTH}x${HEIGHT})`);
   } finally {
