@@ -15,6 +15,11 @@ export const settings = {
   /** The site's prices.json (dist/api/prices.json), the list of plans and electives. */
   pricesFile: process.env.PRICES_FILE ?? '',
   /**
+   * Prices set in the panel for the site, ~/private/<site>/prices.json; src/api/lib.php
+   * reads it instead of the prices in prices.json.
+   */
+  priceOverridesFile: process.env.PRICE_OVERRIDES_FILE ?? '',
+  /**
    * Bot API root: the Cloudflare relay from worker/ on the hosting, where IPv4 connections to
    * api.telegram.org hang.
    */

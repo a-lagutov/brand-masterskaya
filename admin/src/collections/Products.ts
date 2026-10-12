@@ -1,8 +1,10 @@
 import type { CollectionConfig } from 'payload';
 
+import { writePriceOverrides } from '../bot/prices';
+
 /**
- * Plans and electives from the site's prices.json and the chats each of them opens.
- * The list itself follows the site; only the chats are edited here.
+ * Plans and electives from the site's prices.json, their prices and the chats each of them
+ * opens. The list itself follows the site; prices and chats are edited here.
  */
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -11,12 +13,16 @@ export const Products: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'kind', 'chats'],
     description:
-      'Список берётся с сайта (src/prices.json). Здесь выберите, в какие чаты бот пускает купивших.',
+      'Список берётся с сайта. Здесь меняются цены (на сайте и в оплате — сразу после сохранения) ' +
+      'и чаты, в которые бот пускает купивших.',
   },
   access: {
     // Products come from the site; a manual one would match no order.
     create: () => false,
     delete: () => false,
+  },
+  hooks: {
+    afterChange: [({ req }) => writePriceOverrides(req.payload)],
   },
   fields: [
     {
@@ -43,6 +49,16 @@ export const Products: CollectionConfig = {
         { label: 'Факультатив', value: 'elective' },
       ],
       admin: { readOnly: true },
+    },
+    {
+      name: 'price',
+      type: 'number',
+      label: 'Цена, ₽',
+      min: 1,
+      admin: {
+        step: 1,
+        description: 'Пусто — цена из файла сайта.',
+      },
     },
     {
       name: 'chats',

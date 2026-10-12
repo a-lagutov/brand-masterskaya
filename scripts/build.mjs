@@ -6,7 +6,8 @@
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that the pages actually reference.
  * - Fills plan titles and prices from src/prices.json into HTML ({{title:key}},
- *   {{price:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
+ *   {{price:key}}, {{amount:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
+ *   Prices changed in the admin panel replace these at runtime (api/prices.php).
  * - Copies the PHP payment endpoints from src/api/ as is; the bot in admin/ reads api/prices.json too.
  */
 import { mkdir, readFile, rm, writeFile, copyFile, stat, readdir } from 'node:fs/promises';
@@ -101,17 +102,22 @@ function formatKilobytes(bytes) {
 }
 
 /**
- * Replaces {{title:key}} and {{price:key}} with values from src/prices.json.
+ * Replaces {{title:key}}, {{price:key}} and {{amount:key}} with values from src/prices.json.
+ * {{price:key}} becomes <span data-price="key">, which src/js/app.js updates with the prices
+ * set in the admin panel; {{amount:key}} is the bare number, for places a span cannot go
+ * (<option>) or that the script fills itself.
  * @param {string} html Page source.
  * @param {string} pageName For the error message.
  * @returns {string} HTML with prices like 89 900 (non-breaking space).
  * @throws {Error} On an unknown key, so a typo never reaches the site.
  */
 function fillPrices(html, pageName) {
-  return html.replace(/\{\{(title|price):(\w+)\}\}/g, (placeholder, field, key) => {
+  return html.replace(/\{\{(title|price|amount):(\w+)\}\}/g, (placeholder, field, key) => {
     const item = PRICE_ITEMS[key];
     if (!item) throw new Error(`${pageName}: unknown ${placeholder}, see src/${PRICES_FILE}`);
-    return field === 'price' ? RUBLES.format(item.price) : item.title;
+    if (field === 'title') return item.title;
+    const amount = RUBLES.format(item.price);
+    return field === 'price' ? `<span data-price="${key}">${amount}</span>` : amount;
   });
 }
 

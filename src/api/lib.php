@@ -17,9 +17,9 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     exit;
 }
 
-// Plans and prices from src/prices.json, copied next to this file by the build.
-// Prices are checked here, not trusted from the browser.
-define('PRICES', json_decode((string) file_get_contents(__DIR__ . '/prices.json'), true, 512, JSON_THROW_ON_ERROR));
+// Plans from src/prices.json (copied next to this file by the build) with the prices set in
+// the admin panel. Prices are checked here, not trusted from the browser.
+define('PRICES', load_prices());
 const PLANS = PRICES['plans'];
 const ELECTIVES = PRICES['electives'];
 // Electives can only be added to this plan.
@@ -51,6 +51,33 @@ function private_dir(): string
     }
     // api/ -> site root (www/<domain>) -> www/ -> home directory.
     return dirname(__DIR__, 3) . '/private/' . basename(dirname(__DIR__));
+}
+
+/**
+ * Plans and electives from prices.json next to this file, with prices replaced by those the
+ * admin panel (admin/) writes to prices.json in private_dir(): {"<key>": <rubles>, ...}.
+ * @return array<string, mixed> The structure of src/prices.json.
+ */
+function load_prices(): array
+{
+    $prices = json_decode((string) file_get_contents(__DIR__ . '/prices.json'), true, 512, JSON_THROW_ON_ERROR);
+    $overridesFile = private_dir() . '/prices.json';
+    $overrides = is_file($overridesFile)
+        ? json_decode((string) file_get_contents($overridesFile), true)
+        : null;
+    if (!is_array($overrides)) {
+        return $prices;
+    }
+    foreach (['plans', 'electives'] as $group) {
+        foreach (array_keys($prices[$group]) as $key) {
+            $price = $overrides[$key] ?? null;
+            // A broken or zero price must never reach the bank.
+            if (is_int($price) && $price > 0) {
+                $prices[$group][$key]['price'] = $price;
+            }
+        }
+    }
+    return $prices;
 }
 
 /**

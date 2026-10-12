@@ -680,8 +680,8 @@
       <form id="application">
         <label for="plan">Основная программа</label
         ><select id="plan" name="plan">
-          <option value="watch">{{title:watch}} — {{price:watch}} ₽</option>
-          <option value="work">{{title:work}} — {{price:work}} ₽</option>
+          <option value="watch">{{title:watch}} — {{amount:watch}} ₽</option>
+          <option value="work">{{title:work}} — {{amount:work}} ₽</option>
         </select>
         <fieldset id="extra-options" hidden disabled="">
           <legend>Добавить факультатив</legend>
@@ -695,7 +695,7 @@
         </fieldset>
         <div class="total-row">
           <span>Стоимость участия</span
-          ><output id="total" aria-live="polite">{{price:watch}} ₽</output>
+          ><output id="total" aria-live="polite">{{amount:watch}} ₽</output>
         </div>
         <label for="app-name">Ваше имя</label
         ><input

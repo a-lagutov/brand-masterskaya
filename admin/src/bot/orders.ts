@@ -33,15 +33,16 @@ type SiteOrder = {
 
 /** The site's prices.json: plans and electives by key. */
 type SitePrices = {
-  plans: Record<string, { title: string }>;
-  electives: Record<string, { title: string }>;
+  plans: Record<string, { title: string; price: number }>;
+  electives: Record<string, { title: string; price: number }>;
 };
 
 // Modification times of the order files already copied, so unchanged files are skipped.
 const syncedFileTimes = new Map<string, number>();
 
 /**
- * Brings the products list in line with the site's prices.json; chats set in the panel stay.
+ * Brings the products list in line with the site's prices.json; prices and chats set in the
+ * panel stay, a new product starts with the site's price.
  * @param payload
  */
 export async function syncProducts(payload: Payload): Promise<void> {
@@ -53,11 +54,13 @@ export async function syncProducts(payload: Payload): Promise<void> {
     ...Object.entries(prices.plans).map(([key, item]) => ({
       key,
       title: item.title,
+      price: item.price,
       kind: 'plan' as const,
     })),
     ...Object.entries(prices.electives).map(([key, item]) => ({
       key,
       title: item.title,
+      price: item.price,
       kind: 'elective' as const,
     })),
   ];
@@ -71,8 +74,17 @@ export async function syncProducts(payload: Payload): Promise<void> {
     const current = existing.docs[0];
     if (!current) {
       await payload.create({ collection: 'products', data: product });
-    } else if (current.title !== product.title || current.kind !== product.kind) {
-      await payload.update({ collection: 'products', id: current.id, data: product });
+    } else if (
+      current.title !== product.title ||
+      current.kind !== product.kind ||
+      current.price == null
+    ) {
+      await payload.update({
+        collection: 'products',
+        id: current.id,
+        // Products from before prices were edited here start with the site's price.
+        data: { title: product.title, kind: product.kind, price: current.price ?? product.price },
+      });
     }
   }
 }
@@ -94,17 +106,18 @@ function orderProductIds(siteOrder: SiteOrder, products: Product[]): number[] {
 }
 
 /**
- * Copies one order from the site into the panel, creating or updating it.
+ * Copies one order from the site into the panel, creating or updating it. An existing order
+ * gets only the fields that changed on the site since the last copy, so edits made in the
+ * panel stay until the site changes the same field.
  * @param payload
  * @param siteOrder
  * @returns The order in the panel.
  */
 async function upsertOrder(payload: Payload, siteOrder: SiteOrder): Promise<Order> {
   const products = (await payload.find({ collection: 'products', limit: 100, depth: 0 })).docs;
-  const data = {
-    orderId: siteOrder.id,
+  const siteData = {
     name: siteOrder.name ?? '',
-    email: siteOrder.email || undefined,
+    email: siteOrder.email || null,
     phone: siteOrder.phone ?? '',
     telegram: siteOrder.telegram ?? '',
     items: [siteOrder.plan, ...siteOrder.electives].map((item) => ({
@@ -116,20 +129,40 @@ async function upsertOrder(payload: Payload, siteOrder: SiteOrder): Promise<Orde
     createdOnSite: siteOrder.createdAt ?? null,
     paidAt: siteOrder.paidAt ?? null,
   };
-  const existing = await payload.find({
-    collection: 'orders',
-    where: { orderId: { equals: siteOrder.id } },
-    limit: 1,
-    depth: 0,
-  });
-  if (existing.docs[0]) {
-    return payload.update({ collection: 'orders', id: existing.docs[0].id, data, depth: 0 });
+  const existing = (
+    await payload.find({
+      collection: 'orders',
+      where: { orderId: { equals: siteOrder.id } },
+      limit: 1,
+      depth: 0,
+    })
+  ).docs[0];
+  if (existing) {
+    const lastCopy = (existing.siteCopy ?? {}) as Record<string, unknown>;
+    const changed = Object.fromEntries(
+      Object.entries(siteData).filter(
+        ([field, value]) => JSON.stringify(value) !== JSON.stringify(lastCopy[field]),
+      ),
+    );
+    if (!Object.keys(changed).length) {
+      return existing;
+    }
+    return payload.update({
+      collection: 'orders',
+      id: existing.id,
+      data: { ...changed, siteCopy: siteData },
+      depth: 0,
+    });
   }
   // Orders bound by the earlier PHP bot keep their account.
   const member = siteOrder.telegramUserId
     ? await findOrCreateMember(payload, { id: siteOrder.telegramUserId })
     : null;
-  return payload.create({ collection: 'orders', data: { ...data, member: member?.id }, depth: 0 });
+  return payload.create({
+    collection: 'orders',
+    data: { ...siteData, orderId: siteOrder.id, siteCopy: siteData, member: member?.id },
+    depth: 0,
+  });
 }
 
 /**
@@ -152,14 +185,26 @@ async function readSiteOrder(orderId: string): Promise<SiteOrder | null> {
 
 /**
  * Finds an order by its id, reading the site's file first so a payment made a second ago
- * is already seen.
+ * is already seen; orders added in the panel have no file.
  * @param payload
  * @param orderId Untrusted id from /start.
- * @returns The order in the panel, or null when the site has no such order.
+ * @returns The order in the panel, or null when there is no such order.
  */
 export async function loadOrder(payload: Payload, orderId: string): Promise<Order | null> {
   const siteOrder = await readSiteOrder(orderId);
-  return siteOrder ? upsertOrder(payload, siteOrder) : null;
+  if (siteOrder) {
+    return upsertOrder(payload, siteOrder);
+  }
+  if (!ORDER_ID_PATTERN.test(orderId)) {
+    return null;
+  }
+  const panelOrders = await payload.find({
+    collection: 'orders',
+    where: { orderId: { equals: orderId } },
+    limit: 1,
+    depth: 0,
+  });
+  return panelOrders.docs[0] ?? null;
 }
 
 /**

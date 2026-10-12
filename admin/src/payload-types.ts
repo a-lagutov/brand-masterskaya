@@ -91,7 +91,8 @@ export interface Config {
     scenarios: ScenariosSelect<false> | ScenariosSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
-    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
+    'payload-locked-documents':
+      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
@@ -134,7 +135,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Заказы с сайта, обновляются раз в минуту. Чтобы человек мог заново привязать заказ к другому аккаунту Telegram, очистите поле «Аккаунт Telegram».
+ * Заказы с сайта обновляются раз в минуту; правки здесь сохраняются. Заказ можно добавить вручную — ссылку на бота с его номером отправьте человеку. Чтобы заказ можно было привязать к другому аккаунту Telegram, очистите поле «Аккаунт Telegram».
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "orders".
@@ -145,6 +146,9 @@ export interface Order {
   email?: string | null;
   phone?: string | null;
   telegram?: string | null;
+  /**
+   * По ним бот решает, в какие чаты пустить.
+   */
   products?: (number | Product)[] | null;
   items?:
     | {
@@ -156,16 +160,26 @@ export interface Order {
   total?: number | null;
   createdOnSite?: string | null;
   /**
-   * Пусто — оплата не прошла.
+   * Пусто — оплата не прошла. Задаётся только при создании.
    */
   paidAt?: string | null;
   member?: (number | null) | Member;
+  memberChangedAt?: string | null;
   orderId: string;
+  siteCopy?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Список берётся с сайта (src/prices.json). Здесь выберите, в какие чаты бот пускает купивших.
+ * Список берётся с сайта. Здесь меняются цены (на сайте и в оплате — сразу после сохранения) и чаты, в которые бот пускает купивших.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
@@ -175,6 +189,10 @@ export interface Product {
   key: string;
   title: string;
   kind?: ('plan' | 'elective') | null;
+  /**
+   * Пусто — цена из файла сайта.
+   */
+  price?: number | null;
   chats?: (number | Chat)[] | null;
   updatedAt: string;
   createdAt: string;
@@ -439,7 +457,9 @@ export interface OrdersSelect<T extends boolean = true> {
   createdOnSite?: T;
   paidAt?: T;
   member?: T;
+  memberChangedAt?: T;
   orderId?: T;
+  siteCopy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -479,6 +499,7 @@ export interface ProductsSelect<T extends boolean = true> {
   key?: T;
   title?: T;
   kind?: T;
+  price?: T;
   chats?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -668,7 +689,6 @@ export interface CollectionsWidget {
 export interface Auth {
   [k: string]: unknown;
 }
-
 
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}

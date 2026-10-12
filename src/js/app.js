@@ -47,6 +47,8 @@ const PLANS = __PRICES__.plans;
 const ELECTIVES = __PRICES__.electives;
 // Electives can only be added to this plan.
 const ELECTIVES_PLAN = __PRICES__.electivesPlan;
+// Prices set in the admin panel; see src/api/prices.php.
+const PRICES_ENDPOINT = 'api/prices.php';
 // Creates the order and returns the bank's payment page; see src/api/pay.php.
 const PAYMENT_ENDPOINT = 'api/pay.php';
 const PAYMENT_ERROR = 'Не удалось перейти к оплате. Попробуйте ещё раз или напишите нам.';
@@ -172,6 +174,30 @@ function updateTotal() {
   document.querySelector('#total').value = money.format(total) + ' ₽';
   return total;
 }
+/**
+ * Replaces the prices baked in by the build with those set in the admin panel: on the page,
+ * in the plan list and in the form total. The baked prices stay if the request fails.
+ */
+async function refreshPrices() {
+  const response = await fetch(PRICES_ENDPOINT, { cache: 'no-store' });
+  if (!response.ok) return;
+  const prices = await response.json();
+  Object.keys(prices).forEach((key) => {
+    const item = PLANS[key] ?? ELECTIVES[key];
+    const price = prices[key];
+    if (item && Number.isInteger(price) && price > 0) item.price = price;
+  });
+  document.querySelectorAll('[data-price]').forEach((element) => {
+    const item = PLANS[element.dataset.price] ?? ELECTIVES[element.dataset.price];
+    if (item) element.textContent = money.format(item.price);
+  });
+  plan.querySelectorAll('option').forEach((option) => {
+    const item = PLANS[option.value];
+    if (item) option.textContent = item.title + ' — ' + money.format(item.price) + ' ₽';
+  });
+  updateTotal();
+}
+refreshPrices().catch(() => {});
 document.querySelectorAll('.choose-plan').forEach((button) =>
   button.addEventListener('click', (e) => {
     e.preventDefault();
