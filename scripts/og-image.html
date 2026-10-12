@@ -1,0 +1,137 @@
+<!doctype html>
+<!-- Social preview (og:image) template, 1200x630. Rendered by scripts/og-image.mjs. -->
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face {
+        font-family: Helvetica;
+        font-weight: 400;
+        src: url('../src/assets/fonts/helvetica-400.woff2') format('woff2');
+      }
+
+      @font-face {
+        font-family: Helvetica;
+        font-weight: 700;
+        src: url('../src/assets/fonts/helvetica-700.woff2') format('woff2');
+      }
+
+      @font-face {
+        font-family: 'Courier New';
+        font-weight: 700;
+        src: url('../src/assets/fonts/courier-new-700.woff2') format('woff2');
+      }
+
+      :root {
+        --paper: #efeee7;
+        --ink: #22231f;
+        --red: #dc3e27;
+        --line: #cfcec6;
+        --muted: #64655e;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Helvetica, Arial, sans-serif;
+      }
+
+      .card {
+        position: relative;
+        height: 100%;
+        padding: 56px 64px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .mono {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        font-size: 17px;
+        letter-spacing: 1.8px;
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--red);
+      }
+
+      h1 {
+        margin-top: 44px;
+        font-size: 108px;
+        font-weight: 400;
+        line-height: 0.96;
+        letter-spacing: -6px;
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 span {
+        color: var(--red);
+      }
+
+      .desc {
+        margin-top: auto;
+        width: 500px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        font-size: 25px;
+        line-height: 1.4;
+      }
+
+      .disc {
+        position: absolute;
+        right: 70px;
+        top: 150px;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        background: var(--red);
+      }
+
+      .photo {
+        position: absolute;
+        right: -60px;
+        bottom: 0;
+        width: 760px;
+        mix-blend-mode: multiply;
+        /* The photo background is off-white; lifting it to pure white hides its edges. */
+        filter: brightness(1.04);
+      }
+
+      .site {
+        position: absolute;
+        top: 56px;
+        right: 64px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p class="mono eyebrow"><i class="dot"></i>АВТОРСКАЯ ПРОГРАММА</p>
+      <p class="mono site">BRANDMASTERSKAYA.RU</p>
+      <h1>Мастерская<br />бренд-<br /><span>стратегии</span></h1>
+      <p class="desc">Антон Аверьянов и Михаил Чернышев</p>
+      <div class="disc"></div>
+      <img class="photo" src="../src/assets/images/authors.png" alt="" />
+    </div>
+  </body>
+</html>

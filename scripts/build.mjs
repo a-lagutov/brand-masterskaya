@@ -5,6 +5,7 @@
  * - Minifies CSS and JS and inlines them into each page.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that the pages actually reference (src/href and CSS url()).
+ *   Assets in <meta content> (og:image) stay as is and get an absolute URL.
  * - Fills plan titles and prices from src/prices.json into HTML ({{title:key}},
  *   {{price:key}}, {{amount:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
  *   Prices changed in the admin panel replace these at runtime (api/prices.php).
@@ -35,6 +36,8 @@ const PRICES = JSON.parse(await readFile(path.join(SRC_DIR, PRICES_FILE), 'utf8'
 // Plans and electives by key, for the HTML placeholders.
 const PRICE_ITEMS = { ...PRICES.plans, ...PRICES.electives };
 const RUBLES = new Intl.NumberFormat('ru-RU');
+// Social networks need absolute image URLs in og:image, so meta tags point here.
+const SITE_URL = 'https://brandmasterskaya.ru';
 
 /**
  * Converts a raster image to WebP and writes it to dist.
@@ -149,6 +152,17 @@ async function buildPage(pageName, builtAssets) {
         `${pageName}: ${sourcePath} -> inline <${tag}> (${formatKilobytes(Buffer.byteLength(code))})`,
       );
     }
+  }
+
+  // Assets in <meta content> (og:image) are copied as is, since not every network reads WebP,
+  // and get an absolute URL.
+  for (const [, sourcePath] of [...html.matchAll(/<meta[^>]+content="(assets\/[^"]+)"/g)]) {
+    if (!builtAssets.has(sourcePath)) {
+      await mkdir(path.join(DIST_DIR, path.dirname(sourcePath)), { recursive: true });
+      builtAssets.set(sourcePath, await copyAsset(sourcePath));
+      console.log(`${sourcePath} -> ${sourcePath} (meta)`);
+    }
+    html = html.replaceAll(`content="${sourcePath}"`, `content="${SITE_URL}/${sourcePath}"`);
   }
 
   // Collect every local asset referenced from src and href attributes and from inlined CSS.
