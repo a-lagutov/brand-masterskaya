@@ -1,20 +1,28 @@
-# Builds the site and deploys dist/ to brandmasterskaya.ru (reg.ru hosting) on every push to main.
+# Builds the site and deploys dist/ to reg.ru hosting:
+# - push to main -> brandmasterskaya.ru (live);
+# - push to any other branch -> test.brandmasterskaya.ru (test, token prices, hidden from search).
 name: Deploy
 
 on:
   push:
-    branches: [main]
     # Only changes that can affect the built site trigger a deploy.
     paths:
       - 'src/**'
       - 'scripts/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'config.example.php'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
+env:
+  LIVE: ${{ github.ref == 'refs/heads/main' }}
+  # Site folder under ~/www/ and its domain.
+  SITE: ${{ github.ref == 'refs/heads/main' && 'brandmasterskaya.ru' || 'test.brandmasterskaya.ru' }}
+
 concurrency:
-  group: deploy
+  # One deploy per site at a time; branches share the test site, the last push wins.
+  group: deploy-${{ github.ref == 'refs/heads/main' && 'live' || 'test' }}
   cancel-in-progress: false
 
 jobs:
@@ -38,12 +46,45 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The test site must not show up in search results.
+      - name: Hide test site from search engines
+        if: env.LIVE != 'true'
+        run: |
+          printf 'User-agent: *\nDisallow: /\n' > dist/robots.txt
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # Payment settings for src/api/lib.php, outside the web root (~/private/<site>/).
+      # var_export quotes the secrets safely; they never appear in the log.
+      - name: Write payment config
+        env:
+          TOCHKA_JWT: ${{ secrets.TOCHKA_JWT }}
+          TOCHKA_CUSTOMER_CODE: ${{ secrets.TOCHKA_CUSTOMER_CODE }}
+          TOCHKA_MERCHANT_ID: ${{ secrets.TOCHKA_MERCHANT_ID }}
+          # The bot from admin/ the thank-you page links to; the test site has its own bot,
+          # so tests never touch real buyers' chats.
+          TELEGRAM_BOT_USERNAME: ${{ github.ref == 'refs/heads/main' && 'masterskaya_brand_strategy_bot' || 'masterskaya_brand_test_bot' }}
+          # Rubles per receipt line on the test site; the live site charges real prices.
+          TEST_ITEM_PRICE: ${{ github.ref == 'refs/heads/main' && '' || '1' }}
+        run: |
+          php -r 'echo "<?php\n// Written by the deploy workflow; edits are overwritten.\nreturn " . var_export([
+            "tochka_jwt" => getenv("TOCHKA_JWT"),
+            "customer_code" => getenv("TOCHKA_CUSTOMER_CODE"),
+            "merchant_id" => getenv("TOCHKA_MERCHANT_ID"),
+            "telegram_bot_username" => getenv("TELEGRAM_BOT_USERNAME"),
+            "site_url" => "https://" . getenv("SITE"),
+            // A copy of every paid order lands in this mailbox as a backup.
+            "notify_email" => "noreply@brandmasterskaya.ru",
+            "test_item_price" => getenv("TEST_ITEM_PRICE") === "" ? null : (int) getenv("TEST_ITEM_PRICE"),
+          ], true) . ";\n";' > config.php
+          ssh -i ~/.ssh/deploy_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "mkdir -p private/$SITE && chmod 700 private private/$SITE && umask 077 && cat > private/$SITE/config.php" < config.php
+          rm config.php
 
       # --delete keeps the server in sync with the repo; .well-known and .htaccess
       # are excluded so Let's Encrypt challenges and panel-managed rules survive.
@@ -54,4 +95,4 @@ jobs:
             --exclude '.well-known/' \
             --exclude '.htaccess' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:www/brandmasterskaya.ru/"
+            dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:www/$SITE/"

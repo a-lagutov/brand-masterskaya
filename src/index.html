@@ -4,16 +4,54 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#efeee7" />
-    <title>Мастерская бренд-стратегии — Аверьянов × Чернышов</title>
+    <title>Мастерская бренд-стратегии — Аверьянов × Чернышев</title>
     <meta
       name="description"
-      content="Прикладной опыт лидеров рынка в создании и управлении брендами. Авторская программа Антона Аверьянова и Михаила Чернышова."
+      content="Прикладной опыт лидеров рынка в создании и управлении брендами. Авторская программа Антона Аверьянова и Михаила Чернышева."
     />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23efeee7'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%23dc3e27'/%3E%3C/svg%3E"
     />
+    <link
+      rel="preload"
+      href="assets/fonts/helvetica-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/courier-new-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/pt-serif-cyrillic-400-italic.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" href="css/style.css" />
+    <script>
+      // Prices stay hidden until src/js/app.js loads the current ones; shown after 3 s regardless.
+      document.documentElement.classList.add('prices-loading');
+      setTimeout(() => document.documentElement.classList.remove('prices-loading'), 3000);
+      // The page stays hidden until its fonts have loaded, so text never changes font in view;
+      // shown after 3 s regardless, so a slow or failed font never blocks the page.
+      document.documentElement.classList.add('fonts-loading');
+      const showPage = () => document.documentElement.classList.remove('fonts-loading');
+      setTimeout(showPage, 3000);
+      Promise.all([
+        document.fonts.load('400 1em Helvetica', 'Аa'),
+        document.fonts.load('700 1em Helvetica', 'Аa'),
+        document.fonts.load('400 1em "Courier New"', 'Аa'),
+        document.fonts.load('700 1em "Courier New"', 'Аa'),
+        document.fonts.load('italic 400 1em "PT Serif"', 'работа.'),
+      ]).then(showPage, showPage);
+    </script>
   </head>
   <body>
     <a class="skip" href="#main">К содержанию</a>
@@ -56,7 +94,7 @@
               Прикладной опыт лидеров рынка <br />в создании и управлении брендами
             </p>
             <p class="start-date">
-              <span>Старт мастерской</span><time datetime="2026-10-31">31 октября 2026</time>
+              <span>Старт мастерской</span><time datetime="2026-11-07">7 ноября 2026</time>
             </p>
             <a class="button primary" href="#pricing">Выбрать формат участия <span>↗</span></a>
           </div>
@@ -81,11 +119,11 @@
                 src="assets/images/authors.png"
                 width="1672"
                 height="941"
-                alt="Антон Аверьянов слева и Михаил Чернышов справа, авторы мастерской"
+                alt="Антон Аверьянов слева и Михаил Чернышев справа, авторы мастерской"
               />
             </div>
             <div class="photo-caption">
-              <span>АНТОН АВЕРЬЯНОВ</span><span>МИХАИЛ ЧЕРНЫШОВ</span>
+              <span>АНТОН АВЕРЬЯНОВ</span><span>МИХАИЛ ЧЕРНЫШЕВ</span>
             </div>
           </div>
         </div>
@@ -286,6 +324,9 @@
                   <span class="week">НЕДЕЛЯ 01</span>
                   <h3>Бренд как актив</h3>
                   <span class="expand"></span>
+                  <span class="lecture-date"
+                    >Дата лекции: <time datetime="2026-11-07">7 ноября</time></span
+                  >
                 </summary>
                 <div class="lesson">
                   <span class="lesson-label">ДИАГНОСТИКА</span>
@@ -304,6 +345,9 @@
                   <span class="week">НЕДЕЛЯ 02</span>
                   <h3>Внешняя среда</h3>
                   <span class="expand"></span>
+                  <span class="lecture-date"
+                    >Дата лекции: <time datetime="2026-11-14">14 ноября</time></span
+                  >
                 </summary>
                 <div class="lesson">
                   <span class="lesson-label">ДИАГНОСТИКА</span>
@@ -323,6 +367,9 @@
                   <span class="week">НЕДЕЛЯ 03</span>
                   <h3>Идентичность бренда</h3>
                   <span class="expand"></span>
+                  <span class="lecture-date"
+                    >Дата лекции: <time datetime="2026-11-21">21 ноября</time></span
+                  >
                 </summary>
                 <div class="lesson">
                   <span class="lesson-label">РАЗРАБОТКА И ВНЕДРЕНИЕ</span>
@@ -342,6 +389,9 @@
                   <span class="week">НЕДЕЛЯ 04</span>
                   <h3>Активация бренда</h3>
                   <span class="expand"></span>
+                  <span class="lecture-date"
+                    >Дата лекции: <time datetime="2026-11-28">28 ноября</time></span
+                  >
                 </summary>
                 <div class="lesson">
                   <span class="lesson-label">РАЗРАБОТКА И ВНЕДРЕНИЕ</span>
@@ -360,6 +410,9 @@
                   <span class="week">НЕДЕЛЯ 05</span>
                   <h3>Метрики управления брендом</h3>
                   <span class="expand"></span>
+                  <span class="lecture-date"
+                    >Дата лекции: <time datetime="2026-12-05">5 декабря</time></span
+                  >
                 </summary>
                 <div class="lesson">
                   <span class="lesson-label">УПРАВЛЕНИЕ</span>
@@ -380,8 +433,8 @@
               <span class="eyebrow">ПРОДОЛЖЕНИЕ РАБОТЫ</span>
               <h3>Продвинутые факультативы для тех, кто хочет разобраться в деталях</h3>
               <p>
-                Два факультатива на выбор. Каждый — дополнительные две недели к формату «Смотрю и
-                работаю».
+                Два факультатива на выбор. Каждый добавляет к&nbsp;формату
+                «Смотрю&nbsp;и&nbsp;работаю» ещё 2&nbsp;недели обучения и&nbsp;работы.
               </p>
             </div>
             <div class="elective-content">
@@ -404,11 +457,14 @@
                 </button>
               </div>
               <div id="panel-director" role="tabpanel" aria-labelledby="tab-director">
-                <h4>Продвинутый бренд-директор</h4>
+                <h4>{{title:director}}</h4>
                 <div class="elective-week">
-                  <span>06</span>
+                  <span>НЕДЕЛЯ 06</span>
                   <div>
                     <h5>Продвинутые метрики</h5>
+                    <p class="lecture-date">
+                      Дата лекции: <time datetime="2026-12-12">12 декабря</time>
+                    </p>
                     <p>
                       CEP и DBA. Продвинутая модель BHT и её связь с P&amp;L. Обоснование инвестиций
                       в бренд перед CFO и советом директоров.
@@ -417,9 +473,12 @@
                   </div>
                 </div>
                 <div class="elective-week">
-                  <span>07</span>
+                  <span>НЕДЕЛЯ 07</span>
                   <div>
                     <h5>Тонкое взаимодействие</h5>
+                    <p class="lecture-date">
+                      Дата лекции: <time datetime="2026-12-19">19 декабря</time>
+                    </p>
                     <p>Бренд в массовой культуре, семиотика, комьюнити, тренды и хайпы.</p>
                     <p class="result">Результат: карта культурного взаимодействия бренда.</p>
                   </div>
@@ -427,11 +486,14 @@
                 <div class="ai-label">✳ ИИ-агент для сканирования культуры</div>
               </div>
               <div id="panel-business" role="tabpanel" aria-labelledby="tab-business" hidden>
-                <h4>Бренд-ориентированный бизнес</h4>
+                <h4>{{title:business}}</h4>
                 <div class="elective-week">
-                  <span>06</span>
+                  <span>НЕДЕЛЯ 06</span>
                   <div>
                     <h5>Бренд-ориентированная культура</h5>
+                    <p class="lecture-date">
+                      Дата лекции: <time datetime="2026-12-12">12 декабря</time>
+                    </p>
                     <p>
                       Управление брендом независимо от создателя. Влияние культуры организации,
                       сильный HR-бренд и уникальное EVP.
@@ -440,9 +502,12 @@
                   </div>
                 </div>
                 <div class="elective-week">
-                  <span>07</span>
+                  <span>НЕДЕЛЯ 07</span>
                   <div>
                     <h5>Бренд как стратегия</h5>
+                    <p class="lecture-date">
+                      Дата лекции: <time datetime="2026-12-19">19 декабря</time>
+                    </p>
                     <p>
                       Бренд как основа стратегии организации. KPI во всех функциональных
                       направлениях. Стоимость бренда в балансовом отчёте.
@@ -453,9 +518,12 @@
                   </div>
                 </div>
               </div>
-              <p class="elective-foot">2 лекции + 2 Q&amp;A-сессии <strong>+ 69 900 ₽</strong></p>
+              <p class="elective-foot">
+                2 лекции + 2 Q&amp;A-сессии
+                <strong>+ {{price:director}} <span class="ruble">₽</span></strong>
+              </p>
               <button type="button" class="button primary add-elective">
-                <span class="button-label">Добавить факультатив к формату «Смотрю и работаю»</span
+                <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
                 ><span aria-hidden="true">↗</span>
               </button>
             </div>
@@ -476,7 +544,7 @@
         <div class="authors-grid">
           <article>
             <span class="author-index">01 / ВНУТРИ БИЗНЕСА</span>
-            <h3>Михаил <br />Чернышов<span class="red">↗</span></h3>
+            <h3>Михаил <br />Чернышев<span class="red">↗</span></h3>
             <p class="author-lead">
               Глобальный бренд inDrive. <br />48 стран. Более 20 лет в маркетинге.
             </p>
@@ -520,11 +588,11 @@
               <div class="card-top">
                 <span class="eyebrow">ФОРМАТ 01</span><span>ДЛЯ САМОСТОЯТЕЛЬНОЙ РАБОТЫ</span>
               </div>
-              <h3>Только смотрю</h3>
+              <h3>{{title:watch}}</h3>
               <p class="price-intro">
                 Для тех, кому нужен доступ к системе, способу мышления и рабочим приёмам.
               </p>
-              <div class="price">89 900 <span>₽</span></div>
+              <div class="price">{{price:watch}} <span class="price-currency ruble">₽</span></div>
               <a href="#enroll" class="button outline choose-plan" data-plan="watch"
                 >Выбрать формат <span>↗</span></a
               >
@@ -540,16 +608,16 @@
               <div class="card-top">
                 <span class="eyebrow">ФОРМАТ 02 / ОСНОВНОЙ</span><span class="places">20 МЕСТ</span>
               </div>
-              <h3>Смотрю и работаю</h3>
+              <h3>{{title:work}}</h3>
               <p class="price-intro">
                 Приносите свой бренд или клиентский проект и шесть недель работаете вместе с нами.
               </p>
-              <div class="price">219 900 <span>₽</span></div>
+              <div class="price">{{price:work}} <span class="price-currency ruble">₽</span></div>
               <a href="#enroll" class="button primary choose-plan" data-plan="work"
                 >Начать свою работу <span>↗</span></a
               >
               <ul class="features">
-                <li>Всё из формата «Только смотрю»</li>
+                <li>Всё из формата «{{title:watch}}»</li>
                 <li>5 рабочих Q&amp;A-сессий с авторами</li>
                 <li>Задания между сессиями с разборами</li>
                 <li>Закрытая группа потока</li>
@@ -564,13 +632,15 @@
             <span aria-hidden="true">+</span>
             <p>
               К рабочему формату можно добавить факультатив: <br /><strong
-                >«Продвинутый бренд-директор»</strong
+                >«{{title:director}}»</strong
               >
-              или <strong>«Бренд-ориентированный бизнес»</strong>.
+              или <strong>«{{title:business}}»</strong>.
             </p>
-            <b>69 900 ₽<small>за каждый факультатив</small></b
+            <b
+              >{{price:director}} <span class="ruble">₽</span
+              ><small>за каждый факультатив</small></b
             ><button type="button" class="button primary add-elective">
-              <span class="button-label">Добавить факультатив к формату «Смотрю и работаю»</span
+              <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
               ><span aria-hidden="true">↗</span>
             </button>
           </div>
@@ -591,7 +661,7 @@
           <details>
             <summary>Как устроена работа в течение недели?<span class="expand"></span></summary>
             <p>
-              В субботу — 3 часа лекций и обсуждений с двумя авторами. В формате «Смотрю и работаю»
+              В субботу — 3 часа лекций и обсуждений с двумя авторами. В формате «{{title:work}}»
               между встречами вы выполняете задания, а на Q&amp;A разбираете результаты и получаете
               обратную связь.
             </p>
@@ -612,7 +682,7 @@
           <details>
             <summary>Когда начинается программа?<span class="expand"></span></summary>
             <p>
-              Старт мастерской — 31 октября 2026 года. Лекции и обсуждения проходят по субботам.
+              Старт мастерской — 7 ноября 2026 года. Лекции и обсуждения проходят по субботам.
               Точное время встреч будет объявлено отдельно.
             </p>
           </details>
@@ -622,7 +692,7 @@
         <div class="wrap">
           <span class="eyebrow">Два автора. Два взгляда. Одна мастерская.</span>
           <div><a href="#pricing" class="round-cta" aria-label="Выбрать формат участия">↗</a></div>
-          <p>Антон Аверьянов &amp; Михаил Чернышов</p>
+          <p>Антон Аверьянов &amp; Михаил Чернышев</p>
         </div>
       </section>
     </main>
@@ -651,21 +721,24 @@
       <form id="application">
         <label for="plan">Основная программа</label
         ><select id="plan" name="plan">
-          <option value="watch">Только смотрю — 89 900 ₽</option>
-          <option value="work">Смотрю и работаю — 219 900 ₽</option>
+          <option value="watch">{{title:watch}} — {{amount:watch}} ₽</option>
+          <option value="work">{{title:work}} — {{amount:work}} ₽</option>
         </select>
         <fieldset id="extra-options" hidden disabled="">
           <legend>Добавить факультатив</legend>
           <label
-            ><input type="checkbox" name="director" /> Продвинутый бренд-директор
-            <span>+ 69 900 ₽</span></label
+            ><input type="checkbox" name="director" /> {{title:director}}
+            <span>+ {{price:director}} <span class="ruble">₽</span></span></label
           ><label
-            ><input type="checkbox" name="business" /> Бренд-ориентированный бизнес
-            <span>+ 69 900 ₽</span></label
+            ><input type="checkbox" name="business" /> {{title:business}}
+            <span>+ {{price:business}} <span class="ruble">₽</span></span></label
           >
         </fieldset>
         <div class="total-row">
-          <span>Стоимость участия</span><output id="total" aria-live="polite">89&nbsp;900 ₽</output>
+          <span>Стоимость участия</span
+          ><output id="total" aria-live="polite"
+            >{{amount:watch}} <span class="ruble">₽</span></output
+          >
         </div>
         <label for="app-name">Ваше имя</label
         ><input
@@ -697,17 +770,30 @@
           placeholder="+7 (900) 000-00-00"
           required
           maxlength="24"
+        /><label for="app-telegram">Telegram</label
+        ><input
+          id="app-telegram"
+          name="telegram"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="@username"
+          required
+          maxlength="64"
         />
         <label class="consent"
-          ><input type="checkbox" name="consent" required /> Даю
-          <a href="privacy.html#consent" target="_blank"
-            >согласие на обработку персональных данных</a
+          ><input type="checkbox" name="consent" required />
+          <span
+            >Даю
+            <a href="privacy.html#consent" target="_blank"
+              >согласие на обработку персональных данных</a
+            ></span
           ></label
         >
-        <button class="button primary" type="submit">Подтвердить в Telegram <span>↗</span></button>
+        <button class="button primary" type="submit">Перейти к оплате <span>↗</span></button>
         <p class="form-note">
-          Откроется наш Telegram-бот — в нём заявка будет подтверждена. Оплачивая участие, вы
-          принимаете условия <a href="oferta.html" target="_blank">договора-оферты</a>.
+          Оплата картой или через СБП на странице банка Точка. После оплаты пришлём на почту ссылку
+          на Telegram-бота для завершения регистрации. Оплачивая участие, вы принимаете условия
+          <a href="oferta.html" target="_blank">договора-оферты</a>.
         </p>
         <p id="form-status" role="status"></p>
       </form>

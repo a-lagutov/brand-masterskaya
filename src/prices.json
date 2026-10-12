@@ -1,0 +1,11 @@
+{
+  "plans": {
+    "watch": { "title": "Только смотрю", "price": 89900 },
+    "work": { "title": "Смотрю и работаю", "price": 219900 }
+  },
+  "electives": {
+    "director": { "title": "Продвинутый бренд-директор", "price": 69900 },
+    "business": { "title": "Бренд-ориентированный бизнес", "price": 69900 }
+  },
+  "electivesPlan": "work"
+}

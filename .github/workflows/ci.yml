@@ -23,3 +23,7 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Payment endpoints are copied to the hosting as is; catch syntax errors here.
+      - name: PHP syntax
+        run: for file in src/api/*.php config.example.php; do php -l "$file"; done

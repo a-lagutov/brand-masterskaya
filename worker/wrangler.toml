@@ -1,0 +1,10 @@
+# Bot API relay for the bot in admin/, see worker/telegram-relay.js.
+# Deploy: cd worker && npx wrangler deploy
+name = "brandmasterskaya-telegram"
+main = "telegram-relay.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Bots allowed through the relay, the part of the token before the colon:
+# @masterskaya_brand_strategy_bot (live) and @masterskaya_brand_test_bot (test).
+BOT_IDS = ["8392488542", "8577017424"]
