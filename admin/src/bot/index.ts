@@ -179,7 +179,7 @@ async function recordChat(
  * @param payload
  */
 function createBot(payload: Payload): Bot {
-  const bot = new Bot(settings.botToken);
+  const bot = new Bot(settings.botToken, { client: { apiRoot: settings.telegramApiUrl } });
 
   // A group became a supergroup and got a new id; the old one stops working.
   bot.on('message:migrate_to_chat_id', async (context) => {

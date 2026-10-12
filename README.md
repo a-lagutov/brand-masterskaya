@@ -22,6 +22,7 @@ src/                исходники сайта
 scripts/build.mjs   сборка src/ → dist/
 scripts/tochka.mjs  настройка Точки: customerCode, merchantId, вебхук
 admin/              админка Payload и Telegram-бот (Node.js), см. admin/README.md
+worker/             Cloudflare Worker — посредник между ботом и api.telegram.org
 config.example.php  образец настроек оплаты
 .github/workflows/  CI и деплой
 .husky/             git-хуки
@@ -124,6 +125,8 @@ Email и телефон обязательны и проверяются в бр
 ## Telegram-бот
 
 Бот и админка для организаторов живут в [admin/](admin/README.md): Payload CMS и бот на grammY в одном Node-процессе на том же хостинге. У боевого сайта бот [@masterskaya_brand_strategy_bot](https://t.me/masterskaya_brand_strategy_bot) и админка [admin.brandmasterskaya.ru](https://admin.brandmasterskaya.ru), у тестового — [@masterskaya_brand_test_bot](https://t.me/masterskaya_brand_test_bot) и `admin.test.brandmasterskaya.ru`.
+
+Запросы бота к Telegram идут через Cloudflare Worker ([worker/telegram-relay.js](worker/telegram-relay.js), workflow **Worker**): с хостинга соединения с `api.telegram.org` по IPv4 зависают на две минуты. Адрес Worker'а — в переменной репозитория `TELEGRAM_API_URL`, секреты Cloudflare — `CLOUDFLARE_API_TOKEN` и `CLOUDFLARE_ACCOUNT_ID`.
 
 Сайт с ботом напрямую не общается: бот раз в минуту читает заказы из `~/private/<сайт>/orders/` и список тарифов из `~/www/<сайт>/api/prices.json`, а по `/start <номер заказа>` читает файл заказа сразу.
 

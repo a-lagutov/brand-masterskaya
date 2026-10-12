@@ -58,6 +58,8 @@ Workflow **Admin** (`.github/workflows/admin.yml`) запускается при
 - под Passenger запускаются только Python-приложения — поэтому `deploy/passenger_wsgi.py` запускает Node и проксирует ему запросы. Node-процесс живёт отдельно от Python и переживает его остановку;
 - память — 1 ГБ на процесс, а сборке нужно около 3 ГБ — поэтому сборка идёт в GitHub Actions, на сервер едет готовый standalone-сервер (около 2 000 файлов);
 - под Passenger виртуальная память ограничена 1,5 ГБ — Node запускается с `--disable-wasm-trap-handler`.
+- на аккаунт не больше 36 потоков — драйвер SQLite и Node ограничены (`TOKIO_WORKER_THREADS=1`, `UV_THREADPOOL_SIZE=2`, `--v8-pool-size=2`), процесс держит около 8 потоков;
+- соединения с `api.telegram.org` по IPv4 зависают на две минуты — бот ходит в Telegram через Cloudflare Worker из `worker/` (`TELEGRAM_API_URL`).
 
 На сервере:
 

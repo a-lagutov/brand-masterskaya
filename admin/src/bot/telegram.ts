@@ -12,7 +12,7 @@ export function telegramApi(): Api | null {
   if (!settings.botToken) {
     return null;
   }
-  api ??= new Api(settings.botToken);
+  api ??= new Api(settings.botToken, { apiRoot: settings.telegramApiUrl });
   return api;
 }
 

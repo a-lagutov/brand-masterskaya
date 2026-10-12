@@ -89,6 +89,8 @@ jobs:
           PAYLOAD_SECRET: ${{ secrets.ADMIN_PAYLOAD_SECRET }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.TG_BOT_MASTERSKAYA_TOKEN || secrets.TG_TESTBOT_MASTERSKAYA_TOKEN }}
+          # Cloudflare relay from worker/: IPv4 connections from reg.ru to api.telegram.org hang.
+          TELEGRAM_API_URL: ${{ vars.TELEGRAM_API_URL }}
         run: |
           node -e '
             const home = process.argv[1];
@@ -99,6 +101,7 @@ jobs:
               ADMIN_EMAIL: "contact@brandmasterskaya.ru",
               ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
               TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+              TELEGRAM_API_URL: process.env.TELEGRAM_API_URL,
               RUN_BOT: "1",
               ORDERS_DIR: `${home}/private/${process.env.SITE}/orders`,
               PRICES_FILE: `${home}/www/${process.env.SITE}/api/prices.json`,

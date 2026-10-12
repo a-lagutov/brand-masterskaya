@@ -30,8 +30,6 @@ NODE_OPTIONS = [
     '--max-old-space-size=512',
     # The hosting allows 36 threads per account, the live and the test admin together.
     '--v8-pool-size=2',
-    # From this server api.telegram.org answers over IPv6 only; IPv4 connections hang.
-    '--dns-result-order=ipv6first',
     '-r', os.path.join(APP_DIR, 'listen-unix.cjs'),
 ]
 THREAD_LIMITS = {
