@@ -539,27 +539,6 @@ form > .button {
   align-items: center;
 }
 
-.wordmarks .wm-indrive {
-  font-size: 29px;
-  letter-spacing: -1.5px;
-}
-
-.wordmarks .wm-dodo {
-  font-size: 24px;
-  letter-spacing: -1.5px;
-}
-
-.wordmarks .wm-stories {
-  font-size: 18px;
-  font-weight: 400;
-  letter-spacing: 1.5px;
-}
-
-.wordmarks .wm-beeline {
-  font-size: 31px;
-  letter-spacing: -2px;
-}
-
 .wordmarks .more-brands {
   font-family: 'Courier New', monospace;
   font-size: 10px;
@@ -1519,10 +1498,6 @@ input[type='checkbox'] {
     gap: 20px;
   }
 
-  .wordmarks .wm-stories {
-    font-size: 15px;
-  }
-
   .program-layout {
     grid-template-columns: 180px minmax(0, 1fr);
     gap: 30px;
@@ -1689,23 +1664,6 @@ input[type='checkbox'] {
 
   .wordmarks > span {
     font-size: 18px;
-  }
-
-  .wordmarks .wm-indrive {
-    font-size: 25px;
-  }
-
-  .wordmarks .wm-dodo {
-    font-size: 18px;
-  }
-
-  .wordmarks .wm-stories {
-    font-size: 12px;
-    letter-spacing: 1px;
-  }
-
-  .wordmarks .wm-beeline {
-    font-size: 26px;
   }
 
   .section {
@@ -2087,6 +2045,11 @@ input[type='checkbox'] {
   opacity: 0.95;
 }
 
+/* Brand green turns pale grey under grayscale; darken to match the other logos */
+.logo-vkusvill img {
+  filter: grayscale(1) brightness(0.45);
+}
+
 .logo-azbuka {
   width: 122px;
   height: 43px;
@@ -2334,6 +2297,26 @@ input[type='checkbox'] {
   width: 138px;
 }
 
+.logo-indrive {
+  width: 120px;
+}
+
+.logo-dodo {
+  width: 150px;
+}
+
+.logo-vkusvill {
+  width: 140px;
+}
+
+.logo-storeez {
+  width: 140px;
+}
+
+.logo-beeline {
+  width: 125px;
+}
+
 .button .button-label {
   font-size: 13px;
   line-height: 1.4;
@@ -2411,6 +2394,26 @@ input[type='checkbox'] {
 
   .logo-vk {
     width: 96px;
+  }
+
+  .logo-indrive {
+    width: 84px;
+  }
+
+  .logo-dodo {
+    width: 104px;
+  }
+
+  .logo-vkusvill {
+    width: 100px;
+  }
+
+  .logo-storeez {
+    width: 96px;
+  }
+
+  .logo-beeline {
+    width: 88px;
   }
 
   .add-elective {
