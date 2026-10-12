@@ -1,0 +1,11 @@
+# Telegram relay for the bot, see worker/telegram-relay.js.
+# Deploy: cd worker && npx wrangler deploy
+name = "brandmasterskaya-telegram"
+main = "telegram-relay.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Where Telegram's webhook calls go; switch to the live site on launch.
+BOT_URL = "https://test.brandmasterskaya.ru/api/bot.php"
+# @masterskaya_brand_strategy_bot, the part of the token before the colon.
+BOT_ID = "8392488542"

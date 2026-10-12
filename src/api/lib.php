@@ -37,7 +37,6 @@ const PUBLIC_KEY_CACHE_SECONDS = 86400;
 // After a failed check, refetch at most this often, so junk requests do not hammer the bank.
 const PUBLIC_KEY_REFRESH_SECONDS = 300;
 const ORDER_ID_PATTERN = '/^[a-f0-9]{32}$/';
-const TELEGRAM_API_URL = 'https://api.telegram.org/bot';
 
 /**
  * Directory with config.php, orders/ and caches, outside the web root:
@@ -78,6 +77,7 @@ function config(): array
             'test_item_price' => null,
             'telegram_bot_token' => '',
             'telegram_bot_username' => 'masterskaya_brand_strategy_bot',
+            'telegram_api_url' => 'https://api.telegram.org',
         ], $loaded);
     }
     return $config;
@@ -234,7 +234,9 @@ function salebot_link(array $order): string
  */
 function telegram_request(string $method, array $parameters = []): mixed
 {
-    $curl = curl_init(TELEGRAM_API_URL . config()['telegram_bot_token'] . '/' . $method);
+    // reg.ru cannot reach api.telegram.org, so on the hosting this is the relay in worker/.
+    $url = config()['telegram_api_url'] . '/bot' . config()['telegram_bot_token'] . '/' . $method;
+    $curl = curl_init($url);
     curl_setopt_array($curl, [
         CURLOPT_POST => true,
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],

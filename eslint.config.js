@@ -13,6 +13,11 @@ export default [
     },
   },
   {
+    // Cloudflare Worker: fetch, Request, Response and URL are globals there.
+    files: ['worker/**/*.js'],
+    languageOptions: { sourceType: 'module', globals: globals.serviceworker },
+  },
+  {
     files: ['scripts/**/*.mjs', '*.config.js'],
     languageOptions: { sourceType: 'module', globals: globals.node },
   },

@@ -3,15 +3,15 @@
  *
  *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs me
  *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-get
- *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set [url]
+ *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set <relay url>/webhook
  *
- * The bot has one webhook URL: point it at the test site first, at the live one on launch.
- * Setting it takes the bot away from any other service that used the webhook before.
+ * The webhook points at the Cloudflare relay (worker/), which passes calls to the site set in
+ * worker/wrangler.toml: Telegram cannot reach the hosting directly. The bot has one webhook;
+ * setting it takes the bot away from any other service that used it before.
  */
 import { createHmac } from 'node:crypto';
 
 const API_URL = 'https://api.telegram.org/bot';
-const DEFAULT_WEBHOOK_URL = 'https://brandmasterskaya.ru/api/bot.php';
 // Updates src/api/bot.php handles; Telegram does not send the others.
 const ALLOWED_UPDATES = ['message', 'chat_join_request', 'my_chat_member'];
 
@@ -58,14 +58,21 @@ const [command, argument] = process.argv.slice(2);
 const COMMANDS = {
   me: () => callApi('getMe'),
   'webhook-get': () => callApi('getWebhookInfo'),
-  'webhook-set': () =>
-    callApi('setWebhook', {
-      url: argument ?? DEFAULT_WEBHOOK_URL,
+  'webhook-set': () => {
+    if (!argument) {
+      console.error(
+        'Pass the relay URL, e.g. https://brandmasterskaya-telegram.<account>.workers.dev/webhook',
+      );
+      process.exit(1);
+    }
+    return callApi('setWebhook', {
+      url: argument,
       secret_token: webhookSecret(requireToken()),
       allowed_updates: ALLOWED_UPDATES,
       // Updates queued for the previous service would reach the bot out of context.
       drop_pending_updates: true,
-    }),
+    });
+  },
 };
 
 if (!COMMANDS[command]) {

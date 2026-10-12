@@ -35,4 +35,7 @@ return [
     'telegram_bot_token' => '',
     // The bot's @username without @, for the t.me link.
     'telegram_bot_username' => 'masterskaya_brand_strategy_bot',
+    // Bot API address. The hosting cannot reach api.telegram.org, so the deploy sets the
+    // Cloudflare relay from worker/ here, e.g. https://brandmasterskaya-telegram.<account>.workers.dev
+    'telegram_api_url' => 'https://api.telegram.org',
 ];
