@@ -30,6 +30,10 @@ concurrency:
 
 jobs:
   deploy:
+    # Shows each deploy under Deployments on GitHub: admin, live from main, test from other branches.
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'admin-production' || 'admin-test' }}
+      url: ${{ github.ref == 'refs/heads/main' && 'https://admin.brandmasterskaya.ru/admin' || 'https://admin.test.brandmasterskaya.ru/admin' }}
     runs-on: ubuntu-latest
     defaults:
       run:

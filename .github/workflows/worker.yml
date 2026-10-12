@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Shows each deploy under Deployments on GitHub.
+    environment: worker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

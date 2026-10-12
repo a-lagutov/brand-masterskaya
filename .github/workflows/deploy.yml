@@ -31,6 +31,10 @@ concurrency:
 
 jobs:
   deploy:
+    # Shows each deploy under Deployments on GitHub: site, live from main, test from other branches.
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'test' }}
+      url: ${{ github.ref == 'refs/heads/main' && 'https://brandmasterskaya.ru' || 'https://test.brandmasterskaya.ru' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
