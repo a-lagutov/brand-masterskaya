@@ -83,14 +83,31 @@ export const Orders: CollectionConfig = {
     {
       name: 'items',
       type: 'array',
-      label: 'Позиции',
-      admin: { initCollapsed: true },
+      label: 'Позиции чека',
+      labels: { singular: 'Позиция', plural: 'Позиции' },
+      // What the buyer paid for, as in the receipt: never edited, not tied to current prices.
+      access: setOnCreateOnly,
+      admin: {
+        readOnly: true,
+        components: { RowLabel: '/components/OrderItemLabel#OrderItemLabel' },
+      },
       fields: [
-        { name: 'title', type: 'text', label: 'Название' },
-        { name: 'price', type: 'number', label: 'Цена, ₽' },
+        {
+          type: 'row',
+          fields: [
+            { name: 'title', type: 'text', label: 'Название', admin: { width: '70%' } },
+            { name: 'price', type: 'number', label: 'Цена, ₽', admin: { width: '30%' } },
+          ],
+        },
       ],
     },
-    { name: 'total', type: 'number', label: 'Сумма, ₽' },
+    {
+      name: 'total',
+      type: 'number',
+      label: 'Сумма, ₽',
+      access: setOnCreateOnly,
+      admin: { readOnly: true },
+    },
     {
       type: 'row',
       fields: [
