@@ -5,13 +5,15 @@
  * - Minifies CSS and JS and inlines them into each page.
  * - Minifies HTML and rewrites asset references.
  * - Copies only the assets that the pages actually reference (src/href and CSS url()).
- *   Assets in <meta content> (og:image) stay as is and get an absolute URL.
+ *   Assets in <meta content> (og:image) stay as is and get an absolute URL with a content
+ *   hash, so link preview caches pick up a new image.
  * - Fills plan titles and prices from src/prices.json into HTML ({{title:key}},
  *   {{price:key}}, {{amount:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
  *   Prices changed in the admin panel replace these at runtime (api/prices.php).
  * - Copies the PHP payment endpoints from src/api/ as is; the bot in admin/ reads api/prices.json too.
  */
 import { mkdir, readFile, rm, writeFile, copyFile, stat, readdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { transform } from 'esbuild';
 import { minify } from 'html-minifier-terser';
@@ -155,14 +157,22 @@ async function buildPage(pageName, builtAssets) {
   }
 
   // Assets in <meta content> (og:image) are copied as is, since not every network reads WebP,
-  // and get an absolute URL.
+  // and get an absolute URL. The ?v= hash changes with the file, so VK and Telegram, which
+  // cache previews by image URL, fetch the new one.
   for (const [, sourcePath] of [...html.matchAll(/<meta[^>]+content="(assets\/[^"]+)"/g)]) {
     if (!builtAssets.has(sourcePath)) {
       await mkdir(path.join(DIST_DIR, path.dirname(sourcePath)), { recursive: true });
       builtAssets.set(sourcePath, await copyAsset(sourcePath));
       console.log(`${sourcePath} -> ${sourcePath} (meta)`);
     }
-    html = html.replaceAll(`content="${sourcePath}"`, `content="${SITE_URL}/${sourcePath}"`);
+    const contentHash = createHash('sha256')
+      .update(await readFile(path.join(SRC_DIR, sourcePath)))
+      .digest('hex')
+      .slice(0, 8);
+    html = html.replaceAll(
+      `content="${sourcePath}"`,
+      `content="${SITE_URL}/${sourcePath}?v=${contentHash}"`,
+    );
   }
 
   // Collect every local asset referenced from src and href attributes and from inlined CSS.
