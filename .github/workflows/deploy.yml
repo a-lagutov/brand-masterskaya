@@ -66,12 +66,9 @@ jobs:
           TOCHKA_JWT: ${{ secrets.TOCHKA_JWT }}
           TOCHKA_CUSTOMER_CODE: ${{ secrets.TOCHKA_CUSTOMER_CODE }}
           TOCHKA_MERCHANT_ID: ${{ secrets.TOCHKA_MERCHANT_ID }}
-          # The test site has its own bot, so tests never touch real buyers' chats.
-          # Without a token the site keeps sending buyers to Salebot.
-          TELEGRAM_BOT_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.TG_BOT_MASTERSKAYA_TOKEN || secrets.TG_TESTBOT_MASTERSKAYA_TOKEN }}
+          # The bot from admin/ the thank-you page links to; the test site has its own bot,
+          # so tests never touch real buyers' chats.
           TELEGRAM_BOT_USERNAME: ${{ github.ref == 'refs/heads/main' && 'masterskaya_brand_strategy_bot' || 'masterskaya_brand_test_bot' }}
-          # Relay from worker/; the hosting cannot reach api.telegram.org directly.
-          TELEGRAM_API_URL: ${{ vars.TELEGRAM_API_URL }}
           # Rubles per receipt line on the test site; the live site charges real prices.
           TEST_ITEM_PRICE: ${{ github.ref == 'refs/heads/main' && '' || '1' }}
         run: |
@@ -79,9 +76,7 @@ jobs:
             "tochka_jwt" => getenv("TOCHKA_JWT"),
             "customer_code" => getenv("TOCHKA_CUSTOMER_CODE"),
             "merchant_id" => getenv("TOCHKA_MERCHANT_ID"),
-            "telegram_bot_token" => (string) getenv("TELEGRAM_BOT_TOKEN"),
             "telegram_bot_username" => getenv("TELEGRAM_BOT_USERNAME"),
-            "telegram_api_url" => getenv("TELEGRAM_API_URL") ?: "https://api.telegram.org",
             "site_url" => "https://" . getenv("SITE"),
             // A copy of every paid order lands in this mailbox as a backup.
             "notify_email" => "noreply@brandmasterskaya.ru",

@@ -7,7 +7,7 @@
  * - Copies only the assets that the pages actually reference.
  * - Fills plan titles and prices from src/prices.json into HTML ({{title:key}},
  *   {{price:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
- * - Copies the PHP payment endpoints from src/api/ as is, with src/telegram.json for the bot.
+ * - Copies the PHP payment endpoints from src/api/ as is; the bot in admin/ reads api/prices.json too.
  */
 import { mkdir, readFile, rm, writeFile, copyFile, stat, readdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -33,9 +33,6 @@ const PRICES_FILE = 'prices.json';
 const PRICES = JSON.parse(await readFile(path.join(SRC_DIR, PRICES_FILE), 'utf8'));
 // Plans and electives by key, for the HTML placeholders.
 const PRICE_ITEMS = { ...PRICES.plans, ...PRICES.electives };
-// Bot texts, program chats and which plan or elective opens which chat.
-const TELEGRAM_FILE = 'telegram.json';
-const TELEGRAM = JSON.parse(await readFile(path.join(SRC_DIR, TELEGRAM_FILE), 'utf8'));
 const RUBLES = new Intl.NumberFormat('ru-RU');
 
 /**
@@ -188,25 +185,7 @@ async function buildPage(pageName, builtAssets) {
 }
 
 /**
- * Checks that src/telegram.json refers only to known plans, electives and chats.
- * @throws {Error} On an unknown key, so a typo never leaves a buyer outside a chat.
- */
-function validateTelegram() {
-  for (const [itemKey, chatKeys] of Object.entries(TELEGRAM.access)) {
-    if (!PRICE_ITEMS[itemKey]) {
-      throw new Error(`src/${TELEGRAM_FILE}: unknown plan or elective "${itemKey}" in access`);
-    }
-    for (const chatKey of chatKeys) {
-      if (!TELEGRAM.chats[chatKey]) {
-        throw new Error(`src/${TELEGRAM_FILE}: unknown chat "${chatKey}" in access.${itemKey}`);
-      }
-    }
-  }
-}
-
-/**
- * Copies the PHP endpoints to dist unchanged, with the price list they charge by
- * and the bot settings.
+ * Copies the PHP endpoints to dist unchanged, with the price list they charge by.
  * @returns {Promise<void>}
  */
 async function copyApi() {
@@ -216,8 +195,6 @@ async function copyApi() {
   );
   for (const fileName of files) await copyAsset(path.join(API_DIR, fileName));
   await copyFile(path.join(SRC_DIR, PRICES_FILE), path.join(DIST_DIR, API_DIR, PRICES_FILE));
-  validateTelegram();
-  await copyFile(path.join(SRC_DIR, TELEGRAM_FILE), path.join(DIST_DIR, API_DIR, TELEGRAM_FILE));
   console.log(`${API_DIR}/: ${files.join(', ')}`);
 }
 

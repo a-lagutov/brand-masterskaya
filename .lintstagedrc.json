@@ -1,5 +1,6 @@
 {
-  "*.{js,mjs}": ["eslint --max-warnings=0", "prettier --check"],
+  "*.{js,mjs}": ["eslint --max-warnings=0 --no-warn-ignored", "prettier --check --ignore-unknown"],
   "*.css": ["stylelint", "prettier --check"],
-  "*.{html,json,md,yml,yaml}": ["prettier --check"]
+  "*.{html,json,md,yml,yaml}": ["prettier --check --ignore-unknown"],
+  "admin/**/*.{ts,tsx}": ["prettier --check --ignore-unknown"]
 }

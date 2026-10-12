@@ -1,7 +1,9 @@
 <?php
 /**
- * Shared code for the payment endpoints and the bot: catalog, config, order storage,
- * Tochka and Telegram API calls, webhook signature check and emails.
+ * Shared code for the payment endpoints: catalog, config, order storage, Tochka API calls,
+ * webhook signature check, emails and the link to the Telegram bot.
+ *
+ * The bot itself lives in admin/ and reads the orders written here.
  *
  * Secrets and orders live outside the web root (see private_dir()), so a deploy
  * with rsync --delete never touches them and they are never served over HTTP.
@@ -22,10 +24,8 @@ const PLANS = PRICES['plans'];
 const ELECTIVES = PRICES['electives'];
 // Electives can only be added to this plan.
 const ELECTIVES_PLAN = PRICES['electivesPlan'];
-// Bot texts, program chats and which purchase opens which chat, from src/telegram.json.
-define('TELEGRAM', json_decode((string) file_get_contents(__DIR__ . '/telegram.json'), true, 512, JSON_THROW_ON_ERROR));
 const PRODUCT_NAME = 'Мастерская бренд-стратегии';
-// Salebot link to the Telegram bot, used while no bot token is configured;
+// Salebot link to the Telegram bot, used while no bot is configured;
 // the application travels in the query string.
 const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
 const TOCHKA_PRODUCTION_URL = 'https://enter.tochka.com/uapi';
@@ -75,9 +75,7 @@ function config(): array
             'mail_from' => 'noreply@brandmasterskaya.ru',
             'notify_email' => '',
             'test_item_price' => null,
-            'telegram_bot_token' => '',
-            'telegram_bot_username' => 'masterskaya_brand_strategy_bot',
-            'telegram_api_url' => 'https://api.telegram.org',
+            'telegram_bot_username' => '',
         ], $loaded);
     }
     return $config;
@@ -193,7 +191,7 @@ function save_order(array $order): void
  */
 function telegram_link(array $order): string
 {
-    if (config()['telegram_bot_token'] !== '') {
+    if (config()['telegram_bot_username'] !== '') {
         // The id is the order's only access token, as on the thank-you page; the bot
         // reads the order itself, so nothing in the link can be forged.
         return 'https://t.me/' . config()['telegram_bot_username'] . '?start=' . $order['id'];
@@ -223,46 +221,6 @@ function salebot_link(array $order): string
         'currency' => 'RUB',
         'order' => $order['id'],
     ], '', '&', PHP_QUERY_RFC3986);
-}
-
-/**
- * Calls the Telegram Bot API.
- * @param string $method E.g. sendMessage.
- * @param array<string, mixed> $parameters
- * @return mixed The "result" field of the response.
- * @throws RuntimeException On network errors and responses with ok=false.
- */
-function telegram_request(string $method, array $parameters = []): mixed
-{
-    // reg.ru cannot reach api.telegram.org, so on the hosting this is the relay in worker/.
-    $url = config()['telegram_api_url'] . '/bot' . config()['telegram_bot_token'] . '/' . $method;
-    $curl = curl_init($url);
-    curl_setopt_array($curl, [
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_POSTFIELDS => json_encode($parameters, JSON_UNESCAPED_UNICODE),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 15,
-    ]);
-    $raw = curl_exec($curl);
-    if ($raw === false) {
-        throw new RuntimeException("Telegram $method: " . curl_error($curl));
-    }
-    $response = json_decode((string) $raw, true);
-    if (empty($response['ok'])) {
-        throw new RuntimeException("Telegram $method: " . ($response['description'] ?? $raw));
-    }
-    return $response['result'];
-}
-
-/**
- * Secret Telegram sends with every webhook call, derived from the token so it needs no
- * separate setting; scripts/telegram.mjs registers the same value.
- * @return string 64 hex characters.
- */
-function telegram_webhook_secret(): string
-{
-    return hash_hmac('sha256', 'telegram-webhook', (string) config()['telegram_bot_token']);
 }
 
 /**

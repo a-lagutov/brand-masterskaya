@@ -1,0 +1,144 @@
+# Builds the admin panel with the Telegram bot (admin/) and deploys it to reg.ru:
+# - push to main -> admin.brandmasterskaya.ru, the live bot, orders of brandmasterskaya.ru;
+# - push to any other branch -> admin-test.brandmasterskaya.ru, the test bot, orders of the test site.
+#
+# The hosting kills processes that listen on TCP ports and runs only Python apps under
+# Passenger, so admin/deploy/passenger_wsgi.py starts the Node app on a unix socket and proxies
+# to it. The site needs "PHP" and "Python" enabled in the reg.ru panel.
+name: Admin
+
+on:
+  push:
+    paths:
+      - 'admin/**'
+      - '.github/workflows/admin.yml'
+  workflow_dispatch:
+
+env:
+  LIVE: ${{ github.ref == 'refs/heads/main' }}
+  ADMIN_SITE: ${{ github.ref == 'refs/heads/main' && 'admin.brandmasterskaya.ru' || 'admin-test.brandmasterskaya.ru' }}
+  SITE: ${{ github.ref == 'refs/heads/main' && 'brandmasterskaya.ru' || 'test.brandmasterskaya.ru' }}
+  NODE_VERSION: '22.20.0'
+
+concurrency:
+  group: admin-${{ github.ref == 'refs/heads/main' && 'live' || 'test' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # The build needs about 3 GB of memory, more than the hosting gives a process.
+      # A throwaway database: the build must not touch the real one.
+      - name: Build
+        env:
+          DATABASE_URL: file:/tmp/build.db
+          PAYLOAD_SECRET: build-only
+        run: npm run build
+
+      # The standalone server with its static files and the socket preload: about 2 000 files.
+      - name: Assemble bundle
+        run: |
+          mkdir -p bundle
+          cp -R .next/standalone/. bundle/
+          mkdir -p bundle/.next
+          cp -R .next/static bundle/.next/static
+          cp deploy/listen-unix.cjs bundle/
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          echo "SERVER=${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" >> "$GITHUB_ENV"
+
+      # Node from nodejs.org into ~/apps/node; the hosting's own node is too old.
+      - name: Install Node.js on the server
+        run: |
+          ssh -i ~/.ssh/deploy_key "$SERVER" "set -e
+            if [ \"\$(~/apps/node/bin/node -v 2>/dev/null)\" != v$NODE_VERSION ]; then
+              mkdir -p ~/apps && cd ~/apps
+              curl -sSfL https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz | tar -xJ
+              rm -rf node && mv node-v$NODE_VERSION-linux-x64 node
+              # Only the binary is needed; npm and headers would add 5 000 files.
+              rm -rf node/include node/lib node/share
+            fi
+            ~/apps/node/bin/node -v"
+
+      # Secrets and paths for the app, outside the web root; read by passenger_wsgi.py.
+      - name: Write app settings
+        env:
+          PAYLOAD_SECRET: ${{ secrets.ADMIN_PAYLOAD_SECRET }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.TG_BOT_MASTERSKAYA_TOKEN || secrets.TG_TESTBOT_MASTERSKAYA_TOKEN }}
+        run: |
+          node -e '
+            const home = process.argv[1];
+            const privateDir = `${home}/private/${process.env.ADMIN_SITE}`;
+            process.stdout.write(JSON.stringify({
+              DATABASE_URL: `file:${privateDir}/payload.db`,
+              PAYLOAD_SECRET: process.env.PAYLOAD_SECRET,
+              ADMIN_EMAIL: "contact@brandmasterskaya.ru",
+              ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+              TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+              RUN_BOT: "1",
+              ORDERS_DIR: `${home}/private/${process.env.SITE}/orders`,
+              PRICES_FILE: `${home}/www/${process.env.SITE}/api/prices.json`,
+              SITE_URL: `https://${process.env.SITE}`,
+            }));
+          ' "$(ssh -i ~/.ssh/deploy_key "$SERVER" 'echo $HOME')" > env.json
+          ssh -i ~/.ssh/deploy_key "$SERVER" \
+            "mkdir -p private/$ADMIN_SITE && chmod 700 private/$ADMIN_SITE && umask 077 && cat > private/$ADMIN_SITE/env.json" < env.json
+          rm env.json
+
+      - name: Upload app
+        run: |
+          ssh -i ~/.ssh/deploy_key "$SERVER" "mkdir -p apps/$ADMIN_SITE/app"
+          rsync -az --checksum --delete -e "ssh -i ~/.ssh/deploy_key" bundle/ "$SERVER:apps/$ADMIN_SITE/app/"
+
+      # The web root holds only the Passenger entry; the reg.ru placeholder page goes away.
+      - name: Upload Passenger entry
+        run: |
+          printf 'PassengerEnabled On\n' > deploy/.htaccess
+          rsync -az -e "ssh -i ~/.ssh/deploy_key" deploy/passenger_wsgi.py deploy/.htaccess "$SERVER:www/$ADMIN_SITE/"
+          ssh -i ~/.ssh/deploy_key "$SERVER" "rm -f www/$ADMIN_SITE/index.html && mkdir -p www/$ADMIN_SITE/tmp"
+
+      # Stops the old Node process and the Python proxy; the next request starts the new version
+      # and applies database migrations.
+      - name: Restart
+        run: |
+          ssh -i ~/.ssh/deploy_key "$SERVER" "
+            kill \$(cat private/$ADMIN_SITE/app.pid 2>/dev/null) 2>/dev/null || true
+            touch www/$ADMIN_SITE/tmp/restart.txt"
+          for attempt in 1 2 3 4 5 6; do
+            status=$(curl -s -o /dev/null -w '%{http_code}' -m 60 "https://$ADMIN_SITE/api/users/me" || true)
+            echo "attempt $attempt: $status"
+            [ "$status" = 200 ] && exit 0
+            sleep 10
+          done
+          ssh -i ~/.ssh/deploy_key "$SERVER" "tail -30 private/$ADMIN_SITE/app.log"
+          exit 1
+
+      # Brings the app back after a server reboot: a request starts it through Passenger.
+      - name: Keep-alive cron
+        run: |
+          line="*/5 * * * * curl -s -o /dev/null -m 60 https://$ADMIN_SITE/api/users/me"
+          ssh -i ~/.ssh/deploy_key "$SERVER" "(crontab -l 2>/dev/null | grep -vF 'https://$ADMIN_SITE/'; echo '$line') | crontab -"

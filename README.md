@@ -10,11 +10,10 @@
 src/                исходники сайта
   index.html        лендинг
   prices.json       тарифы, факультативы и цены
-  telegram.json     тексты бота, чаты программы и какой тариф открывает какой чат
   oferta.html       договор-оферта
   privacy.html      политика обработки персональных данных и согласие
   spasibo.html      страница после оплаты
-  api/              PHP: создание платежа, вебхук Точки, статус заказа, Telegram-бот
+  api/              PHP: создание платежа, вебхук Точки, статус заказа
   css/style.css
   js/app.js         лендинг и форма заявки
   js/thanks.js      страница после оплаты
@@ -22,8 +21,7 @@ src/                исходники сайта
   assets/logos/     логотипы (уменьшаются до 480 px)
 scripts/build.mjs   сборка src/ → dist/
 scripts/tochka.mjs  настройка Точки: customerCode, merchantId, вебхук
-scripts/telegram.mjs настройка Telegram-бота: вебхук
-worker/             Cloudflare Worker — посредник между Telegram и хостингом
+admin/              админка Payload и Telegram-бот (Node.js), см. admin/README.md
 config.example.php  образец настроек оплаты
 .github/workflows/  CI и деплой
 .husky/             git-хуки
@@ -67,7 +65,7 @@ python3 -m http.server 4173 -d dist
 4. После оплаты банк возвращает на `spasibo.html?order=…`. Страница опрашивает `api/order.php`, пока заказ не оплачен, и показывает кнопку перехода в Telegram-бота.
 5. Банк присылает вебхук `acquiringInternetPayment` на `api/webhook.php` (JWT, подпись RS256 проверяется по [ключу Точки](https://enter.tochka.com/doc/openapi/static/keys/public)). Заказ помечается оплаченным, клиенту уходит письмо со ссылкой на бота, организаторам — копия. Если вебхук задержался, то же самое делает `order.php`, сверив статус платежа в API. Письмо отправляется один раз.
 
-Ссылка на бота — `https://t.me/masterskaya_brand_strategy_bot?start=<номер заказа>`, дальше работает [Telegram-бот](#telegram-бот). Пока токен бота не задан, сайт ведёт на Salebot с заявкой в параметрах:
+Ссылка на бота — `https://t.me/masterskaya_brand_strategy_bot?start=<номер заказа>`, дальше работает [Telegram-бот](#telegram-бот). Пока имя бота не задано (`telegram_bot_username`), сайт ведёт на Salebot с заявкой в параметрах:
 
 ```
 https://link.brandmasterskaya.ru/r/zayavka_1?name=…&email=…&phone=…&plan=…&plan_price=…&electives=…&electives_price=…&total=…&currency=RUB&order=…
@@ -125,39 +123,9 @@ Email и телефон обязательны и проверяются в бр
 
 ## Telegram-бот
 
-`src/api/bot.php` принимает вебхук бота и работает на том же хостинге, что и сайт, с теми же заказами. У боевого сайта бот [@masterskaya_brand_strategy_bot](https://t.me/masterskaya_brand_strategy_bot), у тестового — [@masterskaya_brand_test_bot](https://t.me/masterskaya_brand_test_bot): тестовые покупки не трогают настоящего бота.
+Бот и админка для организаторов живут в [admin/](admin/README.md): Payload CMS и бот на grammY в одном Node-процессе на том же хостинге. У боевого сайта бот [@masterskaya_brand_strategy_bot](https://t.me/masterskaya_brand_strategy_bot) и админка [admin.brandmasterskaya.ru](https://admin.brandmasterskaya.ru), у тестового — [@masterskaya_brand_test_bot](https://t.me/masterskaya_brand_test_bot) и `admin-test.brandmasterskaya.ru`.
 
-Telegram и хостинг reg.ru не достают друг до друга, поэтому между ними стоит Cloudflare Worker ([worker/telegram-relay.js](worker/telegram-relay.js)):
-
-- `POST <worker>/webhook/<id бота>` — вебхук Telegram, Worker пересылает его в `bot.php` сайта этого бота из `BOTS` ([worker/wrangler.toml](worker/wrangler.toml));
-- `<worker>/bot<токен>/<метод>` — запросы `bot.php` к Bot API, Worker пересылает их в `api.telegram.org`. Только для ботов из `BOTS`.
-
-1. Покупатель открывает бота по ссылке со страницы «Спасибо» или из письма: `/start <номер заказа>`.
-2. Бот проверяет, что заказ оплачен, и привязывает его к аккаунту Telegram. Один заказ — один аккаунт: пересланная ссылка другому человеку не сработает.
-3. Бот пишет состав заказа и сумму и присылает кнопки вступления в чаты программы.
-4. Ссылки создают заявку на вступление. Бот одобряет её, только если у этого аккаунта есть оплаченный заказ с этим чатом, остальным отказывает. Заявки по ссылкам, созданным людьми, бот не трогает.
-5. `/start` без номера заказа повторяет состав и кнопки, например когда чаты добавили позже.
-
-Тексты бота, чаты и доступы — в [src/telegram.json](src/telegram.json):
-
-- `chats` — чаты программы: название кнопки и `id` чата. Чат без `id` пропускается;
-- `access` — какие чаты открывает каждый тариф и факультатив (ключи из `src/prices.json`). Неизвестный ключ останавливает сборку;
-- `texts` — сообщения бота, подстановки `{name}`, `{items}`, `{total}`, `{site}`, `{contact}`.
-
-### Подключение
-
-1. Cloudflare: зарегистрироваться (бесплатно), в «My Profile» → «API Tokens» создать токен по шаблону «Edit Cloudflare Workers», скопировать Account ID с главной страницы. Положить их в секреты репозитория `CLOUDFLARE_API_TOKEN` и `CLOUDFLARE_ACCOUNT_ID`.
-2. Задеплоить Worker: workflow `Worker` запускается при изменениях в `worker/` или вручную. Адрес Worker'а (`https://brandmasterskaya-telegram.<аккаунт>.workers.dev`) — в логе шага Deploy.
-3. Положить адрес Worker'а в переменную репозитория `TELEGRAM_API_URL`, токены ботов от @BotFather — в секреты `TG_BOT_MASTERSKAYA_TOKEN` (боевой) и `TG_TESTBOT_MASTERSKAYA_TOKEN` (тестовый), перезапустить деплой сайта. Без токена сайт ведёт на Salebot.
-4. Направить вебхук бота на Worker, для тестового бота — с `--test`. У бота один вебхук: другой сервис, который им пользовался (раньше Unisender), перестанет получать сообщения.
-   ```bash
-   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set https://brandmasterskaya-telegram.<аккаунт>.workers.dev
-   TG_TESTBOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set https://brandmasterskaya-telegram.<аккаунт>.workers.dev --test
-   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-get
-   ```
-5. Добавить бота в каждый чат администратором с правом «Пригласительные ссылки». Бот пришлёт id чата на `notify_email`, его нужно вписать в `src/telegram.json`. Если группа станет супергруппой, её id сменится — бот пришлёт новый.
-
-Секрет вебхука выводится из токена (HMAC), отдельно его хранить не нужно. Привязки аккаунтов: `~/private/<папка сайта>/telegram-users/`, события бота — в `payments.log`.
+Сайт с ботом напрямую не общается: бот раз в минуту читает заказы из `~/private/<сайт>/orders/` и список тарифов из `~/www/<сайт>/api/prices.json`, а по `/start <номер заказа>` читает файл заказа сразу.
 
 ## Проверки
 
@@ -193,6 +161,8 @@ Workflow **Deploy** запускается на пуш, если меняютс�
 3. загрузка `dist/` в `~/www/<сайт>/` через rsync по SSH.
 
 Rsync сравнивает файлы по содержимому и удаляет на сервере лишнее. Папка `.well-known/` и файл `.htaccess` на сервере не трогаются.
+
+Админка и бот деплоятся отдельным workflow **Admin** при изменениях в `admin/`, см. [admin/README.md](admin/README.md#деплой).
 
 Секреты репозитория: доступ к серверу — `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`, `SSH_HOST`, `SSH_USER`; Точка — `TOCHKA_JWT`, `TOCHKA_CUSTOMER_CODE`, `TOCHKA_MERCHANT_ID`. Деплой можно запустить и вручную: Actions → Deploy → Run workflow (выберите ветку).
 
