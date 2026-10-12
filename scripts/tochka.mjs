@@ -11,7 +11,8 @@
  */
 
 const API_URL = 'https://enter.tochka.com/uapi';
-// The bank keeps one webhook URL per key; pass the test site's URL to point it there.
+// The bank keeps one webhook URL per client_id, so the test site has its own JWT key;
+// pass the test site's URL with that key.
 const DEFAULT_WEBHOOK_URL = 'https://brandmasterskaya.ru/api/webhook.php';
 const WEBHOOK_EVENTS = ['acquiringInternetPayment'];
 
