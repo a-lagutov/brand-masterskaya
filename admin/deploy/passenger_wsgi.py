@@ -27,8 +27,16 @@ NODE_OPTIONS = [
     '--disable-wasm-trap-handler',
     # Stay well under the hosting's 1 GB per process.
     '--max-old-space-size=512',
+    # The hosting allows 36 threads per account, the live and the test admin together.
+    '--v8-pool-size=2',
     '-r', os.path.join(APP_DIR, 'listen-unix.cjs'),
 ]
+THREAD_LIMITS = {
+    # The SQLite driver (libsql) would start a thread per CPU core, 24 on this server.
+    'TOKIO_WORKER_THREADS': '1',
+    # Node's pool for file and crypto work; 4 by default.
+    'UV_THREADPOOL_SIZE': '2',
+}
 STARTUP_SECONDS = 30
 HOP_HEADERS = {'connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'proxy-connection'}
 
@@ -62,7 +70,8 @@ def ensure_app():
     # Secrets and paths written by the deploy, outside the web root.
     with open(os.path.join(PRIVATE_DIR, 'env.json')) as env_file:
         app_environment = json.load(env_file)
-    environment = dict(os.environ, NODE_ENV='production', APP_SOCKET=APP_SOCKET, **app_environment)
+    environment = dict(os.environ, NODE_ENV='production', APP_SOCKET=APP_SOCKET,
+                       **THREAD_LIMITS, **app_environment)
     log = open(os.path.join(PRIVATE_DIR, 'app.log'), 'ab')
     process = subprocess.Popen(
         [NODE] + NODE_OPTIONS + ['server.js'],
