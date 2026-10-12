@@ -340,12 +340,6 @@ fieldset label > span {
   margin-bottom: 6px;
 }
 
-.logo-vk > span {
-  font-size: 21px;
-  font-weight: 700;
-  letter-spacing: -0.8px;
-}
-
 h1 > span:not(.title-period) {
   color: var(--red);
 }
@@ -2103,14 +2097,7 @@ input[type='checkbox'] {
 }
 
 .logo-lavka {
-  width: 164px;
-  height: 39px;
-}
-
-.logo-lavka img {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  width: 150px;
 }
 
 .workshop-story {
@@ -2241,8 +2228,7 @@ input[type='checkbox'] {
   }
 
   .logo-lavka {
-    width: 109px;
-    height: 27px;
+    width: 104px;
   }
 
   .workshop-story {
@@ -2310,11 +2296,6 @@ input[type='checkbox'] {
   z-index: -1;
 }
 
-.logo-vk img {
-  width: 27px;
-  height: 27px;
-}
-
 .hero-art .author-photo img {
   display: block;
   width: 100%;
@@ -2350,9 +2331,7 @@ input[type='checkbox'] {
 }
 
 .logo-vk {
-  width: auto;
-  gap: 7px;
-  overflow: visible;
+  width: 138px;
 }
 
 .button .button-label {
@@ -2431,17 +2410,7 @@ input[type='checkbox'] {
   }
 
   .logo-vk {
-    gap: 4px;
-  }
-
-  .logo-vk img {
-    width: 18px;
-    height: 18px;
-  }
-
-  .logo-vk > span {
-    font-size: 13px;
-    letter-spacing: -0.4px;
+    width: 96px;
   }
 
   .add-elective {
