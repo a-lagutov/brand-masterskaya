@@ -125,12 +125,12 @@ Email и телефон обязательны и проверяются в бр
 
 ## Telegram-бот
 
-`src/api/bot.php` принимает вебхук бота [@masterskaya_brand_strategy_bot](https://t.me/masterskaya_brand_strategy_bot) и работает на том же хостинге, что и сайт, с теми же заказами.
+`src/api/bot.php` принимает вебхук бота и работает на том же хостинге, что и сайт, с теми же заказами. У боевого сайта бот [@masterskaya_brand_strategy_bot](https://t.me/masterskaya_brand_strategy_bot), у тестового — [@masterskaya_brand_test_bot](https://t.me/masterskaya_brand_test_bot): тестовые покупки не трогают настоящего бота.
 
 Telegram и хостинг reg.ru не достают друг до друга, поэтому между ними стоит Cloudflare Worker ([worker/telegram-relay.js](worker/telegram-relay.js)):
 
-- `POST <worker>/webhook` — вебхук Telegram, Worker пересылает его в `bot.php` сайта из `BOT_URL` ([worker/wrangler.toml](worker/wrangler.toml));
-- `<worker>/bot<токен>/<метод>` — запросы `bot.php` к Bot API, Worker пересылает их в `api.telegram.org`. Только для бота `BOT_ID`.
+- `POST <worker>/webhook/<id бота>` — вебхук Telegram, Worker пересылает его в `bot.php` сайта этого бота из `BOTS` ([worker/wrangler.toml](worker/wrangler.toml));
+- `<worker>/bot<токен>/<метод>` — запросы `bot.php` к Bot API, Worker пересылает их в `api.telegram.org`. Только для ботов из `BOTS`.
 
 1. Покупатель открывает бота по ссылке со страницы «Спасибо» или из письма: `/start <номер заказа>`.
 2. Бот проверяет, что заказ оплачен, и привязывает его к аккаунту Telegram. Один заказ — один аккаунт: пересланная ссылка другому человеку не сработает.
@@ -148,15 +148,14 @@ Telegram и хостинг reg.ru не достают друг до друга, 
 
 1. Cloudflare: зарегистрироваться (бесплатно), в «My Profile» → «API Tokens» создать токен по шаблону «Edit Cloudflare Workers», скопировать Account ID с главной страницы. Положить их в секреты репозитория `CLOUDFLARE_API_TOKEN` и `CLOUDFLARE_ACCOUNT_ID`.
 2. Задеплоить Worker: workflow `Worker` запускается при изменениях в `worker/` или вручную. Адрес Worker'а (`https://brandmasterskaya-telegram.<аккаунт>.workers.dev`) — в логе шага Deploy.
-3. Положить адрес Worker'а в переменную репозитория `TELEGRAM_API_URL`, токен бота от @BotFather — в секрет `TG_BOT_MASTERSKAYA_TOKEN`, перезапустить деплой сайта. Без токена сайт ведёт на Salebot.
-4. Направить вебхук бота на Worker. У бота один вебхук: другой сервис, который им пользовался (раньше Unisender), перестанет получать сообщения.
+3. Положить адрес Worker'а в переменную репозитория `TELEGRAM_API_URL`, токены ботов от @BotFather — в секреты `TG_BOT_MASTERSKAYA_TOKEN` (боевой) и `TG_TESTBOT_MASTERSKAYA_TOKEN` (тестовый), перезапустить деплой сайта. Без токена сайт ведёт на Salebot.
+4. Направить вебхук бота на Worker, для тестового бота — с `--test`. У бота один вебхук: другой сервис, который им пользовался (раньше Unisender), перестанет получать сообщения.
    ```bash
-   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set https://brandmasterskaya-telegram.<аккаунт>.workers.dev/webhook
+   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set https://brandmasterskaya-telegram.<аккаунт>.workers.dev
+   TG_TESTBOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set https://brandmasterskaya-telegram.<аккаунт>.workers.dev --test
    TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-get
    ```
 5. Добавить бота в каждый чат администратором с правом «Пригласительные ссылки». Бот пришлёт id чата на `notify_email`, его нужно вписать в `src/telegram.json`. Если группа станет супергруппой, её id сменится — бот пришлёт новый.
-
-При запуске боевого сайта поменять `BOT_URL` в `worker/wrangler.toml` на `https://brandmasterskaya.ru/api/bot.php`.
 
 Секрет вебхука выводится из токена (HMAC), отдельно его хранить не нужно. Привязки аккаунтов: `~/private/<папка сайта>/telegram-users/`, события бота — в `payments.log`.
 

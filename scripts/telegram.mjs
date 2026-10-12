@@ -3,11 +3,13 @@
  *
  *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs me
  *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-get
- *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set <relay url>/webhook
+ *   TG_BOT_MASTERSKAYA_TOKEN=… node scripts/telegram.mjs webhook-set <relay url>
  *
- * The webhook points at the Cloudflare relay (worker/), which passes calls to the site set in
- * worker/wrangler.toml: Telegram cannot reach the hosting directly. The bot has one webhook;
- * setting it takes the bot away from any other service that used it before.
+ * Add --test to work with the test site's bot from TG_TESTBOT_MASTERSKAYA_TOKEN.
+ *
+ * The webhook points at the Cloudflare relay (worker/), which passes calls to the bot's site
+ * set in worker/wrangler.toml: Telegram cannot reach the hosting directly. The bot has one
+ * webhook; setting it takes the bot away from any other service that used it before.
  */
 import { createHmac } from 'node:crypto';
 
@@ -15,14 +17,18 @@ const API_URL = 'https://api.telegram.org/bot';
 // Updates src/api/bot.php handles; Telegram does not send the others.
 const ALLOWED_UPDATES = ['message', 'chat_join_request', 'my_chat_member'];
 
+const isTestBot = process.argv.includes('--test');
+const [command, argument] = process.argv.slice(2).filter((value) => value !== '--test');
+
 /**
- * Reads the bot token or exits with a hint.
+ * Reads the token of the live bot, or of the test bot with --test, or exits with a hint.
  * @returns {string}
  */
 function requireToken() {
-  const token = process.env.TG_BOT_MASTERSKAYA_TOKEN;
+  const variable = isTestBot ? 'TG_TESTBOT_MASTERSKAYA_TOKEN' : 'TG_BOT_MASTERSKAYA_TOKEN';
+  const token = process.env[variable];
   if (!token) {
-    console.error('Set TG_BOT_MASTERSKAYA_TOKEN');
+    console.error(`Set ${variable}`);
     process.exit(1);
   }
   return token;
@@ -54,19 +60,20 @@ async function callApi(method, body) {
   if (!response.ok) process.exitCode = 1;
 }
 
-const [command, argument] = process.argv.slice(2);
 const COMMANDS = {
   me: () => callApi('getMe'),
   'webhook-get': () => callApi('getWebhookInfo'),
   'webhook-set': () => {
     if (!argument) {
       console.error(
-        'Pass the relay URL, e.g. https://brandmasterskaya-telegram.<account>.workers.dev/webhook',
+        'Pass the relay URL, e.g. https://brandmasterskaya-telegram.<account>.workers.dev',
       );
       process.exit(1);
     }
+    // The relay picks the site by the bot id, the part of the token before the colon.
+    const botId = requireToken().split(':')[0];
     return callApi('setWebhook', {
-      url: argument,
+      url: `${argument.replace(/\/+$/, '')}/webhook/${botId}`,
       secret_token: webhookSecret(requireToken()),
       allowed_updates: ALLOWED_UPDATES,
       // Updates queued for the previous service would reach the bot out of context.

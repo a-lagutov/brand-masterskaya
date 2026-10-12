@@ -31,9 +31,9 @@ return [
     'notify_email' => 'noreply@brandmasterskaya.ru',
     // Test site only: charge this many rubles per receipt line instead of the real price.
     'test_item_price' => null,
-    // Bot token from @BotFather. Empty — the site sends buyers to Salebot instead of the bot.
+    // Bot token from @BotFather; the test site has its own bot. Empty — the site sends buyers to Salebot instead of the bot.
     'telegram_bot_token' => '',
-    // The bot's @username without @, for the t.me link.
+    // The bot's @username without @, for the t.me link (test site: masterskaya_brand_test_bot).
     'telegram_bot_username' => 'masterskaya_brand_strategy_bot',
     // Bot API address. The hosting cannot reach api.telegram.org, so the deploy sets the
     // Cloudflare relay from worker/ here, e.g. https://brandmasterskaya-telegram.<account>.workers.dev

@@ -2,25 +2,27 @@
  * Cloudflare Worker between Telegram and the site on reg.ru: Telegram cannot reach the
  * hosting and the hosting cannot reach Telegram, while both reach Cloudflare.
  *
- * - POST /webhook — Telegram's webhook call, passed to BOT_URL (src/api/bot.php) with the
- *   secret header; Telegram gets the site's answer, so its retries still work.
+ * - POST /webhook/<bot id> — Telegram's webhook call, passed to that bot's site
+ *   (src/api/bot.php) with the secret header; Telegram gets the site's answer, so its
+ *   retries still work.
  * - /bot<token>/<method> — Bot API calls from the site, passed to api.telegram.org.
- *   Only for the bot BOT_ID, so the relay cannot be used for other bots.
+ *   Only for the bots in BOTS, so the relay cannot be used for other bots.
  *
- * Variables (worker/wrangler.toml): BOT_URL, BOT_ID.
+ * Variables (worker/wrangler.toml): BOTS, bot id -> site's bot.php URL; the live and the
+ * test site have separate bots.
  */
 
 const TELEGRAM_API_ORIGIN = 'https://api.telegram.org';
 const SECRET_HEADER = 'X-Telegram-Bot-Api-Secret-Token';
 
 /**
- * Passes Telegram's webhook call to the site.
+ * Passes Telegram's webhook call to the bot's site.
  * @param {Request} request
- * @param {{BOT_URL: string}} env
+ * @param {string} botUrl The site's bot.php.
  * @returns {Promise<Response>} The site's answer.
  */
-async function forwardWebhook(request, env) {
-  const response = await fetch(env.BOT_URL, {
+async function forwardWebhook(request, botUrl) {
+  const response = await fetch(botUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -53,16 +55,18 @@ export default {
   /**
    * Routes a request to the webhook or the Bot API relay.
    * @param {Request} request
-   * @param {{BOT_URL: string, BOT_ID: string}} env
+   * @param {{BOTS: Record<string, string>}} env
    * @returns {Promise<Response>}
    */
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname === '/webhook' && request.method === 'POST') {
-      return forwardWebhook(request, env);
+    const webhookBotId = url.pathname.match(/^\/webhook\/(\d+)$/)?.[1];
+    if (webhookBotId && Object.hasOwn(env.BOTS, webhookBotId) && request.method === 'POST') {
+      return forwardWebhook(request, env.BOTS[webhookBotId]);
     }
     // The token starts with the bot id: /bot<id>:<secret>/<method>.
-    if (url.pathname.startsWith(`/bot${env.BOT_ID}:`)) {
+    const apiBotId = url.pathname.match(/^\/bot(\d+):/)?.[1];
+    if (apiBotId && Object.hasOwn(env.BOTS, apiBotId)) {
       return forwardApiCall(request, url);
     }
     return new Response('Not found', { status: 404 });
