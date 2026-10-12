@@ -1,6 +1,6 @@
 # Builds the admin panel with the Telegram bot (admin/) and deploys it to reg.ru:
 # - push to main -> admin.brandmasterskaya.ru, the live bot, orders of brandmasterskaya.ru;
-# - push to any other branch -> admin-test.brandmasterskaya.ru, the test bot, orders of the test site.
+# - push to any other branch -> test.admin.brandmasterskaya.ru, the test bot, orders of the test site.
 #
 # The hosting kills processes that listen on TCP ports and runs only Python apps under
 # Passenger, so admin/deploy/passenger_wsgi.py starts the Node app on a unix socket and proxies
@@ -16,7 +16,7 @@ on:
 
 env:
   LIVE: ${{ github.ref == 'refs/heads/main' }}
-  ADMIN_SITE: ${{ github.ref == 'refs/heads/main' && 'admin.brandmasterskaya.ru' || 'admin-test.brandmasterskaya.ru' }}
+  ADMIN_SITE: ${{ github.ref == 'refs/heads/main' && 'admin.brandmasterskaya.ru' || 'test.admin.brandmasterskaya.ru' }}
   SITE: ${{ github.ref == 'refs/heads/main' && 'brandmasterskaya.ru' || 'test.brandmasterskaya.ru' }}
   NODE_VERSION: '22.20.0'
 
