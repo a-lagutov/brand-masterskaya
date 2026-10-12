@@ -17,7 +17,8 @@ const MessageStep: Block = {
       required: true,
       admin: {
         description:
-          'Подстановки: {name} — имя в Telegram, {site} — адрес сайта, {contact} — email для связи.',
+          'Подстановки: {name} — имя в Telegram, {site} — адрес сайта, {contact} — email для связи.' +
+          ' Ссылка: [слова](адрес), например [на сайте]({site}).',
       },
     },
     {

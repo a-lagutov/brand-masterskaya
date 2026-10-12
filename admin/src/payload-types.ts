@@ -282,7 +282,7 @@ export interface Scenario {
   steps: (
     | {
         /**
-         * Подстановки: {name} — имя в Telegram, {site} — адрес сайта, {contact} — email для связи.
+         * Подстановки: {name} — имя в Telegram, {site} — адрес сайта, {contact} — email для связи. Ссылка: [слова](адрес), например [на сайте]({site}).
          */
         text: string;
         buttons?:
@@ -625,7 +625,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
- * Сообщения, которые бот отправляет сам. Подстановки: {name} — имя, {site} — адрес сайта, {contact} — email для связи.
+ * Сообщения, которые бот отправляет сам. Подстановки: {name} — имя, {site} — адрес сайта, {contact} — email для связи. Ссылка: [слова](адрес), например [на сайте]({site}).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bot-texts".

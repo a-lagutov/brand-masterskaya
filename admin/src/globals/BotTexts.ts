@@ -1,7 +1,8 @@
 import type { GlobalConfig } from 'payload';
 
 const PLACEHOLDERS =
-  'Подстановки: {name} — имя, {site} — адрес сайта, {contact} — email для связи.';
+  'Подстановки: {name} — имя, {site} — адрес сайта, {contact} — email для связи.' +
+  ' Ссылка: [слова](адрес), например [на сайте]({site}).';
 
 /** The bot's built-in messages; scenarios have their own texts. */
 export const BotTexts: GlobalConfig = {
@@ -25,8 +26,9 @@ export const BotTexts: GlobalConfig = {
       required: true,
       defaultValue:
         'Здравствуйте! Это бот программы «Мастерская бренд-стратегии».\n\n' +
-        'Оплатить участие можно на сайте {site}. После оплаты откройте бота по кнопке ' +
-        'на странице подтверждения заказа или по ссылке из письма.',
+        'Оплатить участие можно [на сайте]({site}).\n' +
+        'После оплаты откройте бота по кнопке на странице подтверждения заказа ' +
+        'или по ссылке из письма.',
       admin: { description: 'Можно заменить сценарием с галочкой «Вместо приветствия по /start».' },
     },
     {

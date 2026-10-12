@@ -25,7 +25,7 @@ import {
 } from './scenarios';
 import { settings } from './settings';
 import { botUserId } from './telegram';
-import { fillText, loadTexts } from './texts';
+import { fillText, loadTexts, MESSAGE_FORMAT } from './texts';
 import type { Member, Scenario } from '../payload-types';
 
 const ORDER_SYNC_INTERVAL_MS = 60_000;
@@ -44,6 +44,7 @@ async function replyWithText(
 ): Promise<void> {
   const texts = await loadTexts(payload);
   await context.reply(fillText(texts[key], texts, { name: context.from?.first_name ?? '' }), {
+    ...MESSAGE_FORMAT,
     link_preview_options: { is_disabled: true },
   });
 }

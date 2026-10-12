@@ -3,8 +3,28 @@ import type { Payload } from 'payload';
 import type { BotText } from '../payload-types';
 import { settings } from './settings';
 
+/** Message options for texts from fillText: links are HTML. */
+export const MESSAGE_FORMAT = { parse_mode: 'HTML' } as const;
+
+/** A link in a text from the panel: [words](address), e.g. [на сайте]({site}). */
+const LINK_PATTERN = /\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+
 /**
- * Fills {placeholders} in a text; {site} and {contact} are always available.
+ * Escapes text for a Telegram message in HTML mode.
+ * @param text
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Turns a text from the panel into a message: [words](address) becomes a link and
+ * {placeholders} are filled; {site} and {contact} are always available. Send the result
+ * with MESSAGE_FORMAT.
  * @param template Text with placeholders.
  * @param texts The bot texts, for the contact email.
  * @param values More placeholder values, e.g. name.
@@ -19,9 +39,13 @@ export function fillText(
     contact: texts.contact,
     ...values,
   };
-  return template.replace(
-    /\{(\w+)\}/g,
-    (placeholder, name: string) => allValues[name] ?? placeholder,
+  // Links come before the values, so a name like "[x](y)" stays plain text.
+  const withLinks = escapeHtml(template).replace(
+    LINK_PATTERN,
+    (link, words: string, address: string) => `<a href="${address}">${words}</a>`,
+  );
+  return withLinks.replace(/\{(\w+)\}/g, (placeholder, name: string) =>
+    name in allValues ? escapeHtml(allValues[name]) : placeholder,
   );
 }
 

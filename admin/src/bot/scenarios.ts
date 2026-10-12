@@ -7,7 +7,7 @@ import { inviteButtons } from './access';
 import { paidOrders } from './members';
 import { relationIds } from './relations';
 import { telegramApi } from './telegram';
-import { fillText, formatPrice, loadTexts } from './texts';
+import { fillText, formatPrice, loadTexts, MESSAGE_FORMAT } from './texts';
 
 /** Prefix of callback data for buttons that start a scenario. */
 export const SCENARIO_CALLBACK_PREFIX = 'scenario:';
@@ -58,7 +58,7 @@ export async function sendOrderSummary(payload: Payload, member: Member): Promis
         items: items.join('\n'),
         total: formatPrice(order.total ?? 0),
       }),
-      { link_preview_options: { is_disabled: true } },
+      { ...MESSAGE_FORMAT, link_preview_options: { is_disabled: true } },
     );
   }
   await sendChatButtons(payload, member, texts.chats);
@@ -78,7 +78,7 @@ async function sendChatButtons(payload: Payload, member: Member, text: string): 
   const texts = await loadTexts(payload);
   const buttons = await inviteButtons(payload, member);
   if (!buttons.length) {
-    await api.sendMessage(member.telegramId, fillText(texts.chatsLater, texts));
+    await api.sendMessage(member.telegramId, fillText(texts.chatsLater, texts), MESSAGE_FORMAT);
     return;
   }
   const keyboard = new InlineKeyboard();
@@ -88,9 +88,7 @@ async function sendChatButtons(payload: Payload, member: Member, text: string): 
   await api.sendMessage(
     member.telegramId,
     fillText(text, texts, { name: member.displayName ?? '' }),
-    {
-      reply_markup: keyboard,
-    },
+    { ...MESSAGE_FORMAT, reply_markup: keyboard },
   );
 }
 
@@ -124,6 +122,7 @@ export async function runScenario(
         }
       }
       await api.sendMessage(member.telegramId, fillText(step.text, texts, values), {
+        ...MESSAGE_FORMAT,
         link_preview_options: { is_disabled: true },
         reply_markup: keyboard.inline_keyboard.length ? keyboard : undefined,
       });
