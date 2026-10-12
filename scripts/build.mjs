@@ -4,7 +4,7 @@
  * - Converts PNG/JPEG to WebP; logos are downscaled to their display size.
  * - Minifies CSS and JS and inlines them into each page.
  * - Minifies HTML and rewrites asset references.
- * - Copies only the assets that the pages actually reference.
+ * - Copies only the assets that the pages actually reference (src/href and CSS url()).
  * - Fills plan titles and prices from src/prices.json into HTML ({{title:key}},
  *   {{price:key}}, {{amount:key}}), JS (__PRICES__) and the PHP endpoints (api/prices.json).
  *   Prices changed in the admin panel replace these at runtime (api/prices.php).
@@ -140,7 +140,9 @@ async function buildPage(pageName, builtAssets) {
   ];
   for (const { pattern, tag } of inlineTargets) {
     for (const [element, sourcePath] of [...html.matchAll(pattern)]) {
-      const code = await minifyCode(sourcePath);
+      let code = await minifyCode(sourcePath);
+      // CSS refers to assets from src/css/; once inlined, paths are relative to the page.
+      if (tag === 'style') code = code.replace(/url\((["']?)\.\.\/assets\//g, 'url($1assets/');
       sourceBytes += (await stat(path.join(SRC_DIR, sourcePath))).size;
       html = html.replace(element, () => `<${tag}>${code}</${tag}>`);
       console.log(
@@ -149,9 +151,13 @@ async function buildPage(pageName, builtAssets) {
     }
   }
 
-  // Collect every local asset referenced from src and href attributes.
+  // Collect every local asset referenced from src and href attributes and from inlined CSS.
   const assetPaths = [
-    ...new Set([...html.matchAll(/(?:src|href)="(assets\/[^"#?]+)"/g)].map((match) => match[1])),
+    ...new Set(
+      [...html.matchAll(/(?:(?:src|href)="|url\(["']?)(assets\/[^"'#?)]+)/g)].map(
+        (match) => match[1],
+      ),
+    ),
   ];
 
   let outputBytes = 0;

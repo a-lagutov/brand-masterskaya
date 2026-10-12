@@ -13,7 +13,45 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23efeee7'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%23dc3e27'/%3E%3C/svg%3E"
     />
+    <link
+      rel="preload"
+      href="assets/fonts/helvetica-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/courier-new-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/pt-serif-cyrillic-400-italic.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" href="css/style.css" />
+    <script>
+      // Prices stay hidden until src/js/app.js loads the current ones; shown after 3 s regardless.
+      document.documentElement.classList.add('prices-loading');
+      setTimeout(() => document.documentElement.classList.remove('prices-loading'), 3000);
+      // The page stays hidden until its fonts have loaded, so text never changes font in view;
+      // shown after 3 s regardless, so a slow or failed font never blocks the page.
+      document.documentElement.classList.add('fonts-loading');
+      const showPage = () => document.documentElement.classList.remove('fonts-loading');
+      setTimeout(showPage, 3000);
+      Promise.all([
+        document.fonts.load('400 1em Helvetica', 'Аa'),
+        document.fonts.load('700 1em Helvetica', 'Аa'),
+        document.fonts.load('400 1em "Courier New"', 'Аa'),
+        document.fonts.load('700 1em "Courier New"', 'Аa'),
+        document.fonts.load('italic 400 1em "PT Serif"', 'работа.'),
+      ]).then(showPage, showPage);
+    </script>
   </head>
   <body>
     <a class="skip" href="#main">К содержанию</a>
@@ -481,7 +519,8 @@
                 </div>
               </div>
               <p class="elective-foot">
-                2 лекции + 2 Q&amp;A-сессии <strong>+ {{price:director}} ₽</strong>
+                2 лекции + 2 Q&amp;A-сессии
+                <strong>+ {{price:director}} <span class="ruble">₽</span></strong>
               </p>
               <button type="button" class="button primary add-elective">
                 <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
@@ -553,7 +592,7 @@
               <p class="price-intro">
                 Для тех, кому нужен доступ к системе, способу мышления и рабочим приёмам.
               </p>
-              <div class="price">{{price:watch}} <span>₽</span></div>
+              <div class="price">{{price:watch}} <span class="price-currency ruble">₽</span></div>
               <a href="#enroll" class="button outline choose-plan" data-plan="watch"
                 >Выбрать формат <span>↗</span></a
               >
@@ -573,7 +612,7 @@
               <p class="price-intro">
                 Приносите свой бренд или клиентский проект и шесть недель работаете вместе с нами.
               </p>
-              <div class="price">{{price:work}} <span>₽</span></div>
+              <div class="price">{{price:work}} <span class="price-currency ruble">₽</span></div>
               <a href="#enroll" class="button primary choose-plan" data-plan="work"
                 >Начать свою работу <span>↗</span></a
               >
@@ -597,7 +636,9 @@
               >
               или <strong>«{{title:business}}»</strong>.
             </p>
-            <b>{{price:director}} ₽<small>за каждый факультатив</small></b
+            <b
+              >{{price:director}} <span class="ruble">₽</span
+              ><small>за каждый факультатив</small></b
             ><button type="button" class="button primary add-elective">
               <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
               ><span aria-hidden="true">↗</span>
@@ -687,15 +728,17 @@
           <legend>Добавить факультатив</legend>
           <label
             ><input type="checkbox" name="director" /> {{title:director}}
-            <span>+ {{price:director}} ₽</span></label
+            <span>+ {{price:director}} <span class="ruble">₽</span></span></label
           ><label
             ><input type="checkbox" name="business" /> {{title:business}}
-            <span>+ {{price:business}} ₽</span></label
+            <span>+ {{price:business}} <span class="ruble">₽</span></span></label
           >
         </fieldset>
         <div class="total-row">
           <span>Стоимость участия</span
-          ><output id="total" aria-live="polite">{{amount:watch}} ₽</output>
+          ><output id="total" aria-live="polite"
+            >{{amount:watch}} <span class="ruble">₽</span></output
+          >
         </div>
         <label for="app-name">Ваше имя</label
         ><input

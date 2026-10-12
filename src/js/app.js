@@ -171,7 +171,9 @@ function updateTotal() {
   extras.disabled = !working;
   if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
   const total = collectSelection().total;
-  document.querySelector('#total').value = money.format(total) + ' ₽';
+  // Markup, not text, so the ruble sign keeps its own font; the amount is a formatted number.
+  document.querySelector('#total').innerHTML =
+    money.format(total) + ' <span class="ruble">₽</span>';
   return total;
 }
 /**
@@ -197,7 +199,9 @@ async function refreshPrices() {
   });
   updateTotal();
 }
-refreshPrices().catch(() => {});
+refreshPrices()
+  .catch(() => {})
+  .finally(() => document.documentElement.classList.remove('prices-loading'));
 document.querySelectorAll('.choose-plan').forEach((button) =>
   button.addEventListener('click', (e) => {
     e.preventDefault();
