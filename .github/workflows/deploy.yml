@@ -70,7 +70,8 @@ jobs:
           # so tests never touch real buyers' chats.
           TELEGRAM_BOT_USERNAME: ${{ github.ref == 'refs/heads/main' && 'masterskaya_brand_strategy_bot' || 'masterskaya_brand_test_bot' }}
           # Rubles per receipt line on the test site; the live site charges real prices.
-          TEST_ITEM_PRICE: ${{ github.ref == 'refs/heads/main' && '' || '1' }}
+          # The empty value goes last: `cond && '' || x` always yields x, since '' is falsy.
+          TEST_ITEM_PRICE: ${{ github.ref != 'refs/heads/main' && '1' || '' }}
         run: |
           php -r 'echo "<?php\n// Written by the deploy workflow; edits are overwritten.\nreturn " . var_export([
             "tochka_jwt" => getenv("TOCHKA_JWT"),
