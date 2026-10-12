@@ -1,28 +1,28 @@
-## Что и зачем
+## What and why
 
-<!-- Что меняется для посетителя сайта, покупателя, заказчика в админке или в боте. -->
+<!-- What changes for a site visitor, a buyer, an organizer in the admin panel or in the bot. -->
 
-## Что затронуто
+## Affected
 
-- [ ] Сайт (`src/`, `scripts/build.mjs`)
-- [ ] Оплата (`src/api/`)
-- [ ] Админка и бот (`admin/`)
-- [ ] Схема базы админки (новая миграция в `admin/src/migrations/`)
-- [ ] Ретранслятор Telegram (`worker/`)
-- [ ] Выкладка, секреты, переменные GitHub (`.github/workflows/`)
+- [ ] Site (`src/`, `scripts/build.mjs`)
+- [ ] Payment (`src/api/`)
+- [ ] Admin panel and bot (`admin/`)
+- [ ] Admin database schema (new migration in `admin/src/migrations/`)
+- [ ] Telegram relay (`worker/`)
+- [ ] Deploy, secrets, GitHub variables (`.github/workflows/`)
 
-## Проверка на тесте
+## Checked on test
 
-<!-- Ветка уже выложена на test.brandmasterskaya.ru и admin.test.brandmasterskaya.ru. -->
+<!-- The branch is already deployed to test.brandmasterskaya.ru and admin.test.brandmasterskaya.ru. -->
 
-- [ ] Страница и форма на test.brandmasterskaya.ru, в том числе на телефоне
-- [ ] Оплата проходит, страница подтверждения заказа ведёт в бота
-- [ ] Бот @masterskaya_brand_test_bot отвечает на `/start` и пускает в чаты
-- [ ] Изменения видны в admin.test.brandmasterskaya.ru
+- [ ] Page and form on test.brandmasterskaya.ru, including on a phone
+- [ ] Payment goes through, the order confirmation page leads to the bot
+- [ ] @masterskaya_brand_test_bot answers `/start` and lets the buyer into the chats
+- [ ] Changes show up in admin.test.brandmasterskaya.ru
 
-## После слияния в main
+## After merge to main
 
-<!-- Слияние выкладывает brandmasterskaya.ru, admin.brandmasterskaya.ru и боевого бота. -->
+<!-- Merging deploys brandmasterskaya.ru, admin.brandmasterskaya.ru and the live bot. -->
 
-- [ ] Ничего вручную делать не нужно
-- [ ] Нужно вручную: <!-- секрет, настройка в панели reg.ru, текст в админке… -->
+- [ ] Nothing to do by hand
+- [ ] By hand: <!-- a secret, a setting in the reg.ru panel, a text in the admin panel… -->
