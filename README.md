@@ -109,18 +109,18 @@ Email и телефон обязательны и проверяются в бр
    ```
 3. Положить их в секреты репозитория `TOCHKA_JWT`, `TOCHKA_CUSTOMER_CODE`, `TOCHKA_MERCHANT_ID`.
 4. Создать ящик отправителя (`mail_from`, по умолчанию `noreply@brandmasterskaya.ru`).
-5. После деплоя подключить вебхуки (банк сразу присылает тестовый и ждёт ответ 200). На один `client_id` банк хранит один адрес ([FAQ Точки](https://developers.tochka.com/docs/tochka-api/faq)), поэтому у тестового сайта свой JWT-ключ только с правом `ManageWebhookData`: основной ключ шлёт вебхуки на боевой сайт, тестовый — на тестовый. Чужие заказы каждый сайт пропускает.
+5. После деплоя подключить вебхук (банк сразу присылает тестовый и ждёт ответ 200). На один `client_id` банк хранит один адрес ([FAQ Точки](https://developers.tochka.com/docs/tochka-api/faq)), поэтому вебхук основного ключа ведёт на боевой сайт:
    ```bash
    TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-edit https://brandmasterskaya.ru/api/webhook.php
-   TOCHKA_JWT=<тестовый ключ> TOCHKA_CLIENT_ID=<его client_id> node scripts/tochka.mjs webhook-set https://test.brandmasterskaya.ru/api/webhook.php
    ```
+   Чтобы вебхуки получал и тестовый сайт, нужен отдельный JWT-ключ только с правом `ManageWebhookData` и свой вебхук на него (`webhook-set https://test.brandmasterskaya.ru/api/webhook.php`). Чужие заказы каждый сайт пропускает.
    Без вебхука оплата тоже засчитывается: страница «Спасибо» сверяет статус через API.
 
 Журнал платежей: `~/private/<папка сайта>/payments.log`, заказы: `~/private/<папка сайта>/orders/`.
 
 Для локальной проверки без денег: `BM_PRIVATE_DIR` указывает на папку с `config.php`, в нём `'sandbox' => true` и `customer_code`/`merchant_id` из песочницы (`1234567ab`, `200000000001098` с `payment_modes` `['sbp']`). Песочница сразу отвечает «оплачено».
 
-При перевыпуске JWT меняются и токен, и `client_id`: обновите секрет `TOCHKA_JWT`, перезапустите деплой и заново подключите вебхук. Тестовый ключ перевыпускается так же, его вебхук тоже подключают заново.
+При перевыпуске JWT меняются и токен, и `client_id`: обновите секрет `TOCHKA_JWT`, перезапустите деплой и заново подключите вебхук.
 
 ## Telegram-бот
 
