@@ -50,7 +50,7 @@ Workflow **Admin** (`.github/workflows/admin.yml`) запускается при
 | Ветка        | Админка                          | Бот                             | Заказы сайта               |
 | ------------ | -------------------------------- | ------------------------------- | -------------------------- |
 | `main`       | `admin.brandmasterskaya.ru`      | @masterskaya_brand_strategy_bot | `brandmasterskaya.ru`      |
-| любая другая | `test.admin.brandmasterskaya.ru` | @masterskaya_brand_test_bot     | `test.brandmasterskaya.ru` |
+| любая другая | `admin.test.brandmasterskaya.ru` | @masterskaya_brand_test_bot     | `test.brandmasterskaya.ru` |
 
 Ограничения хостинга reg.ru (Host-0), под которые всё устроено:
 
