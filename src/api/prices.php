@@ -10,8 +10,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/lib.php';
 
+// The test site charges a token amount per line (see pay.php); show the same on the page.
+$testPrice = config()['test_item_price'];
 $prices = [];
 foreach ([...array_keys(PLANS), ...array_keys(ELECTIVES)] as $key) {
-    $prices[$key] = PLANS[$key]['price'] ?? ELECTIVES[$key]['price'];
+    $prices[$key] = $testPrice ?: PLANS[$key]['price'] ?? ELECTIVES[$key]['price'];
 }
 respond_json(200, $prices);
