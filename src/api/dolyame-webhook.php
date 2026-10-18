@@ -24,11 +24,11 @@ if (!$allowed) {
 }
 
 $event = json_decode((string) file_get_contents('php://input'), true);
-$orderId = is_array($event) ? (string) ($event['id'] ?? '') : '';
-log_event("dolyame webhook status=" . ($event['status'] ?? '') . " order=$orderId");
+$orderId = is_array($event) ? order_id_from_dolyame_id((string) ($event['id'] ?? '')) : null;
+log_event('dolyame webhook status=' . ($event['status'] ?? '') . ' order=' . ($orderId ?? 'unknown'));
 
 // Unknown ids (test notifications, other shops) are acknowledged and ignored.
-if (dolyame_enabled() && load_order($orderId) !== null) {
+if (dolyame_enabled() && $orderId !== null) {
     $status = dolyame_sync($orderId);
     if ($status === '') {
         // The status could not be checked; a non-200 makes Dolyame retry later.

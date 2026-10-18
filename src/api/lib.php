@@ -31,6 +31,8 @@ const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
 const TOCHKA_PRODUCTION_URL = 'https://enter.tochka.com/uapi';
 const TOCHKA_SANDBOX_URL = 'https://enter.tochka.com/sandbox/v2';
 const TOCHKA_SANDBOX_TOKEN = 'sandbox.jwt.token';
+// Dolyame accepts order ids up to 30 characters; our ids have 32, so Dolyame gets their prefix.
+const DOLYAME_ORDER_ID_LENGTH = 30;
 const DOLYAME_URL = 'https://partner.dolyame.ru/v1';
 // Dolyame sends notifications only from these networks.
 const DOLYAME_WEBHOOK_NETWORKS = ['91.194.226.0/23', '91.218.132.0/22', '212.233.80.0/22'];
@@ -257,6 +259,30 @@ function ip_in_network(string $address, string $network): bool
 }
 
 /**
+ * The id Dolyame knows an order by: the first 30 characters of ours.
+ * @param string $orderId Our 32-character order id.
+ * @return string
+ */
+function dolyame_order_id(string $orderId): string
+{
+    return substr($orderId, 0, DOLYAME_ORDER_ID_LENGTH);
+}
+
+/**
+ * Finds our order id by the shortened id Dolyame sends in notifications.
+ * @param string $dolyameId Untrusted id from a notification.
+ * @return string|null Our full order id, null when malformed or unknown.
+ */
+function order_id_from_dolyame_id(string $dolyameId): ?string
+{
+    if (!preg_match('/^[a-f0-9]{' . DOLYAME_ORDER_ID_LENGTH . '}$/', $dolyameId)) {
+        return null;
+    }
+    $files = glob(private_dir() . '/orders/' . $dolyameId . '*.json') ?: [];
+    return $files ? basename($files[0], '.json') : null;
+}
+
+/**
  * Lines of an order as Dolyame items: one per purchased part, with the 54-FZ fields for
  * Dolyame's receipt service. The service is handed over at once, so one "full payment" receipt.
  * @param array<string, mixed> $order
@@ -292,11 +318,11 @@ function dolyame_sync(string $orderId): string
         return '';
     }
     try {
-        $info = dolyame_request('GET', '/orders/' . rawurlencode($orderId) . '/info');
+        $info = dolyame_request('GET', '/orders/' . dolyame_order_id($orderId) . '/info');
         $status = (string) ($info['status'] ?? '');
         if (in_array($status, ['wait_for_commit', 'waiting_for_commit'], true)) {
             // The shop gets the money only after the commit; the service is sold at once.
-            $info = dolyame_request('POST', '/orders/' . rawurlencode($orderId) . '/commit', [
+            $info = dolyame_request('POST', '/orders/' . dolyame_order_id($orderId) . '/commit', [
                 'amount' => $order['total'],
                 'items' => dolyame_items($order),
                 // Receipts for exactly the items sold; none were added or dropped since create.

@@ -87,7 +87,7 @@ $order = [
 if ($useDolyame) {
     try {
         $response = dolyame_request('POST', '/orders/create', [
-            'order' => ['id' => $order['id'], 'amount' => $total, 'items' => dolyame_items($order)],
+            'order' => ['id' => dolyame_order_id($order['id']), 'amount' => $total, 'items' => dolyame_items($order)],
             'client_info' => ['first_name' => $name, 'phone' => $phone, 'email' => $email],
             'notification_url' => $config['site_url'] . '/api/dolyame-webhook.php',
             'success_url' => $config['site_url'] . '/spasibo.html?order=' . $order['id'],
