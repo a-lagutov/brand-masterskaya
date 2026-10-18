@@ -31,6 +31,9 @@ const APPLICATION_LINK = 'https://link.brandmasterskaya.ru/r/zayavka_1';
 const TOCHKA_PRODUCTION_URL = 'https://enter.tochka.com/uapi';
 const TOCHKA_SANDBOX_URL = 'https://enter.tochka.com/sandbox/v2';
 const TOCHKA_SANDBOX_TOKEN = 'sandbox.jwt.token';
+const DOLYAME_URL = 'https://partner.dolyame.ru/v1';
+// Dolyame sends notifications only from these networks.
+const DOLYAME_WEBHOOK_NETWORKS = ['91.194.226.0/23', '91.218.132.0/22', '212.233.80.0/22'];
 const TOCHKA_PUBLIC_KEY_URL = 'https://enter.tochka.com/doc/openapi/static/keys/public';
 // The webhook key rarely changes; refetch it once a day.
 const PUBLIC_KEY_CACHE_SECONDS = 86400;
@@ -101,6 +104,10 @@ function config(): array
             'site_url' => 'https://brandmasterskaya.ru',
             'mail_from' => 'noreply@brandmasterskaya.ru',
             'notify_email' => '',
+            // Dolyame (installments): Basic login/password plus the mTLS certificate and key,
+            // which the deploy writes next to config.php. Empty login — Dolyame is off.
+            'dolyame_login' => '',
+            'dolyame_password' => '',
             'test_item_price' => null,
             'telegram_bot_username' => '',
         ], $loaded);
@@ -167,6 +174,151 @@ function tochka_request(string $method, string $path, ?array $body = null): arra
         throw new RuntimeException("Tochka $method $path: HTTP $status $raw");
     }
     return json_decode((string) $raw, true) ?? [];
+}
+
+/**
+ * Random UUID v4, the format Dolyame requires in X-Correlation-ID.
+ * @return string
+ */
+function uuid_v4(): string
+{
+    $bytes = random_bytes(16);
+    // Version 4 and RFC 4122 variant bits.
+    $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+    $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+}
+
+/**
+ * Whether Dolyame is configured: credentials, certificate and key are all present.
+ * @return bool
+ */
+function dolyame_enabled(): bool
+{
+    return config()['dolyame_login'] !== ''
+        && is_file(private_dir() . '/dolyame-cert.pem')
+        && is_file(private_dir() . '/dolyame-key.pem');
+}
+
+/**
+ * Calls the Dolyame partner API over mTLS with Basic auth.
+ * @param string $method HTTP method.
+ * @param string $path Path after the base URL, e.g. /orders/create.
+ * @param array<string, mixed>|null $body JSON body.
+ * @return array<string, mixed> Decoded response.
+ * @throws RuntimeException On network errors and non-2xx responses.
+ */
+function dolyame_request(string $method, string $path, ?array $body = null): array
+{
+    $config = config();
+    $curl = curl_init(DOLYAME_URL . $path);
+    $headers = [
+        'Accept: application/json',
+        // Lets Dolyame support trace a request; also makes retries recognisable.
+        'X-Correlation-ID: ' . uuid_v4(),
+    ];
+    if ($body !== null) {
+        $headers[] = 'Content-Type: application/json';
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($body, JSON_UNESCAPED_UNICODE));
+    }
+    curl_setopt_array($curl, [
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_USERPWD => $config['dolyame_login'] . ':' . $config['dolyame_password'],
+        CURLOPT_SSLCERT => private_dir() . '/dolyame-cert.pem',
+        CURLOPT_SSLKEY => private_dir() . '/dolyame-key.pem',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+    ]);
+    $raw = curl_exec($curl);
+    $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+    $error = curl_error($curl);
+    if ($raw === false) {
+        throw new RuntimeException("Dolyame $method $path: $error");
+    }
+    if ($status < 200 || $status >= 300) {
+        throw new RuntimeException("Dolyame $method $path: HTTP $status $raw");
+    }
+    return json_decode((string) $raw, true) ?? [];
+}
+
+/**
+ * Whether an IPv4 address lies in a CIDR network.
+ * @param string $address
+ * @param string $network e.g. 91.194.226.0/23.
+ * @return bool
+ */
+function ip_in_network(string $address, string $network): bool
+{
+    [$base, $bits] = explode('/', $network);
+    $mask = -1 << (32 - (int) $bits);
+    $addressNumber = ip2long($address);
+    return $addressNumber !== false && (($addressNumber & $mask) === (ip2long($base) & $mask));
+}
+
+/**
+ * Lines of an order as Dolyame items: one per purchased part, with the 54-FZ fields for
+ * Dolyame's receipt service. The service is handed over at once, so one "full payment" receipt.
+ * @param array<string, mixed> $order
+ * @return list<array<string, mixed>>
+ */
+function dolyame_items(array $order): array
+{
+    $vatType = config()['vat_type'];
+    return array_map(fn($item) => [
+        'name' => PRODUCT_NAME . ': ' . $item['title'],
+        'quantity' => 1,
+        'price' => $item['price'],
+        'receipt' => [
+            'tax' => $vatType,
+            'payment_method' => 'full_payment',
+            'payment_object' => 'service',
+            'measurement_unit' => 'шт',
+        ],
+    ], array_merge([$order['plan']], $order['electives']));
+}
+
+/**
+ * Brings a Dolyame order up to date with the bank: confirms (commit) an application that
+ * waits for it and marks the order paid once Dolyame has accepted it. Safe to call from the
+ * webhook and the thank-you page at the same time.
+ * @param string $orderId A known order id.
+ * @return string Dolyame status, or '' when it could not be fetched.
+ */
+function dolyame_sync(string $orderId): string
+{
+    $order = load_order($orderId);
+    if ($order === null || ($order['provider'] ?? '') !== 'dolyame') {
+        return '';
+    }
+    try {
+        $info = dolyame_request('GET', '/orders/' . rawurlencode($orderId) . '/info');
+        $status = (string) ($info['status'] ?? '');
+        if (in_array($status, ['wait_for_commit', 'waiting_for_commit'], true)) {
+            // The shop gets the money only after the commit; the service is sold at once.
+            $info = dolyame_request('POST', '/orders/' . rawurlencode($orderId) . '/commit', [
+                'amount' => $order['total'],
+                'items' => dolyame_items($order),
+                // Receipts for exactly the items sold; none were added or dropped since create.
+                'fiscalization_settings' => [
+                    'type' => 'enabled',
+                    'params' => [
+                        'create_receipt_for_committed_items' => true,
+                        'create_receipt_for_added_items' => false,
+                        'create_receipt_for_returned_items' => false,
+                    ],
+                ],
+            ]);
+            $status = (string) ($info['status'] ?? 'committed');
+        }
+    } catch (RuntimeException $exception) {
+        log_event("dolyame sync failed order=$orderId " . $exception->getMessage());
+        return '';
+    }
+    if (in_array($status, ['committed', 'completed'], true)) {
+        mark_paid($orderId, 'dolyame');
+    }
+    return $status;
 }
 
 /**

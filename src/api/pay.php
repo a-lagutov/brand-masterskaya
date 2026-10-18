@@ -1,8 +1,9 @@
 <?php
 /**
- * Creates an order and a Tochka payment link with a receipt.
+ * Creates an order and a payment link: a Tochka link with a receipt, or a Dolyame installment
+ * application when method is "dolyame".
  *
- * POST JSON {name, email, phone, telegram, plan, electives: string[]}
+ * POST JSON {name, email, phone, telegram, plan, electives: string[], method?: "dolyame"}
  * 200 {paymentLink} — the browser goes there to pay.
  * 4xx/5xx {error} — a message to show in the form.
  */
@@ -28,6 +29,7 @@ $phone = (string) ($input['phone'] ?? '');
 $telegram = preg_replace('~^(https?://)?(t\.me|telegram\.me)/|^@~i', '', trim((string) ($input['telegram'] ?? '')));
 $planKey = (string) ($input['plan'] ?? '');
 $electiveKeys = array_values(array_unique(array_map('strval', (array) ($input['electives'] ?? []))));
+$useDolyame = ($input['method'] ?? '') === 'dolyame';
 
 // Same rules as the form in src/js/app.js; the browser checks are only a convenience.
 if ($name === '' || mb_strlen($name) > 100) {
@@ -52,6 +54,9 @@ foreach ($electiveKeys as $electiveKey) {
 }
 
 $config = config();
+if ($useDolyame && !dolyame_enabled()) {
+    respond_json(422, ['error' => 'Оплата частями сейчас недоступна']);
+}
 $plan = PLANS[$planKey];
 $electives = array_map(fn($key) => ELECTIVES[$key], $electiveKeys);
 // The test site charges a token amount per line instead of the real price.
@@ -75,8 +80,28 @@ $order = [
     'electiveKeys' => $electiveKeys,
     'total' => $total,
     'operationId' => null,
+    'provider' => $useDolyame ? 'dolyame' : 'tochka',
     'paidAt' => null,
 ];
+
+if ($useDolyame) {
+    try {
+        $response = dolyame_request('POST', '/orders/create', [
+            'order' => ['id' => $order['id'], 'amount' => $total, 'items' => dolyame_items($order)],
+            'client_info' => ['first_name' => $name, 'phone' => $phone, 'email' => $email],
+            'notification_url' => $config['site_url'] . '/api/dolyame-webhook.php',
+            'success_url' => $config['site_url'] . '/spasibo.html?order=' . $order['id'],
+            'fail_url' => $config['site_url'] . '/?payment=failed#pricing',
+            'fiscalization_settings' => ['type' => 'enabled'],
+        ]);
+    } catch (RuntimeException $exception) {
+        log_event('dolyame create failed order=' . $order['id'] . ' ' . $exception->getMessage());
+        respond_json(502, ['error' => 'Не удалось оформить рассрочку. Попробуйте ещё раз или оплатите картой.']);
+    }
+    save_order($order);
+    log_event("created order={$order['id']} provider=dolyame total=$total");
+    respond_json(200, ['paymentLink' => (string) ($response['link'] ?? '')]);
+}
 
 // One receipt line per purchased part, so the receipt mirrors the order.
 $receiptItems = array_map(fn($item) => [

@@ -74,6 +74,11 @@ jobs:
           TOCHKA_JWT: ${{ secrets.TOCHKA_JWT }}
           TOCHKA_CUSTOMER_CODE: ${{ secrets.TOCHKA_CUSTOMER_CODE }}
           TOCHKA_MERCHANT_ID: ${{ secrets.TOCHKA_MERCHANT_ID }}
+          # Dolyame: Basic credentials, and the mTLS certificate and key written beside config.php.
+          DOLYAME_LOGIN: ${{ secrets.DOLYAMI_MASTERSKAYA_LOGIN }}
+          DOLYAME_PASSWORD: ${{ secrets.DOLYAMI_MASTERSKAYA_PASS }}
+          DOLYAME_CERT: ${{ secrets.DOLYAME_CERT }}
+          DOLYAME_KEY: ${{ secrets.DOLYAME_KEY }}
           # The bot from admin/ the thank-you page links to; the test site has its own bot,
           # so tests never touch real buyers' chats.
           TELEGRAM_BOT_USERNAME: ${{ github.ref == 'refs/heads/main' && 'masterskaya_brand_strategy_bot' || 'masterskaya_brand_test_bot' }}
@@ -89,11 +94,20 @@ jobs:
             "site_url" => "https://" . getenv("SITE"),
             // A copy of every paid order lands in this mailbox as a backup.
             "notify_email" => "noreply@brandmasterskaya.ru",
+            "dolyame_login" => getenv("DOLYAME_LOGIN"),
+            "dolyame_password" => getenv("DOLYAME_PASSWORD"),
             "test_item_price" => getenv("TEST_ITEM_PRICE") === "" ? null : (int) getenv("TEST_ITEM_PRICE"),
           ], true) . ";\n";' > config.php
           ssh -i ~/.ssh/deploy_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "mkdir -p private/$SITE && chmod 700 private private/$SITE && umask 077 && cat > private/$SITE/config.php" < config.php
           rm config.php
+          # Without the certificate the site has no Dolyame button.
+          if [ -n "$DOLYAME_CERT" ] && [ -n "$DOLYAME_KEY" ]; then
+            printf '%s\n' "$DOLYAME_CERT" | ssh -i ~/.ssh/deploy_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+              "umask 077 && cat > private/$SITE/dolyame-cert.pem"
+            printf '%s\n' "$DOLYAME_KEY" | ssh -i ~/.ssh/deploy_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+              "umask 077 && cat > private/$SITE/dolyame-key.pem"
+          fi
 
       # --delete keeps the server in sync with the repo; .well-known and .htaccess
       # are excluded so Let's Encrypt challenges and panel-managed rules survive.

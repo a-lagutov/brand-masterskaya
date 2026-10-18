@@ -29,6 +29,11 @@ return [
     'mail_from' => 'noreply@brandmasterskaya.ru',
     // Where to send a copy of every paid order; empty to skip.
     'notify_email' => 'noreply@brandmasterskaya.ru',
+    // Dolyame installments (https://dolyame.ru/develop/): login and password from Dolyame; the mTLS
+    // certificate and key lie next to this file as dolyame-cert.pem and dolyame-key.pem (the
+    // deploy writes them). Empty login or no files — the button is hidden.
+    'dolyame_login' => '',
+    'dolyame_password' => '',
     // Test site only: charge this many rubles per receipt line instead of the real price.
     'test_item_price' => null,
     // The bot's @username without @, for the t.me link (admin/ runs the bot); the test site has
