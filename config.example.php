@@ -35,8 +35,6 @@ return [
     // browser where `localStorage.dolyame = 'on'` was typed in the console (see README).
     'dolyame_login' => '',
     'dolyame_password' => '',
-    // Test site only: charge this many rubles per receipt line instead of the real price.
-    'test_item_price' => null,
     // The bot's @username without @, for the t.me link (admin/ runs the bot); the test site has
     // masterskaya_brand_test_bot. Empty — the site sends buyers to Salebot instead.
     'telegram_bot_username' => 'masterskaya_brand_strategy_bot',

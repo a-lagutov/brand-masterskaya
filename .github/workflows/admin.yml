@@ -114,6 +114,7 @@ jobs:
               ORDERS_DIR: `${home}/private/${process.env.SITE}/orders`,
               PRICES_FILE: `${home}/www/${process.env.SITE}/api/prices.json`,
               PRICE_OVERRIDES_FILE: `${home}/private/${process.env.SITE}/prices.json`,
+              PROMO_CODES_FILE: `${home}/private/${process.env.SITE}/promocodes.json`,
               SITE_URL: `https://${process.env.SITE}`,
             }));
           ' "$(ssh -i ~/.ssh/deploy_key "$SERVER" 'echo $HOME')" > env.json

@@ -71,6 +71,7 @@ export interface Config {
     members: Member;
     chats: Chat;
     products: Product;
+    'promo-codes': PromoCode;
     scenarios: Scenario;
     users: User;
     'payload-kv': PayloadKv;
@@ -88,6 +89,7 @@ export interface Config {
     members: MembersSelect<false> | MembersSelect<true>;
     chats: ChatsSelect<false> | ChatsSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     scenarios: ScenariosSelect<false> | ScenariosSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -157,6 +159,10 @@ export interface Order {
       }[]
     | null;
   total?: number | null;
+  /**
+   * Скидка уже учтена в цене тарифа.
+   */
+  promoCode?: string | null;
   createdOnSite?: string | null;
   /**
    * Пусто — оплата не прошла. Задаётся только при создании.
@@ -252,6 +258,38 @@ export interface Member {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Скидка в процентах на выбранные тарифы и факультативы, у каждого свой процент; остальное — по полной цене. Сайт принимает код сразу после сохранения. Регистр букв неважен.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "promo-codes".
+ */
+export interface PromoCode {
+  id: number;
+  /**
+   * Например, FRIENDS10.
+   */
+  code: string;
+  /**
+   * Тарифы и факультативы, на которые действует код, и процент для каждого.
+   */
+  discounts: {
+    product: number | Product;
+    percent: number;
+    id?: string | null;
+  }[];
+  active?: boolean | null;
+  /**
+   * Пусто — без срока.
+   */
+  validUntil?: string | null;
+  /**
+   * Для кого код; покупатели её не видят.
+   */
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -387,6 +425,10 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
+        relationTo: 'promo-codes';
+        value: number | PromoCode;
+      } | null)
+    | ({
         relationTo: 'scenarios';
         value: number | Scenario;
       } | null)
@@ -454,6 +496,7 @@ export interface OrdersSelect<T extends boolean = true> {
         id?: T;
       };
   total?: T;
+  promoCode?: T;
   createdOnSite?: T;
   paidAt?: T;
   member?: T;
@@ -502,6 +545,25 @@ export interface ProductsSelect<T extends boolean = true> {
   kind?: T;
   price?: T;
   chats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "promo-codes_select".
+ */
+export interface PromoCodesSelect<T extends boolean = true> {
+  code?: T;
+  discounts?:
+    | T
+    | {
+        product?: T;
+        percent?: T;
+        id?: T;
+      };
+  active?: T;
+  validUntil?: T;
+  note?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -20,6 +20,11 @@ export const settings = {
    */
   priceOverridesFile: process.env.PRICE_OVERRIDES_FILE ?? '',
   /**
+   * Active promo codes for the site, ~/private/<site>/promocodes.json; src/api/lib.php checks
+   * the codes buyers type against it.
+   */
+  promoCodesFile: process.env.PROMO_CODES_FILE ?? '',
+  /**
    * Bot API root: the Cloudflare relay from worker/ on the hosting, where IPv4 connections to
    * api.telegram.org hang.
    */

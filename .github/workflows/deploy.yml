@@ -82,9 +82,6 @@ jobs:
           # The bot from admin/ the thank-you page links to; the test site has its own bot,
           # so tests never touch real buyers' chats.
           TELEGRAM_BOT_USERNAME: ${{ github.ref == 'refs/heads/main' && 'masterskaya_brand_strategy_bot' || 'masterskaya_brand_test_bot' }}
-          # Rubles per receipt line on the test site; the live site charges real prices.
-          # The empty value goes last: `cond && '' || x` always yields x, since '' is falsy.
-          TEST_ITEM_PRICE: ${{ github.ref != 'refs/heads/main' && '1' || '' }}
         run: |
           php -r 'echo "<?php\n// Written by the deploy workflow; edits are overwritten.\nreturn " . var_export([
             "tochka_jwt" => getenv("TOCHKA_JWT"),
@@ -96,7 +93,6 @@ jobs:
             "notify_email" => "noreply@brandmasterskaya.ru",
             "dolyame_login" => getenv("DOLYAME_LOGIN"),
             "dolyame_password" => getenv("DOLYAME_PASSWORD"),
-            "test_item_price" => getenv("TEST_ITEM_PRICE") === "" ? null : (int) getenv("TEST_ITEM_PRICE"),
           ], true) . ";\n";' > config.php
           ssh -i ~/.ssh/deploy_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "mkdir -p private/$SITE && chmod 700 private private/$SITE && umask 077 && cat > private/$SITE/config.php" < config.php
