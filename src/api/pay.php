@@ -77,12 +77,6 @@ $plan = $withDiscount(PLANS[$planKey], $planKey);
 $electives = array_map(fn($key) => $withDiscount(ELECTIVES[$key], $key), $electiveKeys);
 $fullTotal = PLANS[$planKey]['price'] + array_sum(array_map(fn($key) => ELECTIVES[$key]['price'], $electiveKeys));
 $discount = $fullTotal - $plan['price'] - array_sum(array_map(fn($item) => $item['price'], $electives));
-// The test site charges a token amount per line instead of the real price.
-if ($config['test_item_price']) {
-    $testPrice = fn($item) => ['title' => $item['title'], 'price' => $config['test_item_price']];
-    $plan = $testPrice($plan);
-    $electives = array_map($testPrice, $electives);
-}
 $total = $plan['price'] + array_sum(array_map(fn($item) => $item['price'], $electives));
 $order = [
     'id' => bin2hex(random_bytes(16)),

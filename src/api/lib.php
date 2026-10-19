@@ -160,7 +160,6 @@ function config(): array
             // which the deploy writes next to config.php. Empty login — Dolyame is off.
             'dolyame_login' => '',
             'dolyame_password' => '',
-            'test_item_price' => null,
             'telegram_bot_username' => '',
         ], $loaded);
     }
