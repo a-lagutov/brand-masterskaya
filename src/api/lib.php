@@ -102,7 +102,7 @@ function config(): array
             'tax_system_code' => 'usn_income',
             'vat_type' => 'none',
             'payment_method' => 'full_payment',
-            'payment_modes' => ['card', 'sbp'],
+            'payment_modes' => ['card', 'sbp', 'dolyame'],
             'site_url' => 'https://brandmasterskaya.ru',
             'mail_from' => 'noreply@brandmasterskaya.ru',
             'notify_email' => '',
