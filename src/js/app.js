@@ -157,13 +157,24 @@ function reportFieldError(input, message) {
 }
 
 /**
+ * Whether the applied promo code covers the selected plan.
+ * @returns {boolean}
+ */
+function promoAppliesToPlan() {
+  return Boolean(appliedPromo && appliedPromo.plans.includes(plan.value));
+}
+
+/**
  * Discount the applied promo code gives on the selected plan; electives are never discounted.
- * Rounded to whole rubles, the same formula as promo_discount() in src/api/lib.php.
+ * Same formula as promo_discount() in src/api/lib.php: rounded to whole rubles, at least 1 ruble,
+ * and the price never drops below 1 ruble.
  * @returns {number} Rubles off the plan's price, 0 when no code applies to it.
  */
 function planDiscount() {
-  if (!appliedPromo || !appliedPromo.plans.includes(plan.value)) return 0;
-  return Math.round((PLANS[plan.value].price * appliedPromo.percent) / 100);
+  if (!promoAppliesToPlan()) return 0;
+  const price = PLANS[plan.value].price;
+  const discount = Math.max(1, Math.round((price * appliedPromo.percent) / 100));
+  return Math.max(0, Math.min(price - 1, discount));
 }
 
 /**
@@ -197,11 +208,11 @@ function showPromoStatus(error) {
     promoStatus.textContent = '';
     return;
   }
-  const discount = planDiscount();
-  promoStatus.textContent = discount
-    ? 'Скидка ' + appliedPromo.percent + '% на тариф: −' + money.format(discount) + ' ₽'
+  const applies = promoAppliesToPlan();
+  promoStatus.textContent = applies
+    ? 'Скидка ' + appliedPromo.percent + '% на тариф: −' + money.format(planDiscount()) + ' ₽'
     : 'Промокод не действует для формата «' + PLANS[plan.value].title + '»';
-  promoStatus.classList.toggle('error', !discount);
+  promoStatus.classList.toggle('error', !applies);
 }
 
 /**

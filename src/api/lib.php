@@ -125,13 +125,15 @@ function find_promo_code(string $code): ?array
 
 /**
  * Discount in rubles for a price, rounded to whole rubles; the same formula as src/js/app.js.
+ * At least 1 ruble, so a code never gives nothing on a tiny price, and never more than leaves
+ * 1 ruble, which the bank needs.
  * @param int $price Full price in rubles.
  * @param int $percent 1–99.
  * @return int
  */
 function promo_discount(int $price, int $percent): int
 {
-    return (int) round($price * $percent / 100);
+    return max(0, min($price - 1, max(1, (int) round($price * $percent / 100))));
 }
 
 /**
