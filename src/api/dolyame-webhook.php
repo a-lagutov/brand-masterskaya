@@ -28,7 +28,7 @@ $orderId = is_array($event) ? order_id_from_dolyame_id((string) ($event['id'] ??
 log_event('dolyame webhook status=' . ($event['status'] ?? '') . ' order=' . ($orderId ?? 'unknown'));
 
 // Unknown ids (test notifications, other shops) are acknowledged and ignored.
-if (dolyame_configured() && $orderId !== null) {
+if (dolyame_enabled() && $orderId !== null) {
     $status = dolyame_sync($orderId);
     if ($status === '') {
         // The status could not be checked; a non-200 makes Dolyame retry later.
