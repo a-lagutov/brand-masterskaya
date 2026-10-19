@@ -113,11 +113,20 @@ Email и телефон обязательны и проверяются в бр
 3. Положить их в секреты репозитория `TOCHKA_JWT`, `TOCHKA_CUSTOMER_CODE`, `TOCHKA_MERCHANT_ID`.
 4. Создать ящик отправителя (`mail_from`, по умолчанию `noreply@brandmasterskaya.ru`).
 5. После деплоя подключить вебхук (банк сразу присылает тестовый и ждёт ответ 200). На один `client_id` банк хранит один адрес ([FAQ Точки](https://developers.tochka.com/docs/tochka-api/faq)), поэтому вебхук основного ключа ведёт на боевой сайт:
+
    ```bash
    TOCHKA_JWT=… TOCHKA_CLIENT_ID=… node scripts/tochka.mjs webhook-edit https://brandmasterskaya.ru/api/webhook.php
    ```
+
    Чтобы вебхуки получал и тестовый сайт, нужен отдельный JWT-ключ только с правом `ManageWebhookData` и свой вебхук на него (`webhook-set https://test.brandmasterskaya.ru/api/webhook.php`). Чужие заказы каждый сайт пропускает.
    Без вебхука оплата тоже засчитывается: страница «Спасибо» сверяет статус через API.
+
+6. Долями (оплата частями, [документация](https://dolyame.ru/develop/)): в секреты репозитория положить `DOLYAMI_MASTERSKAYA_LOGIN`, `DOLYAMI_MASTERSKAYA_PASS` и mTLS-сертификат с ключом, выпущенные в Т-Бизнесе, — `DOLYAME_CERT` и `DOLYAME_KEY` (содержимое PEM-файлов):
+   ```bash
+   gh secret set DOLYAME_CERT < 2-certificate-….pem
+   gh secret set DOLYAME_KEY < 2-private.key
+   ```
+   Деплой кладёт их в `~/private/<папка сайта>/dolyame-{cert,key}.pem`; без них кнопка «Оплатить частями» скрыта. Кнопка появляется, только когда на сервере есть пустой файл `~/private/<папка сайта>/dolyame.enabled`: `ssh <хостинг> 'touch private/brandmasterskaya.ru/dolyame.enabled'` включает, `rm` того же файла выключает (деплой его не трогает). Уже созданные заказы и вебхуки работают и без файла. Сайт передаёт в Долями `notification_url` = `/api/dolyame-webhook.php` (принимает только сети Долями и сверяет статус через API), заявка в статусе `wait_for_commit` подтверждается сразу, заказ считается оплаченным после `committed`. Чеки по 54-ФЗ для оплат через Долями пробивает чековый сервис Долями: к каждой позиции уходит `receipt` (`tax` из `vat_type`, «полный расчёт», «услуга»), в заявке и подтверждении `fiscalization_settings: enabled`. Нужна онлайн-касса, подключённая в Долями ([инструкция](https://dolyame.ru/develop/fiscalization/onlinekassa/)). Сертификат действует до 16.10.2027.
 
 Журнал платежей: `~/private/<папка сайта>/payments.log`, заказы: `~/private/<папка сайта>/orders/`.
 

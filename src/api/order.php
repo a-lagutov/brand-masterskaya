@@ -20,7 +20,13 @@ if ($order === null) {
     respond_json(404, ['status' => 'not_found']);
 }
 
-if (empty($order['paidAt']) && $order['operationId']) {
+if (empty($order['paidAt']) && ($order['provider'] ?? '') === 'dolyame') {
+    $dolyameStatus = dolyame_sync($orderId);
+    if (in_array($dolyameStatus, ['rejected', 'canceled'], true)) {
+        respond_json(200, ['status' => 'expired']);
+    }
+    $order = load_order($orderId);
+} elseif (empty($order['paidAt']) && $order['operationId']) {
     try {
         $response = tochka_request('GET', '/acquiring/v1.0/payments/' . rawurlencode($order['operationId']));
         $operation = $response['Data']['Operation'][0] ?? [];

@@ -184,6 +184,7 @@ async function refreshPrices() {
   const response = await fetch(PRICES_ENDPOINT, { cache: 'no-store' });
   if (!response.ok) return;
   const prices = await response.json();
+  document.querySelector('#pay-dolyame').hidden = prices.dolyame !== true;
   Object.keys(prices).forEach((key) => {
     const item = PLANS[key] ?? ELECTIVES[key];
     const price = prices[key];
@@ -288,9 +289,11 @@ async function submitApplication(event) {
     telegram,
     plan: plan.value,
     electives: [...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
+    // The Dolyame button submits the same form with its own value.
+    method: event.submitter?.value === 'dolyame' ? 'dolyame' : 'card',
   };
   submitButton.disabled = true;
-  showFormStatus('Создаём платёж…');
+  showFormStatus(application.method === 'dolyame' ? 'Оформляем рассрочку…' : 'Создаём платёж…');
   try {
     const response = await fetch(PAYMENT_ENDPOINT, {
       method: 'POST',
