@@ -23,7 +23,7 @@ return [
     // full_payment | full_prepayment
     'payment_method' => 'full_payment',
     // sbp | card | tinkoff | dolyame — only the ones enabled for the retail point.
-    'payment_modes' => ['card', 'sbp'],
+    'payment_modes' => ['card', 'sbp', 'dolyame'],
     'site_url' => 'https://brandmasterskaya.ru',
     // Sender of the "payment received" email; a mailbox on the site's domain.
     'mail_from' => 'noreply@brandmasterskaya.ru',
