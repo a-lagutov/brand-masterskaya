@@ -26,6 +26,8 @@ type SiteOrder = {
   planKey?: string;
   electiveKeys?: string[];
   total?: number;
+  /** Set when a promo code lowered the plan's price; the plan item holds the discounted price. */
+  promo?: { code: string; percent: number; discount: number } | null;
   paidAt?: string | null;
   /** Set by the earlier PHP bot (src/api/bot.php) when it bound the order. */
   telegramUserId?: number;
@@ -126,6 +128,7 @@ async function upsertOrder(payload: Payload, siteOrder: SiteOrder): Promise<Orde
     })),
     products: orderProductIds(siteOrder, products),
     total: siteOrder.total ?? 0,
+    promoCode: siteOrder.promo?.code ?? null,
     createdOnSite: siteOrder.createdAt ?? null,
     paidAt: siteOrder.paidAt ?? null,
   };

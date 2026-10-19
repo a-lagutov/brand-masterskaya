@@ -3,7 +3,8 @@
  * Creates an order and a payment link: a Tochka link with a receipt, or a Dolyame installment
  * application when method is "dolyame".
  *
- * POST JSON {name, email, phone, telegram, plan, electives: string[], method?: "dolyame"}
+ * POST JSON {name, email, phone, telegram, plan, electives: string[], promoCode?: string,
+ *   method?: "dolyame"}
  * 200 {paymentLink} — the browser goes there to pay.
  * 4xx/5xx {error} — a message to show in the form.
  */
@@ -30,6 +31,7 @@ $telegram = preg_replace('~^(https?://)?(t\.me|telegram\.me)/|^@~i', '', trim((s
 $planKey = (string) ($input['plan'] ?? '');
 $electiveKeys = array_values(array_unique(array_map('strval', (array) ($input['electives'] ?? []))));
 $useDolyame = ($input['method'] ?? '') === 'dolyame';
+$promoCode = trim((string) ($input['promoCode'] ?? ''));
 
 // Same rules as the form in src/js/app.js; the browser checks are only a convenience.
 if ($name === '' || mb_strlen($name) > 100) {
@@ -53,12 +55,24 @@ foreach ($electiveKeys as $electiveKey) {
     }
 }
 
+// The code is checked here again: the form only previews the discount.
+$promo = $promoCode === '' ? null : find_promo_code($promoCode);
+if ($promoCode !== '' && $promo === null) {
+    respond_json(422, ['error' => 'Промокод не найден или больше не действует']);
+}
+if ($promo !== null && !in_array($planKey, $promo['plans'], true)) {
+    respond_json(422, ['error' => 'Промокод не действует для формата «' . PLANS[$planKey]['title'] . '»']);
+}
+
 $config = config();
 if ($useDolyame && !dolyame_enabled()) {
     respond_json(422, ['error' => 'Оплата частями сейчас недоступна']);
 }
 $plan = PLANS[$planKey];
 $electives = array_map(fn($key) => ELECTIVES[$key], $electiveKeys);
+// The discount lowers only the plan's price, so the receipt line shows what was paid for it.
+$discount = $promo === null ? 0 : promo_discount($plan['price'], $promo['percent']);
+$plan['price'] -= $discount;
 // The test site charges a token amount per line instead of the real price.
 if ($config['test_item_price']) {
     $testPrice = fn($item) => ['title' => $item['title'], 'price' => $config['test_item_price']];
@@ -79,6 +93,12 @@ $order = [
     'planKey' => $planKey,
     'electiveKeys' => $electiveKeys,
     'total' => $total,
+    // The plan item above already holds the discounted price.
+    'promo' => $promo === null ? null : [
+        'code' => $promo['code'],
+        'percent' => $promo['percent'],
+        'discount' => $discount,
+    ],
     'operationId' => null,
     'provider' => $useDolyame ? 'dolyame' : 'tochka',
     'paidAt' => null,
@@ -99,7 +119,7 @@ if ($useDolyame) {
         respond_json(502, ['error' => 'Не удалось оформить рассрочку. Попробуйте ещё раз или оплатите картой.']);
     }
     save_order($order);
-    log_event("created order={$order['id']} provider=dolyame total=$total");
+    log_event("created order={$order['id']} provider=dolyame total=$total promo=" . ($promo['code'] ?? '-'));
     respond_json(200, ['paymentLink' => (string) ($response['link'] ?? '')]);
 }
 
@@ -139,5 +159,5 @@ try {
 $order['operationId'] = $response['Data']['operationId'] ?? null;
 $paymentLink = $response['Data']['paymentLink'] ?? '';
 save_order($order);
-log_event("created order={$order['id']} operation={$order['operationId']} total=$total");
+log_event("created order={$order['id']} operation={$order['operationId']} total=$total promo=" . ($promo['code'] ?? '-'));
 respond_json(200, ['paymentLink' => $paymentLink]);

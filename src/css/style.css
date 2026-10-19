@@ -143,7 +143,8 @@ summary:focus-visible {
   outline-offset: 5px;
 }
 
-form > input {
+form > input,
+.promo-row input {
   width: 100%;
   background: var(--white);
   border: 1px solid #a7a89d;
@@ -1437,6 +1438,31 @@ input[type='checkbox'] {
 .total-row output {
   font-size: 27px;
   letter-spacing: -0.6px;
+}
+
+.promo-row {
+  display: flex;
+  gap: 10px;
+}
+
+.promo-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.promo-row .button {
+  flex: none;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#promo-status {
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+#promo-status.error {
+  color: var(--red);
 }
 
 .form-note {

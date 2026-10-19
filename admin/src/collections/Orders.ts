@@ -102,11 +102,23 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
-      name: 'total',
-      type: 'number',
-      label: 'Сумма, ₽',
-      access: setOnCreateOnly,
-      admin: { readOnly: true },
+      type: 'row',
+      fields: [
+        {
+          name: 'total',
+          type: 'number',
+          label: 'Сумма, ₽',
+          access: setOnCreateOnly,
+          admin: { readOnly: true },
+        },
+        {
+          name: 'promoCode',
+          type: 'text',
+          label: 'Промокод',
+          access: setOnCreateOnly,
+          admin: { readOnly: true, description: 'Скидка уже учтена в цене тарифа.' },
+        },
+      ],
     },
     {
       type: 'row',

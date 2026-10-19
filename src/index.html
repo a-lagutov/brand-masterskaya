@@ -770,6 +770,19 @@
             <span>+ {{price:business}} <span class="ruble">₽</span></span></label
           >
         </fieldset>
+        <label for="app-promo">Промокод</label>
+        <div class="promo-row">
+          <input
+            id="app-promo"
+            name="promoCode"
+            autocapitalize="characters"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Если есть"
+            maxlength="32"
+          /><button class="button" type="button" id="apply-promo">Применить</button>
+        </div>
+        <p id="promo-status" role="status"></p>
         <div class="total-row">
           <span>Стоимость участия</span
           ><output id="total" aria-live="polite"

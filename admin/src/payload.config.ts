@@ -12,6 +12,7 @@ import { Chats } from './collections/Chats';
 import { Members } from './collections/Members';
 import { Orders } from './collections/Orders';
 import { Products } from './collections/Products';
+import { PromoCodes } from './collections/PromoCodes';
 import { Scenarios } from './collections/Scenarios';
 import { Users } from './collections/Users';
 import { BotTexts } from './globals/BotTexts';
@@ -30,7 +31,7 @@ export default buildConfig({
     supportedLanguages: { ru },
     fallbackLanguage: 'ru',
   },
-  collections: [Orders, Members, Chats, Products, Scenarios, Users],
+  collections: [Orders, Members, Chats, Products, PromoCodes, Scenarios, Users],
   globals: [BotTexts],
   editor: lexicalEditor(),
   graphQL: { disable: true },

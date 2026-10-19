@@ -52,6 +52,14 @@ const PRICES_ENDPOINT = 'api/prices.php';
 // Creates the order and returns the bank's payment page; see src/api/pay.php.
 const PAYMENT_ENDPOINT = 'api/pay.php';
 const PAYMENT_ERROR = 'Не удалось перейти к оплате. Попробуйте ещё раз или напишите нам.';
+// Checks a promo code before payment; see src/api/promo.php.
+const PROMO_ENDPOINT = 'api/promo.php';
+const PROMO_ERROR = 'Не удалось проверить промокод. Попробуйте ещё раз.';
+const promoInput = document.querySelector('#app-promo');
+const promoButton = document.querySelector('#apply-promo');
+const promoStatus = document.querySelector('#promo-status');
+// The code the server confirmed: {code, percent, plans}; null until one is applied.
+let appliedPromo = null;
 const submitButton = form.querySelector('button[type="submit"]');
 const emailInput = document.querySelector('#app-email');
 const phoneInput = document.querySelector('#app-phone');
@@ -149,20 +157,86 @@ function reportFieldError(input, message) {
 }
 
 /**
+ * Discount the applied promo code gives on the selected plan; electives are never discounted.
+ * Rounded to whole rubles, the same formula as promo_discount() in src/api/lib.php.
+ * @returns {number} Rubles off the plan's price, 0 when no code applies to it.
+ */
+function planDiscount() {
+  if (!appliedPromo || !appliedPromo.plans.includes(plan.value)) return 0;
+  return Math.round((PLANS[plan.value].price * appliedPromo.percent) / 100);
+}
+
+/**
  * Builds the application from the current form state.
- * @returns {{plan: {title: string, price: number}, electives: {title: string, price: number}[], total: number}}
+ * @returns {{plan: {title: string, price: number}, electives: {title: string, price: number}[], discount: number, total: number}}
  */
 function collectSelection() {
   const selectedPlan = PLANS[plan.value];
   const electives = [...extras.querySelectorAll('input:checked')].map(
     (checkbox) => ELECTIVES[checkbox.name],
   );
-  const total = electives.reduce((sum, elective) => sum + elective.price, selectedPlan.price);
-  return { plan: selectedPlan, electives, total };
+  const discount = planDiscount();
+  const total = electives.reduce(
+    (sum, elective) => sum + elective.price,
+    selectedPlan.price - discount,
+  );
+  return { plan: selectedPlan, electives, discount, total };
 }
 
 /**
- * Shows electives only for the full plan and refreshes the total.
+ * Shows what the applied promo code does for the selected plan, or an error.
+ * @param {string} [error] Error text; without it the status follows appliedPromo.
+ */
+function showPromoStatus(error) {
+  promoStatus.classList.toggle('error', Boolean(error));
+  if (error) {
+    promoStatus.textContent = error;
+    return;
+  }
+  if (!appliedPromo) {
+    promoStatus.textContent = '';
+    return;
+  }
+  const discount = planDiscount();
+  promoStatus.textContent = discount
+    ? 'Скидка ' + appliedPromo.percent + '% на тариф: −' + money.format(discount) + ' ₽'
+    : 'Промокод не действует для формата «' + PLANS[plan.value].title + '»';
+  promoStatus.classList.toggle('error', !discount);
+}
+
+/**
+ * Checks the typed promo code on the server and applies it to the total.
+ */
+async function applyPromo() {
+  const code = promoInput.value.trim();
+  appliedPromo = null;
+  if (!code) {
+    showPromoStatus();
+    updateTotal();
+    return;
+  }
+  promoButton.disabled = true;
+  try {
+    const response = await fetch(PROMO_ENDPOINT + '?code=' + encodeURIComponent(code), {
+      cache: 'no-store',
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || PROMO_ERROR);
+    appliedPromo = result;
+    showPromoStatus();
+  } catch (error) {
+    // A failed fetch or broken JSON has a technical message; show ours instead.
+    showPromoStatus(
+      error instanceof SyntaxError || error instanceof TypeError ? PROMO_ERROR : error.message,
+    );
+  } finally {
+    promoButton.disabled = false;
+    updateTotal();
+  }
+}
+
+/**
+ * Shows electives only for the full plan and refreshes the total and the promo code's discount.
  * @returns {number} Current total in rubles.
  */
 function updateTotal() {
@@ -174,6 +248,8 @@ function updateTotal() {
   // Markup, not text, so the ruble sign keeps its own font; the amount is a formatted number.
   document.querySelector('#total').innerHTML =
     money.format(total) + ' <span class="ruble">₽</span>';
+  // The plan or its price may have changed: say whether the code still applies.
+  if (appliedPromo) showPromoStatus();
   return total;
 }
 /**
@@ -247,6 +323,21 @@ dialog.addEventListener('click', (e) => {
   }
 });
 form.addEventListener('change', updateTotal);
+promoButton.addEventListener('click', applyPromo);
+promoInput.addEventListener('keydown', (event) => {
+  // Enter applies the code instead of submitting the whole form.
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    applyPromo();
+  }
+});
+// An edited code is no longer the one checked.
+promoInput.addEventListener('input', () => {
+  if (!appliedPromo) return;
+  appliedPromo = null;
+  showPromoStatus();
+  updateTotal();
+});
 // Drop the error as soon as the user edits a field, so the next submit re-checks it.
 emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
 telegramInput.addEventListener('input', () => telegramInput.setCustomValidity(''));
@@ -302,6 +393,8 @@ async function submitApplication(event) {
     telegram,
     plan: plan.value,
     electives: [...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
+    // A typed but unapplied code goes too: the server checks it and says if it is wrong.
+    promoCode: promoInput.value.trim(),
     // The Dolyame button submits the same form with its own value.
     method: event.submitter?.value === 'dolyame' ? 'dolyame' : 'card',
   };

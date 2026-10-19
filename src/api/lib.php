@@ -42,6 +42,8 @@ const PUBLIC_KEY_CACHE_SECONDS = 86400;
 // After a failed check, refetch at most this often, so junk requests do not hammer the bank.
 const PUBLIC_KEY_REFRESH_SECONDS = 300;
 const ORDER_ID_PATTERN = '/^[a-f0-9]{32}$/';
+// Promo codes as the admin panel stores them: upper case, Latin letters, digits, - and _.
+const PROMO_CODE_PATTERN = '/^[A-Z0-9_-]{3,32}$/';
 
 /**
  * Directory with config.php, orders/ and caches, outside the web root:
@@ -83,6 +85,53 @@ function load_prices(): array
         }
     }
     return $prices;
+}
+
+/**
+ * Finds an active promo code in promocodes.json, which the admin panel (admin/) writes to
+ * private_dir(): {"<CODE>": {"percent": 10, "plans": ["watch"], "validUntil": "<ISO>"|null}}.
+ * @param string $code Untrusted code as the buyer typed it; case and spaces do not matter.
+ * @return array{code: string, percent: int, plans: list<string>}|null Null when unknown, expired
+ *   or malformed.
+ */
+function find_promo_code(string $code): ?array
+{
+    $code = strtoupper(trim($code));
+    $codesFile = private_dir() . '/promocodes.json';
+    if (!preg_match(PROMO_CODE_PATTERN, $code) || !is_file($codesFile)) {
+        return null;
+    }
+    $codes = json_decode((string) file_get_contents($codesFile), true);
+    $promo = is_array($codes) ? ($codes[$code] ?? null) : null;
+    if (!is_array($promo)) {
+        return null;
+    }
+    $percent = $promo['percent'] ?? null;
+    // A broken percent must never make a zero or negative price.
+    if (!is_int($percent) || $percent < 1 || $percent > 99) {
+        return null;
+    }
+    $validUntil = $promo['validUntil'] ?? null;
+    if (is_string($validUntil) && strtotime($validUntil) !== false && strtotime($validUntil) < time()) {
+        return null;
+    }
+    // Only plans can be discounted; electives are always charged in full.
+    $plans = array_values(array_filter(
+        (array) ($promo['plans'] ?? []),
+        fn($key) => is_string($key) && isset(PLANS[$key]),
+    ));
+    return ['code' => $code, 'percent' => $percent, 'plans' => $plans];
+}
+
+/**
+ * Discount in rubles for a price, rounded to whole rubles; the same formula as src/js/app.js.
+ * @param int $price Full price in rubles.
+ * @param int $percent 1–99.
+ * @return int
+ */
+function promo_discount(int $price, int $percent): int
+{
+    return (int) round($price * $percent / 100);
 }
 
 /**
@@ -529,7 +578,10 @@ function notify_paid(array $order): void
         $ownerText = "Новая оплата\n\nЗаказ: {$order['id']}\nИмя: {$order['name']}\n"
             . "Email: {$order['email']}\nТелефон: {$order['phone']}\n"
             . "Telegram: @" . ($order['telegram'] ?? '') . "\n\n"
-            . "Состав:\n" . implode("\n", $lines) . "\nИтого: $total\n\n"
+            . "Состав:\n" . implode("\n", $lines) . "\n"
+            . (empty($order['promo']) ? '' : "Промокод {$order['promo']['code']}: скидка {$order['promo']['percent']}% на тариф, "
+                . number_format($order['promo']['discount'], 0, ',', ' ') . " ₽\n")
+            . "Итого: $total\n\n"
             . "Операция Точки: {$order['operationId']}";
         // The fixed "Новая оплата" prefix lets a mailbox filter sort these into a folder.
         send_mail($notifyEmail, "Новая оплата: $total — {$order['name']}", $ownerText);
