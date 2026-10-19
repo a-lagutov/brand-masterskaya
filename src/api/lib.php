@@ -89,10 +89,11 @@ function load_prices(): array
 
 /**
  * Finds an active promo code in promocodes.json, which the admin panel (admin/) writes to
- * private_dir(): {"<CODE>": {"percent": 10, "plans": ["watch"], "validUntil": "<ISO>"|null}}.
+ * private_dir(): {"<CODE>": {"discounts": {"<key>": <percent>}, "validUntil": "<ISO>"|null}},
+ * where a key is a plan or an elective from prices.json.
  * @param string $code Untrusted code as the buyer typed it; case and spaces do not matter.
- * @return array{code: string, percent: int, plans: list<string>}|null Null when unknown, expired
- *   or malformed.
+ * @return array{code: string, discounts: array<string, int>}|null Null when unknown, expired,
+ *   malformed or covering nothing on sale.
  */
 function find_promo_code(string $code): ?array
 {
@@ -106,21 +107,19 @@ function find_promo_code(string $code): ?array
     if (!is_array($promo)) {
         return null;
     }
-    $percent = $promo['percent'] ?? null;
-    // A broken percent must never make a zero or negative price.
-    if (!is_int($percent) || $percent < 1 || $percent > 99) {
-        return null;
-    }
     $validUntil = $promo['validUntil'] ?? null;
     if (is_string($validUntil) && strtotime($validUntil) !== false && strtotime($validUntil) < time()) {
         return null;
     }
-    // Only plans can be discounted; electives are always charged in full.
-    $plans = array_values(array_filter(
-        (array) ($promo['plans'] ?? []),
-        fn($key) => is_string($key) && isset(PLANS[$key]),
-    ));
-    return ['code' => $code, 'percent' => $percent, 'plans' => $plans];
+    // Only known plans and electives with a sane percent: a broken one must never make a zero
+    // or negative price.
+    $discounts = array_filter(
+        (array) ($promo['discounts'] ?? []),
+        fn($percent, $key) => (isset(PLANS[$key]) || isset(ELECTIVES[$key]))
+            && is_int($percent) && $percent >= 1 && $percent <= 99,
+        ARRAY_FILTER_USE_BOTH,
+    );
+    return $discounts ? ['code' => $code, 'discounts' => $discounts] : null;
 }
 
 /**
@@ -581,8 +580,8 @@ function notify_paid(array $order): void
             . "Email: {$order['email']}\nТелефон: {$order['phone']}\n"
             . "Telegram: @" . ($order['telegram'] ?? '') . "\n\n"
             . "Состав:\n" . implode("\n", $lines) . "\n"
-            . (empty($order['promo']) ? '' : "Промокод {$order['promo']['code']}: скидка {$order['promo']['percent']}% на тариф, "
-                . number_format($order['promo']['discount'], 0, ',', ' ') . " ₽\n")
+            . (empty($order['promo']) ? '' : "Промокод {$order['promo']['code']}: скидка "
+                . number_format($order['promo']['discount'], 0, ',', ' ') . " ₽ (уже в ценах выше)\n")
             . "Итого: $total\n\n"
             . "Операция Точки: {$order['operationId']}";
         // The fixed "Новая оплата" prefix lets a mailbox filter sort these into a folder.

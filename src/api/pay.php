@@ -60,19 +60,23 @@ $promo = $promoCode === '' ? null : find_promo_code($promoCode);
 if ($promoCode !== '' && $promo === null) {
     respond_json(422, ['error' => 'Промокод не найден или больше не действует']);
 }
-if ($promo !== null && !in_array($planKey, $promo['plans'], true)) {
-    respond_json(422, ['error' => 'Промокод не действует для формата «' . PLANS[$planKey]['title'] . '»']);
+if ($promo !== null && !array_intersect_key($promo['discounts'], array_flip([$planKey, ...$electiveKeys]))) {
+    respond_json(422, ['error' => 'Промокод не действует на выбранный формат и факультативы']);
 }
 
 $config = config();
 if ($useDolyame && !dolyame_enabled()) {
     respond_json(422, ['error' => 'Оплата частями сейчас недоступна']);
 }
-$plan = PLANS[$planKey];
-$electives = array_map(fn($key) => ELECTIVES[$key], $electiveKeys);
-// The discount lowers only the plan's price, so the receipt line shows what was paid for it.
-$discount = $promo === null ? 0 : promo_discount($plan['price'], $promo['percent']);
-$plan['price'] -= $discount;
+// Each discounted line carries its own lower price, so the receipt shows what was paid for it.
+$withDiscount = function (array $item, string $key) use ($promo): array {
+    $percent = $promo['discounts'][$key] ?? 0;
+    return $percent ? [...$item, 'price' => $item['price'] - promo_discount($item['price'], $percent)] : $item;
+};
+$plan = $withDiscount(PLANS[$planKey], $planKey);
+$electives = array_map(fn($key) => $withDiscount(ELECTIVES[$key], $key), $electiveKeys);
+$fullTotal = PLANS[$planKey]['price'] + array_sum(array_map(fn($key) => ELECTIVES[$key]['price'], $electiveKeys));
+$discount = $fullTotal - $plan['price'] - array_sum(array_map(fn($item) => $item['price'], $electives));
 // The test site charges a token amount per line instead of the real price.
 if ($config['test_item_price']) {
     $testPrice = fn($item) => ['title' => $item['title'], 'price' => $config['test_item_price']];
@@ -93,10 +97,10 @@ $order = [
     'planKey' => $planKey,
     'electiveKeys' => $electiveKeys,
     'total' => $total,
-    // The plan item above already holds the discounted price.
+    // The items above already hold the discounted prices; discount is their sum in rubles.
     'promo' => $promo === null ? null : [
         'code' => $promo['code'],
-        'percent' => $promo['percent'],
+        'discounts' => $promo['discounts'],
         'discount' => $discount,
     ],
     'operationId' => null,

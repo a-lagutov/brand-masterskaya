@@ -3,7 +3,7 @@
  * Checks a promo code for the form, so it can show the discount before payment.
  *
  * GET ?code=<code>
- * 200 {code, percent, plans: string[]} — plan keys the discount applies to.
+ * 200 {code, discounts: {"<plan or elective key>": <percent>}}.
  * 404 {error} — unknown or expired code.
  *
  * pay.php checks the code again and computes the price itself.

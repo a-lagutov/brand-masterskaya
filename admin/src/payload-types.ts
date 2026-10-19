@@ -262,7 +262,7 @@ export interface Member {
   createdAt: string;
 }
 /**
- * Скидка в процентах на выбранные тарифы; факультативы всегда без скидки. Сайт принимает код сразу после сохранения. Регистр букв неважен.
+ * Скидка в процентах на выбранные тарифы и факультативы, у каждого свой процент; остальное — по полной цене. Сайт принимает код сразу после сохранения. Регистр букв неважен.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "promo-codes".
@@ -273,8 +273,14 @@ export interface PromoCode {
    * Например, FRIENDS10.
    */
   code: string;
-  percent: number;
-  plans: (number | Product)[];
+  /**
+   * Тарифы и факультативы, на которые действует код, и процент для каждого.
+   */
+  discounts: {
+    product: number | Product;
+    percent: number;
+    id?: string | null;
+  }[];
   active?: boolean | null;
   /**
    * Пусто — без срока.
@@ -548,8 +554,13 @@ export interface ProductsSelect<T extends boolean = true> {
  */
 export interface PromoCodesSelect<T extends boolean = true> {
   code?: T;
-  percent?: T;
-  plans?: T;
+  discounts?:
+    | T
+    | {
+        product?: T;
+        percent?: T;
+        id?: T;
+      };
   active?: T;
   validUntil?: T;
   note?: T;

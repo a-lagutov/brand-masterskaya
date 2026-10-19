@@ -157,45 +157,49 @@ function reportFieldError(input, message) {
 }
 
 /**
- * Whether the applied promo code covers the selected plan.
- * @returns {boolean}
+ * Discount a promo code gives on one price. Same formula as promo_discount() in
+ * src/api/lib.php: rounded to whole rubles, at least 1 ruble, and the price never drops below
+ * 1 ruble.
+ * @param {number} price Full price in rubles.
+ * @param {number} percent 1–99.
+ * @returns {number} Rubles off the price.
  */
-function promoAppliesToPlan() {
-  return Boolean(appliedPromo && appliedPromo.plans.includes(plan.value));
-}
-
-/**
- * Discount the applied promo code gives on the selected plan; electives are never discounted.
- * Same formula as promo_discount() in src/api/lib.php: rounded to whole rubles, at least 1 ruble,
- * and the price never drops below 1 ruble.
- * @returns {number} Rubles off the plan's price, 0 when no code applies to it.
- */
-function planDiscount() {
-  if (!promoAppliesToPlan()) return 0;
-  const price = PLANS[plan.value].price;
-  const discount = Math.max(1, Math.round((price * appliedPromo.percent) / 100));
+function promoDiscount(price, percent) {
+  const discount = Math.max(1, Math.round((price * percent) / 100));
   return Math.max(0, Math.min(price - 1, discount));
 }
 
 /**
- * Builds the application from the current form state.
- * @returns {{plan: {title: string, price: number}, electives: {title: string, price: number}[], discount: number, total: number}}
+ * Selected plan and electives, each with its key and price after the applied promo code.
+ * @returns {{key: string, title: string, price: number, percent: number, discount: number}[]}
  */
-function collectSelection() {
-  const selectedPlan = PLANS[plan.value];
-  const electives = [...extras.querySelectorAll('input:checked')].map(
-    (checkbox) => ELECTIVES[checkbox.name],
-  );
-  const discount = planDiscount();
-  const total = electives.reduce(
-    (sum, elective) => sum + elective.price,
-    selectedPlan.price - discount,
-  );
-  return { plan: selectedPlan, electives, discount, total };
+function selectedItems() {
+  const keys = [
+    plan.value,
+    ...[...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
+  ];
+  return keys.map((key) => {
+    const item = PLANS[key] ?? ELECTIVES[key];
+    const percent = appliedPromo?.discounts[key] ?? 0;
+    const discount = percent ? promoDiscount(item.price, percent) : 0;
+    return { key, title: item.title, price: item.price - discount, percent, discount };
+  });
 }
 
 /**
- * Shows what the applied promo code does for the selected plan, or an error.
+ * Builds the application from the current form state.
+ * @returns {{discount: number, total: number}} Rubles off and the total to pay.
+ */
+function collectSelection() {
+  const items = selectedItems();
+  return {
+    discount: items.reduce((sum, item) => sum + item.discount, 0),
+    total: items.reduce((sum, item) => sum + item.price, 0),
+  };
+}
+
+/**
+ * Shows what the applied promo code takes off the selected plan and electives, or an error.
  * @param {string} [error] Error text; without it the status follows appliedPromo.
  */
 function showPromoStatus(error) {
@@ -208,11 +212,19 @@ function showPromoStatus(error) {
     promoStatus.textContent = '';
     return;
   }
-  const applies = promoAppliesToPlan();
-  promoStatus.textContent = applies
-    ? 'Скидка ' + appliedPromo.percent + '% на тариф: −' + money.format(planDiscount()) + ' ₽'
-    : 'Промокод не действует для формата «' + PLANS[plan.value].title + '»';
-  promoStatus.classList.toggle('error', !applies);
+  const discounted = selectedItems().filter((item) => item.percent);
+  if (!discounted.length) {
+    // Name what the code is for, so the buyer can pick it.
+    const covered = Object.keys(appliedPromo.discounts)
+      .map((key) => '«' + (PLANS[key] ?? ELECTIVES[key]).title + '»')
+      .join(', ');
+    promoStatus.textContent = 'Промокод действует только на ' + covered;
+    promoStatus.classList.add('error');
+    return;
+  }
+  const parts = discounted.map((item) => '«' + item.title + '» −' + item.percent + '%');
+  promoStatus.textContent =
+    'Скидка: ' + parts.join(', ') + '. Итого −' + money.format(collectSelection().discount) + ' ₽';
 }
 
 /**

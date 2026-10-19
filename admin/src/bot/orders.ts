@@ -26,8 +26,8 @@ type SiteOrder = {
   planKey?: string;
   electiveKeys?: string[];
   total?: number;
-  /** Set when a promo code lowered the plan's price; the plan item holds the discounted price. */
-  promo?: { code: string; percent: number; discount: number } | null;
+  /** Set when a promo code lowered prices; the items hold the discounted prices. */
+  promo?: { code: string; discount: number } | null;
   paidAt?: string | null;
   /** Set by the earlier PHP bot (src/api/bot.php) when it bound the order. */
   telegramUserId?: number;

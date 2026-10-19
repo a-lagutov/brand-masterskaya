@@ -5,13 +5,16 @@ import type { Payload } from 'payload';
 import type { Product } from '../payload-types';
 import { settings } from './settings';
 
-/** A promo code as the site reads it: src/api/lib.php, find_promo_code(). */
-type SitePromoCode = { percent: number; plans: string[]; validUntil: string | null };
+/**
+ * A promo code as the site reads it (src/api/lib.php, find_promo_code()): percent by the key of
+ * a plan or elective.
+ */
+type SitePromoCode = { discounts: Record<string, number>; validUntil: string | null };
 
 /**
- * Writes the active promo codes for the site: {"<CODE>": {percent, plans, validUntil}, ...}.
- * Only plan keys go in: electives are never discounted. src/api/lib.php checks the code and
- * its expiry and charges the discounted price.
+ * Writes the active promo codes for the site: {"<CODE>": {discounts: {"<key>": <percent>},
+ * validUntil}, ...}. src/api/lib.php checks the code and its expiry and charges the discounted
+ * prices.
  * @param payload
  */
 export async function writePromoCodes(payload: Payload): Promise<void> {
@@ -28,10 +31,13 @@ export async function writePromoCodes(payload: Payload): Promise<void> {
     promoCodes.docs.map((promoCode) => [
       promoCode.code,
       {
-        percent: promoCode.percent,
-        plans: (promoCode.plans ?? [])
-          .filter((plan): plan is Product => typeof plan === 'object' && plan.kind === 'plan')
-          .map((plan) => plan.key),
+        discounts: Object.fromEntries(
+          (promoCode.discounts ?? [])
+            .filter(
+              (row): row is typeof row & { product: Product } => typeof row.product === 'object',
+            )
+            .map((row) => [row.product.key, row.percent]),
+        ),
         validUntil: promoCode.validUntil ?? null,
       },
     ]),
