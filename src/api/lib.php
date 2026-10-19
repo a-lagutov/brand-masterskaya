@@ -192,14 +192,25 @@ function uuid_v4(): string
 }
 
 /**
- * Whether Dolyame is configured: credentials, certificate and key are all present.
+ * Whether Dolyame can be called: credentials, certificate and key are all present. Notifications
+ * and status checks of orders already created depend on this alone.
  * @return bool
  */
-function dolyame_enabled(): bool
+function dolyame_configured(): bool
 {
     return config()['dolyame_login'] !== ''
         && is_file(private_dir() . '/dolyame-cert.pem')
         && is_file(private_dir() . '/dolyame-key.pem');
+}
+
+/**
+ * Whether new Dolyame orders are offered: configured, and the owner has switched it on by creating
+ * the empty file dolyame.enabled next to config.php (`rm` it to switch off).
+ * @return bool
+ */
+function dolyame_enabled(): bool
+{
+    return dolyame_configured() && is_file(private_dir() . '/dolyame.enabled');
 }
 
 /**

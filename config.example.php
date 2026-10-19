@@ -31,7 +31,9 @@ return [
     'notify_email' => 'noreply@brandmasterskaya.ru',
     // Dolyame installments (https://dolyame.ru/develop/): login and password from Dolyame; the mTLS
     // certificate and key lie next to this file as dolyame-cert.pem and dolyame-key.pem (the
-    // deploy writes them). Empty login or no files — the button is hidden.
+    // deploy writes them). Empty login or no files — the button is hidden. Even with both, it shows
+    // only while the empty file dolyame.enabled lies next to config.php: create it by hand to
+    // switch Dolyame on, remove it to switch off.
     'dolyame_login' => '',
     'dolyame_password' => '',
     // Test site only: charge this many rubles per receipt line instead of the real price.
