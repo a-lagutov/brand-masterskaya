@@ -103,9 +103,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'bot-texts': BotText;
+    'site-settings': SiteSetting;
   };
   globalsSelect: {
     'bot-texts': BotTextsSelect<false> | BotTextsSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -717,6 +719,21 @@ export interface BotText {
   createdAt?: string | null;
 }
 /**
+ * Переключатели для сайта. Применяются сразу после сохранения.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Это вторая кнопка под основной «Перейти к оплате». Оплата картой и СБП не меняется.
+   */
+  hideDolyame?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bot-texts_select".
  */
@@ -731,6 +748,16 @@ export interface BotTextsSelect<T extends boolean = true> {
   otherAccount?: T;
   notAllowed?: T;
   help?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  hideDolyame?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

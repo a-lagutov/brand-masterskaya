@@ -5,6 +5,7 @@ import * as migration_20261012_042732_bot_start_text from './20261012_042732_bot
 import * as migration_20261012_043143_bot_text_links from './20261012_043143_bot_text_links';
 import * as migration_20261019_155241_promo_codes from './20261019_155241_promo_codes';
 import * as migration_20261019_161222_promo_discounts from './20261019_161222_promo_discounts';
+import * as migration_20261020_121529_site_settings from './20261020_121529_site_settings';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20261019_161222_promo_discounts.up,
     down: migration_20261019_161222_promo_discounts.down,
     name: '20261019_161222_promo_discounts',
+  },
+  {
+    up: migration_20261020_121529_site_settings.up,
+    down: migration_20261020_121529_site_settings.down,
+    name: '20261020_121529_site_settings'
   },
 ];

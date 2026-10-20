@@ -16,6 +16,7 @@ import { PromoCodes } from './collections/PromoCodes';
 import { Scenarios } from './collections/Scenarios';
 import { Users } from './collections/Users';
 import { BotTexts } from './globals/BotTexts';
+import { SiteSettings } from './globals/SiteSettings';
 import { migrations } from './migrations';
 import { ensureFirstAdmin } from './seed';
 
@@ -32,7 +33,7 @@ export default buildConfig({
     fallbackLanguage: 'ru',
   },
   collections: [Orders, Members, Chats, Products, PromoCodes, Scenarios, Users],
-  globals: [BotTexts],
+  globals: [BotTexts, SiteSettings],
   editor: lexicalEditor(),
   graphQL: { disable: true },
   secret: process.env.PAYLOAD_SECRET ?? '',
