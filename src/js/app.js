@@ -276,11 +276,13 @@ function updateTotal() {
   return total;
 }
 /**
- * Whether Dolyame was switched on in this browser by typing localStorage.dolyame = 'on' in the
- * console; until then nobody sees the button.
+ * Whether the Dolyame button may be shown: always on the test site, elsewhere only when it was
+ * switched on in this browser by typing localStorage.dolyame = 'on' in the console.
  * @returns {boolean}
  */
 function dolyameSwitchedOn() {
+  // The test site (test.<domain>) shows the button to everyone so it can be tried without the flag.
+  if (location.hostname.startsWith('test.')) return true;
   try {
     return localStorage.getItem('dolyame') === 'on';
   } catch {
