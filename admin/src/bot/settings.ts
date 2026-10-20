@@ -24,6 +24,8 @@ export const settings = {
    * the codes buyers type against it.
    */
   promoCodesFile: process.env.PROMO_CODES_FILE ?? '',
+  /** Switches for the site, ~/private/<site>/site-settings.json; src/api/prices.php reads it. */
+  siteSettingsFile: process.env.SITE_SETTINGS_FILE ?? '',
   /**
    * Bot API root: the Cloudflare relay from worker/ on the hosting, where IPv4 connections to
    * api.telegram.org hang.

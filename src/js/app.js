@@ -276,19 +276,6 @@ function updateTotal() {
   return total;
 }
 /**
- * Whether Dolyame was switched on in this browser by typing localStorage.dolyame = 'on' in the
- * console; until then nobody sees the button.
- * @returns {boolean}
- */
-function dolyameSwitchedOn() {
-  try {
-    return localStorage.getItem('dolyame') === 'on';
-  } catch {
-    // Storage blocked (private mode): treat as off.
-    return false;
-  }
-}
-/**
  * Replaces the prices baked in by the build with those set in the admin panel: on the page,
  * in the plan list and in the form total. The baked prices stay if the request fails.
  */
@@ -296,7 +283,7 @@ async function refreshPrices() {
   const response = await fetch(PRICES_ENDPOINT, { cache: 'no-store' });
   if (!response.ok) return;
   const prices = await response.json();
-  document.querySelector('#pay-dolyame').hidden = !(prices.dolyame === true && dolyameSwitchedOn());
+  document.querySelector('#pay-dolyame').hidden = prices.dolyame !== true;
   Object.keys(prices).forEach((key) => {
     const item = PLANS[key] ?? ELECTIVES[key];
     const price = prices[key];

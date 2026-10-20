@@ -252,6 +252,24 @@ function dolyame_enabled(): bool
 }
 
 /**
+ * Whether the page may show the Dolyame button: Dolyame is configured and the admin panel
+ * (admin/, "Настройки сайта") has not hidden it. The panel writes site-settings.json to
+ * private_dir(); without the file the button stays hidden.
+ * @return bool
+ */
+function dolyame_button_visible(): bool
+{
+    if (!dolyame_enabled()) {
+        return false;
+    }
+    $settingsFile = private_dir() . '/site-settings.json';
+    $siteSettings = is_file($settingsFile)
+        ? json_decode((string) file_get_contents($settingsFile), true)
+        : null;
+    return is_array($siteSettings) && ($siteSettings['hideDolyame'] ?? true) === false;
+}
+
+/**
  * Calls the Dolyame partner API over mTLS with Basic auth.
  * @param string $method HTTP method.
  * @param string $path Path after the base URL, e.g. /orders/create.
