@@ -26,6 +26,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
+    components: { providers: ['/components/JsonRequests#JsonRequests'] },
     meta: { titleSuffix: ' — Мастерская бренд-стратегии' },
   },
   i18n: {
