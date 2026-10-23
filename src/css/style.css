@@ -2542,3 +2542,40 @@ input[type='checkbox'] {
   /* A button, not a link in running text. */
   text-decoration: none;
 }
+
+/* Country code and number share one box, like a single field. */
+.phone-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--white);
+  border: 1px solid #a7a89d;
+}
+
+.phone-row:focus-within {
+  outline: 3px solid var(--red);
+  outline-offset: 5px;
+}
+
+.dial-code {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-right: 1px solid #a7a89d;
+  font-size: 14px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.phone-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 13px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: transparent;
+}
+
+.phone-row input:focus-visible {
+  outline: 0;
+}

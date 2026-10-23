@@ -40,8 +40,9 @@ if ($name === '' || mb_strlen($name) > 100) {
 if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 160) {
     respond_json(422, ['error' => 'Укажите email в формате you@example.com']);
 }
-if (!preg_match('/^\+7\d{10}$/', $phone)) {
-    respond_json(422, ['error' => 'Укажите телефон в формате +7 (900) 000-00-00']);
+// International format: plus, country code and number, 8-15 digits in all (+7 takes exactly 11).
+if (!preg_match('/^\+(7\d{10}|[1-9]\d{7,14})$/', $phone)) {
+    respond_json(422, ['error' => 'Укажите телефон: выберите страну и введите номер полностью']);
 }
 if (!preg_match('/^[A-Za-z0-9_]{5,32}$/', $telegram)) {
     respond_json(422, ['error' => 'Укажите ник в Telegram, например @username']);

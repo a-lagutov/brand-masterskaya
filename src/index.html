@@ -809,18 +809,24 @@
           placeholder="you@example.com"
           required
           maxlength="160"
-        /><label for="app-phone">Телефон</label
-        ><input
-          id="app-phone"
-          name="phone"
-          type="tel"
-          inputmode="tel"
-          autocomplete="tel"
-          placeholder="+7 (900) 000-00-00"
-          required
-          maxlength="24"
-        /><label for="app-telegram">Telegram</label
-        ><input
+        /><label for="app-country">Страна</label
+        ><select id="app-country" name="country" autocomplete="country" required></select
+        ><label for="app-phone">Телефон</label>
+        <div class="phone-row">
+          <span id="app-dial-code" class="dial-code" aria-hidden="true">+7</span
+          ><input
+            id="app-phone"
+            name="phone"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel-national"
+            placeholder="900 000-00-00"
+            required
+            maxlength="24"
+          />
+        </div>
+        <label for="app-telegram">Telegram</label>
+        <input
           id="app-telegram"
           name="telegram"
           autocapitalize="off"
