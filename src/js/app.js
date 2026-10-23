@@ -129,6 +129,8 @@ const PHONE_COUNTRIES = [
   { isoCode: 'TR', name: 'Турция', dialCode: '90' },
   { isoCode: 'US', name: 'США', dialCode: '1' },
   { isoCode: 'VN', name: 'Вьетнам', dialCode: '84' },
+  // Not a country: international numbers, e.g. Telegram's anonymous ones.
+  { isoCode: 'UN', name: 'Международные номера', dialCode: '888' },
 ];
 const DEFAULT_COUNTRY = 'RU';
 // Dial code 7 (Russia, Kazakhstan) has a fixed 10-digit local number.
@@ -137,11 +139,13 @@ const RUSSIAN_LOCAL_DIGITS = 10;
 // International numbers are at most 15 digits including the country code (E.164).
 const PHONE_MAX_DIGITS = 15;
 const PHONE_MIN_LOCAL_DIGITS = 6;
+// International numbers (+888, e.g. Telegram's anonymous ones) have 8 digits after the code.
+const INTERNATIONAL_DIAL_CODE = '888';
+const INTERNATIONAL_LOCAL_DIGITS = 8;
 const countrySelect = document.querySelector('#app-country');
 const dialCodeInput = document.querySelector('#app-dial-code');
-// Select value for a code that is not in the list.
-const OTHER_COUNTRY = 'OTHER';
-const MAX_DIAL_CODE_DIGITS = 4;
+// Only the codes of the listed countries can be typed.
+const DIAL_CODES = new Set(PHONE_COUNTRIES.map((country) => country.dialCode));
 const EMAIL_ERROR = 'Укажите email в формате you@example.com';
 const PHONE_ERROR = 'Укажите телефон: выберите страну и введите номер полностью';
 // Telegram usernames: 5–32 Latin letters, digits and underscores.
@@ -166,15 +170,42 @@ function currentDialCode() {
 }
 
 /**
+ * Cuts typed digits to the longest start of a listed code, so no other code can be entered.
+ * @param {string} digits Digits typed after the plus.
+ * @returns {string} Digits that still lead to some listed code; empty if none does.
+ */
+function allowedDialCodeStart(digits) {
+  let allowed = digits;
+  while (allowed && ![...DIAL_CODES].some((dialCode) => dialCode.startsWith(allowed))) {
+    allowed = allowed.slice(0, -1);
+  }
+  return allowed;
+}
+
+/**
  * Points the select at the country that owns the typed code.
- * Keeps the chosen country when it shares the code (Russia and Kazakhstan both use 7).
+ * Keeps the chosen country when it shares the code (Russia and Kazakhstan both use 7), and
+ * leaves it alone while the code is still incomplete (3 on the way to 375).
  */
 function syncCountryWithDialCode() {
   const dialCode = currentDialCode();
   const chosen = PHONE_COUNTRIES.find((country) => country.isoCode === countrySelect.value);
   if (chosen && chosen.dialCode === dialCode) return;
   const match = PHONE_COUNTRIES.find((country) => country.dialCode === dialCode);
-  countrySelect.value = match ? match.isoCode : OTHER_COUNTRY;
+  // An incomplete code belongs to no country yet: show the empty choice, not a stale one.
+  countrySelect.value = match ? match.isoCode : '';
+}
+
+/**
+ * Tells whether no listed code continues the given one (7 is final, 3 is not: 375 follows).
+ * @param {string} dialCode Complete listed code.
+ * @returns {boolean}
+ */
+function isFinalDialCode(dialCode) {
+  return (
+    DIAL_CODES.has(dialCode) &&
+    ![...DIAL_CODES].some((other) => other.startsWith(dialCode) && other !== dialCode)
+  );
 }
 
 /**
@@ -183,6 +214,7 @@ function syncCountryWithDialCode() {
  * @returns {number}
  */
 function maxLocalDigits(dialCode) {
+  if (dialCode === INTERNATIONAL_DIAL_CODE) return INTERNATIONAL_LOCAL_DIGITS;
   return dialCode === RUSSIAN_DIAL_CODE ? RUSSIAN_LOCAL_DIGITS : PHONE_MAX_DIGITS - dialCode.length;
 }
 
@@ -223,19 +255,23 @@ function phoneLocalDigits(phone) {
 }
 
 /**
- * Formats the local digits as the user types: 900 123-45-67 for +7, groups of three otherwise.
+ * Formats the local digits as the user types: 900 123 45 67 for +7, groups of three otherwise.
  * @param {string} phone Raw field value.
  * @returns {string} Formatted local part without the country code.
  */
 function formatPhone(phone) {
   const local = phoneLocalDigits(phone);
+  if (currentDialCode() === INTERNATIONAL_DIAL_CODE) {
+    // 0123 4567: two groups of four.
+    return [local.slice(0, 4), local.slice(4)].filter(Boolean).join(' ');
+  }
   if (currentDialCode() !== RUSSIAN_DIAL_CODE) {
     // 202 555 0123: two groups of three, the rest in the last one.
     return [local.slice(0, 3), local.slice(3, 6), local.slice(6)].filter(Boolean).join(' ');
   }
   const area = local.slice(0, 3);
   const rest = [local.slice(3, 6), local.slice(6, 8), local.slice(8, 10)].filter(Boolean);
-  return [area, rest.join('-')].filter(Boolean).join(' ');
+  return [area, rest.join(' ')].filter(Boolean).join(' ');
 }
 
 /**
@@ -245,26 +281,42 @@ function formatPhone(phone) {
  */
 function normalizePhone(phone) {
   const dialCode = currentDialCode();
-  if (!dialCode) return null;
+  // The code can still be a start of a listed one, e.g. 37 on the way to 375.
+  if (!DIAL_CODES.has(dialCode)) return null;
   const local = phoneLocalDigits(phone);
-  const minDigits = dialCode === RUSSIAN_DIAL_CODE ? RUSSIAN_LOCAL_DIGITS : PHONE_MIN_LOCAL_DIGITS;
+  const minDigits =
+    {
+      [RUSSIAN_DIAL_CODE]: RUSSIAN_LOCAL_DIGITS,
+      [INTERNATIONAL_DIAL_CODE]: INTERNATIONAL_LOCAL_DIGITS,
+    }[dialCode] ?? PHONE_MIN_LOCAL_DIGITS;
   return local.length >= minDigits ? '+' + dialCode + local : null;
+}
+
+/** Shows a number example that matches the typed code's format. */
+function showPhonePlaceholder() {
+  const dialCode = currentDialCode();
+  phoneInput.placeholder =
+    { [RUSSIAN_DIAL_CODE]: '900 000 00 00', [INTERNATIONAL_DIAL_CODE]: '0000 0000' }[dialCode] ??
+    '000 000 0000';
 }
 
 /** Puts the dial code of the chosen country into the code field. */
 function showDialCode() {
   const chosen = PHONE_COUNTRIES.find((country) => country.isoCode === countrySelect.value);
-  // "Other" leaves the typed code alone.
   if (chosen) dialCodeInput.value = chosen.dialCode;
+  showPhonePlaceholder();
 }
 
 /** Fills the country select with flags, names and codes. */
 function fillCountrySelect() {
+  // Shown while the typed code matches no country yet.
+  const placeholder = new Option('Выберите страну', '');
+  placeholder.disabled = true;
+  countrySelect.append(placeholder);
   for (const country of PHONE_COUNTRIES) {
     const label = `${flagOf(country.isoCode)}  ${country.name} +${country.dialCode}`;
     countrySelect.append(new Option(label, country.isoCode));
   }
-  countrySelect.append(new Option('Другая страна', OTHER_COUNTRY));
   countrySelect.value = DEFAULT_COUNTRY;
   showDialCode();
 }
@@ -405,8 +457,9 @@ function updateTotal() {
   if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
   const total = collectSelection().total;
   // Markup, not text, so the ruble sign keeps its own font; the amount is a formatted number.
-  document.querySelector('#total').innerHTML =
-    money.format(total) + ' <span class="ruble">₽</span>';
+  const totalMarkup = money.format(total) + ' <span class="ruble">₽</span>';
+  document.querySelector('#total').innerHTML = totalMarkup;
+  document.querySelector('#total-recap').innerHTML = totalMarkup;
   // The plan or its price may have changed: say whether the code still applies.
   if (appliedPromo) showPromoStatus();
   return total;
@@ -485,8 +538,125 @@ promoInput.addEventListener('input', () => {
   updateTotal();
 });
 // Drop the error as soon as the user edits a field, so the next submit re-checks it.
-emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
-telegramInput.addEventListener('input', () => telegramInput.setCustomValidity(''));
+// Popular mail domains offered after the @.
+const EMAIL_DOMAINS = [
+  'gmail.com',
+  'yandex.ru',
+  'mail.ru',
+  'bk.ru',
+  'inbox.ru',
+  'list.ru',
+  'ya.ru',
+  'icloud.com',
+  'outlook.com',
+  'rambler.ru',
+  'yahoo.com',
+  'proton.me',
+];
+const MAX_EMAIL_SUGGESTIONS = 6;
+const EMAIL_HINT = 'Выберите или продолжите ввод';
+const emailSuggestions = document.querySelector('#email-suggestions');
+// Index of the suggestion picked with the arrow keys; -1 when none is.
+let activeSuggestion = -1;
+
+/** Hides the domain list. */
+function hideEmailSuggestions() {
+  emailSuggestions.hidden = true;
+  emailSuggestions.replaceChildren();
+  activeSuggestion = -1;
+}
+
+/**
+ * Puts the chosen domain after the @ and closes the list.
+ * @param {string} domain Domain from EMAIL_DOMAINS.
+ */
+function chooseEmailDomain(domain) {
+  const localPart = emailInput.value.split('@')[0];
+  emailInput.value = `${localPart}@${domain}`;
+  emailInput.setCustomValidity('');
+  hideEmailSuggestions();
+  emailInput.focus();
+}
+
+/**
+ * Offers popular domains once the user has typed the @, narrowed by what follows it.
+ * Nothing is shown for a second @ or when the typed domain is already complete.
+ */
+function showEmailSuggestions() {
+  const parts = emailInput.value.split('@');
+  const localPart = parts[0];
+  const typedDomain = parts[1];
+  if (parts.length !== 2 || !localPart) {
+    hideEmailSuggestions();
+    return;
+  }
+  const matches = EMAIL_DOMAINS.filter(
+    (domain) =>
+      domain.startsWith(typedDomain.toLowerCase()) && domain !== typedDomain.toLowerCase(),
+  ).slice(0, MAX_EMAIL_SUGGESTIONS);
+  if (!matches.length) {
+    hideEmailSuggestions();
+    return;
+  }
+  const hint = document.createElement('li');
+  hint.className = 'suggestion-hint';
+  hint.setAttribute('role', 'presentation');
+  hint.textContent = EMAIL_HINT;
+  const options = matches.map((domain) => {
+    const option = document.createElement('li');
+    option.setAttribute('role', 'option');
+    option.dataset.domain = domain;
+    option.textContent = `${localPart}@${domain}`;
+    // mousedown, not click: the field would lose focus and close the list first.
+    option.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      chooseEmailDomain(domain);
+    });
+    return option;
+  });
+  emailSuggestions.replaceChildren(hint, ...options);
+  emailSuggestions.hidden = false;
+  activeSuggestion = -1;
+}
+
+/**
+ * Moves the highlight through the list with the arrow keys.
+ * @param {number} step 1 for down, -1 for up.
+ */
+function moveSuggestion(step) {
+  const options = [...emailSuggestions.querySelectorAll('[role="option"]')];
+  activeSuggestion = (activeSuggestion + step + options.length) % options.length;
+  options.forEach((option, index) => option.classList.toggle('active', index === activeSuggestion));
+}
+
+emailInput.addEventListener('input', () => {
+  emailInput.setCustomValidity('');
+  showEmailSuggestions();
+});
+emailInput.addEventListener('keydown', (event) => {
+  if (emailSuggestions.hidden) return;
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    moveSuggestion(event.key === 'ArrowDown' ? 1 : -1);
+  } else if (event.key === 'Enter' && activeSuggestion >= 0) {
+    // Enter picks the highlighted domain instead of leaving the step.
+    event.preventDefault();
+    const options = emailSuggestions.querySelectorAll('[role="option"]');
+    chooseEmailDomain(options[activeSuggestion].dataset.domain);
+  } else if (event.key === 'Escape') {
+    // Closes only the list, not the whole dialog.
+    event.stopPropagation();
+    hideEmailSuggestions();
+  }
+});
+emailInput.addEventListener('blur', hideEmailSuggestions);
+// The @ is printed before the field, so a typed or pasted @ or t.me link is cut to the bare name.
+telegramInput.addEventListener('input', () => {
+  telegramInput.setCustomValidity('');
+  telegramInput.value = telegramInput.value
+    .replace(/^\s*(https?:\/\/)?(t\.me|telegram\.me)\//i, '')
+    .replace(/^\s*@+/, '');
+});
 fillCountrySelect();
 phoneInput.addEventListener('input', () => {
   phoneInput.setCustomValidity('');
@@ -495,14 +665,32 @@ phoneInput.addEventListener('input', () => {
     phoneInput.value = formatPhone(phoneInput.value);
   }
 });
+// Backspace in an empty number goes back to the country code.
+phoneInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Backspace' || phoneInput.value) return;
+  event.preventDefault();
+  dialCodeInput.focus();
+  dialCodeInput.setSelectionRange(dialCodeInput.value.length, dialCodeInput.value.length);
+});
 // Autofill and paste can leave the caret elsewhere; tidy the value when the field is left.
 phoneInput.addEventListener('blur', () => (phoneInput.value = formatPhone(phoneInput.value)));
-// A typed code picks its country, or "other" when the list has none.
-dialCodeInput.addEventListener('input', () => {
+// A typed code picks its country; digits that lead to no listed code are dropped.
+dialCodeInput.addEventListener('input', (event) => {
   phoneInput.setCustomValidity('');
-  dialCodeInput.value = currentDialCode().slice(0, MAX_DIAL_CODE_DIGITS);
+  const typedDigits = currentDialCode();
+  const allowedDigits = allowedDialCodeStart(typedDigits);
+  dialCodeInput.value = allowedDigits;
   syncCountryWithDialCode();
-  phoneInput.value = formatPhone(phoneInput.value);
+  showPhonePlaceholder();
+  // Digits typed after a finished code belong to the number, e.g. 3 after 7 starts it with 3.
+  const overflowDigits = DIAL_CODES.has(allowedDigits)
+    ? typedDigits.slice(allowedDigits.length)
+    : '';
+  phoneInput.value = formatPhone(overflowDigits + phoneInput.value);
+  // A finished code sends the user on to the number; deleting stays in the code field.
+  if (!event.inputType?.startsWith('delete') && isFinalDialCode(currentDialCode())) {
+    phoneInput.focus();
+  }
 });
 // Another country changes the code and the digit limit, so the number is formatted again.
 countrySelect.addEventListener('change', () => {
@@ -510,6 +698,30 @@ countrySelect.addEventListener('change', () => {
   showDialCode();
   phoneInput.value = formatPhone(phoneInput.value);
 });
+const formSteps = [...form.querySelectorAll('.form-step')];
+const STEP_TITLES = ['Программа', 'Контакты и оплата'];
+const progressBar = form.querySelector('.progress-bar');
+const progressFill = form.querySelector('.progress-fill');
+let currentStep = 1;
+
+/**
+ * Shows one step of the form and moves the progress bar to it.
+ * @param {number} step 1-based step number.
+ */
+function showStep(step) {
+  currentStep = step;
+  formSteps.forEach((section, index) => (section.hidden = index + 1 !== step));
+  progressFill.style.width = `${(step / formSteps.length) * 100}%`;
+  progressBar.setAttribute('aria-valuenow', String(step));
+  document.querySelector('#progress-current').textContent = String(step);
+  document.querySelector('#progress-title').textContent = STEP_TITLES[step - 1];
+  showFormStatus('');
+  // Start the new step from its top, since the dialog scrolls.
+  dialog.scrollTo({ top: 0 });
+}
+document.querySelector('#step-next').addEventListener('click', () => showStep(2));
+document.querySelector('#step-back').addEventListener('click', () => showStep(1));
+
 /**
  * Shows a message under the submit button.
  * @param {string} message Empty string clears it.
@@ -525,6 +737,13 @@ function showFormStatus(message) {
  */
 async function submitApplication(event) {
   event.preventDefault();
+  // Enter on the first step moves on instead of paying.
+  if (currentStep === 1) {
+    showStep(2);
+    return;
+  }
+  // The form has novalidate (step 1 hides the required fields), so check them here.
+  if (!form.reportValidity()) return;
   const email = emailInput.value.trim();
   if (!EMAIL_PATTERN.test(email)) {
     reportFieldError(emailInput, EMAIL_ERROR);
@@ -578,5 +797,6 @@ updateTotal();
 // The bank sends the user back here with ?payment=failed when the payment did not go through.
 if (new URLSearchParams(window.location.search).get('payment') === 'failed') {
   dialog.showModal();
+  showStep(2);
   showFormStatus('Оплата не прошла. Проверьте данные и попробуйте ещё раз.');
 }
