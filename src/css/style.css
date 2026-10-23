@@ -2559,11 +2559,10 @@ input[type='checkbox'] {
 .dial-code {
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding-left: 12px;
   border-right: 1px solid #a7a89d;
   font-size: 14px;
   color: var(--ink);
-  white-space: nowrap;
 }
 
 .phone-row input {
@@ -2578,4 +2577,10 @@ input[type='checkbox'] {
 
 .phone-row input:focus-visible {
   outline: 0;
+}
+
+.phone-row .dial-code input {
+  flex: none;
+  width: 4ch;
+  padding: 13px 12px 13px 2px;
 }

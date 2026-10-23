@@ -138,7 +138,10 @@ const RUSSIAN_LOCAL_DIGITS = 10;
 const PHONE_MAX_DIGITS = 15;
 const PHONE_MIN_LOCAL_DIGITS = 6;
 const countrySelect = document.querySelector('#app-country');
-const dialCodeLabel = document.querySelector('#app-dial-code');
+const dialCodeInput = document.querySelector('#app-dial-code');
+// Select value for a code that is not in the list.
+const OTHER_COUNTRY = 'OTHER';
+const MAX_DIAL_CODE_DIGITS = 4;
 const EMAIL_ERROR = 'Укажите email в формате you@example.com';
 const PHONE_ERROR = 'Укажите телефон: выберите страну и введите номер полностью';
 // Telegram usernames: 5–32 Latin letters, digits and underscores.
@@ -155,11 +158,23 @@ function flagOf(isoCode) {
 }
 
 /**
- * Finds the country chosen in the select.
- * @returns {{isoCode: string, dialCode: string}}
+ * Reads the country code typed after the plus.
+ * @returns {string} Digits only, possibly empty while the user is still typing.
  */
-function selectedCountry() {
-  return PHONE_COUNTRIES.find((country) => country.isoCode === countrySelect.value);
+function currentDialCode() {
+  return dialCodeInput.value.replace(/\D/g, '');
+}
+
+/**
+ * Points the select at the country that owns the typed code.
+ * Keeps the chosen country when it shares the code (Russia and Kazakhstan both use 7).
+ */
+function syncCountryWithDialCode() {
+  const dialCode = currentDialCode();
+  const chosen = PHONE_COUNTRIES.find((country) => country.isoCode === countrySelect.value);
+  if (chosen && chosen.dialCode === dialCode) return;
+  const match = PHONE_COUNTRIES.find((country) => country.dialCode === dialCode);
+  countrySelect.value = match ? match.isoCode : OTHER_COUNTRY;
 }
 
 /**
@@ -183,11 +198,8 @@ function applyPastedDialCode(value) {
     (first, second) => second.dialCode.length - first.dialCode.length,
   )[0];
   if (!match) return digits;
-  // Keep Kazakhstan chosen when the user already picked it for +7.
-  if (match.dialCode !== selectedCountry().dialCode) {
-    countrySelect.value = match.isoCode;
-    showDialCode();
-  }
+  dialCodeInput.value = match.dialCode;
+  syncCountryWithDialCode();
   return digits.slice(match.dialCode.length);
 }
 
@@ -197,18 +209,17 @@ function applyPastedDialCode(value) {
  * @returns {string} Digits without the country code, trimmed to the maximum length.
  */
 function phoneLocalDigits(phone) {
-  const dialCode = selectedCountry().dialCode;
   const value = phone.trim();
   let digits = value.startsWith('+') ? applyPastedDialCode(value) : value.replace(/\D/g, '');
   // Russian numbers are often typed as 8 900… or 7 900…
   if (
-    dialCode === RUSSIAN_DIAL_CODE &&
+    currentDialCode() === RUSSIAN_DIAL_CODE &&
     digits.length > RUSSIAN_LOCAL_DIGITS &&
     /^[78]/.test(digits)
   ) {
     digits = digits.slice(1);
   }
-  return digits.slice(0, maxLocalDigits(selectedCountry().dialCode));
+  return digits.slice(0, maxLocalDigits(currentDialCode()));
 }
 
 /**
@@ -218,7 +229,7 @@ function phoneLocalDigits(phone) {
  */
 function formatPhone(phone) {
   const local = phoneLocalDigits(phone);
-  if (selectedCountry().dialCode !== RUSSIAN_DIAL_CODE) {
+  if (currentDialCode() !== RUSSIAN_DIAL_CODE) {
     // 202 555 0123: two groups of three, the rest in the last one.
     return [local.slice(0, 3), local.slice(3, 6), local.slice(6)].filter(Boolean).join(' ');
   }
@@ -233,15 +244,18 @@ function formatPhone(phone) {
  * @returns {string|null} Phone as +79001234567, or null for an incomplete number.
  */
 function normalizePhone(phone) {
-  const dialCode = selectedCountry().dialCode;
+  const dialCode = currentDialCode();
+  if (!dialCode) return null;
   const local = phoneLocalDigits(phone);
   const minDigits = dialCode === RUSSIAN_DIAL_CODE ? RUSSIAN_LOCAL_DIGITS : PHONE_MIN_LOCAL_DIGITS;
   return local.length >= minDigits ? '+' + dialCode + local : null;
 }
 
-/** Shows the dial code of the chosen country in front of the number. */
+/** Puts the dial code of the chosen country into the code field. */
 function showDialCode() {
-  dialCodeLabel.textContent = '+' + selectedCountry().dialCode;
+  const chosen = PHONE_COUNTRIES.find((country) => country.isoCode === countrySelect.value);
+  // "Other" leaves the typed code alone.
+  if (chosen) dialCodeInput.value = chosen.dialCode;
 }
 
 /** Fills the country select with flags, names and codes. */
@@ -250,6 +264,7 @@ function fillCountrySelect() {
     const label = `${flagOf(country.isoCode)}  ${country.name} +${country.dialCode}`;
     countrySelect.append(new Option(label, country.isoCode));
   }
+  countrySelect.append(new Option('Другая страна', OTHER_COUNTRY));
   countrySelect.value = DEFAULT_COUNTRY;
   showDialCode();
 }
@@ -482,6 +497,13 @@ phoneInput.addEventListener('input', () => {
 });
 // Autofill and paste can leave the caret elsewhere; tidy the value when the field is left.
 phoneInput.addEventListener('blur', () => (phoneInput.value = formatPhone(phoneInput.value)));
+// A typed code picks its country, or "other" when the list has none.
+dialCodeInput.addEventListener('input', () => {
+  phoneInput.setCustomValidity('');
+  dialCodeInput.value = currentDialCode().slice(0, MAX_DIAL_CODE_DIGITS);
+  syncCountryWithDialCode();
+  phoneInput.value = formatPhone(phoneInput.value);
+});
 // Another country changes the code and the digit limit, so the number is formatted again.
 countrySelect.addEventListener('change', () => {
   phoneInput.setCustomValidity('');
