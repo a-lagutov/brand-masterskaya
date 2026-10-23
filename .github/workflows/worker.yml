@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Dependabot gets no repository secrets, so its branches cannot deploy; the checks still run.
+    if: github.actor != 'dependabot[bot]'
     # Shows each deploy under Deployments on GitHub.
     environment: worker
     runs-on: ubuntu-latest

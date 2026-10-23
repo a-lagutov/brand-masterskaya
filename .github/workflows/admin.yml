@@ -12,6 +12,11 @@ on:
     paths:
       - 'admin/**'
       - '.github/workflows/admin.yml'
+  # Typecheck and build of every pull request, Dependabot's too; see the check job.
+  pull_request:
+    paths:
+      - 'admin/**'
+      - '.github/workflows/admin.yml'
   workflow_dispatch:
 
 # Read-only token: jobs only check out code; deploys use their own secrets.
@@ -25,11 +30,44 @@ env:
   NODE_VERSION: '22.20.0'
 
 concurrency:
-  group: admin-${{ github.ref == 'refs/heads/main' && 'live' || 'test' }}
+  # Pull request checks have their own group, so they never queue behind a deploy.
+  group: admin-${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || (github.ref == 'refs/heads/main' && 'live' || 'test') }}
   cancel-in-progress: false
 
 jobs:
+  # Same typecheck and build as the deploy, without secrets, so it also runs for Dependabot.
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # A throwaway database: the build must not touch a real one.
+      - name: Build
+        env:
+          DATABASE_URL: file:/tmp/build.db
+          PAYLOAD_SECRET: build-only
+        run: npm run build
+
   deploy:
+    # Dependabot gets no repository secrets, so its branches cannot deploy; the check job covers
+    # them. Pull requests are only checked, never deployed.
+    if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
     # Shows each deploy under Deployments on GitHub: admin, live from main, test from other branches.
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'admin-production' || 'admin-test' }}
