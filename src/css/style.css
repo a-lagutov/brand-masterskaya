@@ -2781,7 +2781,7 @@ input[type='checkbox'] {
   background: var(--paper);
 }
 
-/* The main page's ↗ turned to point right or left. */
+/* The main page's arrow turned to point right or left. */
 .arrow-next,
 .arrow-back {
   display: inline-block;
@@ -2791,9 +2791,8 @@ input[type='checkbox'] {
   transform: rotate(45deg);
 }
 
-/* The turned glyph sits low in its box; lift it to the text's middle. */
 .arrow-back {
-  transform: translateY(-3px) rotate(-135deg);
+  transform: rotate(-135deg);
 }
 
 /* On phones the form fills the screen. */
@@ -2949,4 +2948,13 @@ input[type='checkbox'] {
 
 .dropdown-search input[type='search']::-webkit-search-cancel-button {
   appearance: none;
+}
+
+/* The build swaps every ↗ for this SVG; it is as big as the glyph and sits on the same baseline. */
+.arrow-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  fill: currentcolor;
+  vertical-align: -0.085em;
 }

@@ -117,6 +117,14 @@ function formatKilobytes(bytes) {
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
+// The ↗ of the buttons as an SVG, so it looks the same in every browser: the web fonts have no
+// ↗, and each system picks its own fallback glyph (thin or bold). The outline is the thin
+// Hiragino arrow most Macs show; the font's y axis points up, so the path is flipped.
+const ARROW_SVG =
+  '<svg class="arrow-icon" viewBox="40 -815 900 900" aria-hidden="true">' +
+  '<path transform="scale(1 -1)" d="M75 -78 861 711 871 500H900C902 622 909 690 930 810C810 789 ' +
+  '742 782 620 780V751L831 741L46 -49Z"/></svg>';
+
 /**
  * Replaces {{title:key}}, {{price:key}} and {{amount:key}} with values from src/prices.json.
  * {{price:key}} becomes <span data-price="key">, which src/js/app.js updates with the prices
@@ -199,6 +207,7 @@ async function buildPage(pageName, builtAssets) {
   let html = await readFile(path.join(SRC_DIR, pageName), 'utf8');
   let sourceBytes = Buffer.byteLength(html);
   html = fillPrices(await fillLegal(html, pageName), pageName);
+  html = html.replaceAll('↗', ARROW_SVG);
 
   // Inline stylesheets and scripts so the page needs a single HTML request.
   const inlineTargets = [
