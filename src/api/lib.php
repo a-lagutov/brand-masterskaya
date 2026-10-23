@@ -279,25 +279,40 @@ function site_settings(): array
 }
 
 /**
+ * Defaults for the contacts and legal details: src/legal/defaults.json, which the build copies
+ * next to this file (api/legal/). The admin panel overrides them.
+ * @return array{contacts: array<string, string>, legal: array<string, string>}
+ */
+function legal_defaults(): array
+{
+    static $defaults = null;
+    if ($defaults === null) {
+        $defaults = json_decode((string) file_get_contents(__DIR__ . '/legal/defaults.json'), true, 512, JSON_THROW_ON_ERROR);
+    }
+    return $defaults;
+}
+
+/**
  * Contacts for the page, the letter to the buyer and the legal documents: set in the admin
- * panel ("Настройки сайта"), otherwise the defaults below (same as in admin/).
+ * panel ("Настройки сайта"), otherwise the defaults.
  * @return array{phone: string, phoneText: string, telegram: string, email: string}
  */
 function site_contacts(): array
 {
+    $defaults = legal_defaults()['contacts'];
     $siteSettings = site_settings();
     $phone = (string) ($siteSettings['contactPhone'] ?? '');
     $telegram = (string) ($siteSettings['contactTelegram'] ?? '');
     $email = (string) ($siteSettings['contactEmail'] ?? '');
     // A broken value never reaches the page: each field falls back on its own.
     if (!preg_match('/^\+[1-9]\d{7,14}$/', $phone)) {
-        $phone = '+79150446975';
+        $phone = $defaults['phone'];
     }
     if (!preg_match('/^[A-Za-z0-9_]{5,32}$/', $telegram)) {
-        $telegram = 'brandmasterskaya';
+        $telegram = $defaults['telegram'];
     }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $email = 'contact@brandmasterskaya.ru';
+        $email = $defaults['email'];
     }
     // Russian numbers are written +7 915 044-69-75; others stay as stored.
     $phoneText = preg_match('/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/', $phone, $parts)
@@ -308,23 +323,12 @@ function site_contacts(): array
 
 /**
  * Legal details of the seller for the pages: set in the admin panel ("Настройки сайта"),
- * otherwise the defaults below (same as in admin/ and in the pages).
+ * otherwise the defaults.
  * @return array<string, string>
  */
 function site_legal(): array
 {
-    $legal = [
-        'ownerName' => 'Аверьянова Ольга Владимировна',
-        'ownerNameGenitive' => 'Аверьяновой Ольги Владимировны',
-        'ownerNameDative' => 'Аверьяновой Ольге Владимировне',
-        'ownerNameInstrumental' => 'Аверьяновой Ольгой Владимировной',
-        'inn' => '420526003907',
-        'ogrnip' => '326420500014874',
-        'bankAccount' => '40802810020000903497',
-        'bankName' => 'ООО «Банк Точка»',
-        'bik' => '044525104',
-        'correspondentAccount' => '30101810745374525104',
-    ];
+    $legal = legal_defaults()['legal'];
     // Digit-only details must have the exact length; a broken one keeps its default.
     $digitPatterns = [
         'inn' => '/^(\d{10}|\d{12})$/',
@@ -341,6 +345,37 @@ function site_legal(): array
         $legal[$key] = $valid ? $value : $default;
     }
     return $legal;
+}
+
+/**
+ * A legal document with its {{variables}} filled: the text saved in the admin panel
+ * (legal-<name>.html in private_dir()), or the one shipped with the site (api/legal/<name>.html).
+ * Values are escaped, the text itself is the owners' HTML; a text with scripts is ignored.
+ * @param string $name oferta or privacy.
+ * @return string HTML for inside <main>.
+ */
+function render_legal_document(string $name): string
+{
+    $shipped = (string) file_get_contents(__DIR__ . "/legal/$name.html");
+    $savedFile = private_dir() . "/legal-$name.html";
+    $saved = is_file($savedFile) ? (string) file_get_contents($savedFile) : '';
+    $unsafe = preg_match('/<\s*(script|iframe|object|embed)\b|\son\w+\s*=|javascript:/i', $saved) === 1;
+    $template = trim($saved) !== '' && !$unsafe ? $saved : $shipped;
+    $siteUrl = rtrim((string) config()['site_url'], '/');
+    $values = [
+        ...site_legal(),
+        ...site_contacts(),
+        'site' => $siteUrl,
+        'domain' => (string) parse_url($siteUrl, PHP_URL_HOST),
+    ];
+    return preg_replace_callback(
+        '/\{\{(\w+)\}\}/',
+        // An unknown variable stays visible, so a typo is noticed.
+        static fn (array $match): string => isset($values[$match[1]])
+            ? htmlspecialchars($values[$match[1]], ENT_QUOTES)
+            : $match[0],
+        $template,
+    );
 }
 
 /**

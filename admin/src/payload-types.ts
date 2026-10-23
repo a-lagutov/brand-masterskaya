@@ -104,10 +104,12 @@ export interface Config {
   globals: {
     'bot-texts': BotText;
     'site-settings': SiteSetting;
+    'legal-documents': LegalDocument;
   };
   globalsSelect: {
     'bot-texts': BotTextsSelect<false> | BotTextsSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'legal-documents': LegalDocumentsSelect<false> | LegalDocumentsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -776,6 +778,19 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * Полный текст договора-оферты и политики на сайте (HTML). Значения подставляются из «Настроек сайта» → «Контакты» и «Юридическая информация». Применяется сразу после сохранения. Если очистить поле и сохранить, сайт покажет текст, поставляемый с сайтом. Переменные: {{ownerName}} — ФИО предпринимателя, именительный падеж; {{ownerNameGenitive}} — ФИО, родительный падеж; {{ownerNameDative}} — ФИО, дательный падеж; {{ownerNameInstrumental}} — ФИО, творительный падеж; {{inn}} — ИНН; {{ogrnip}} — ОГРНИП; {{bankAccount}} — расчётный счёт; {{bankName}} — банк; {{bik}} — БИК; {{correspondentAccount}} — корсчёт; {{phone}} — телефон для ссылки, +79150446975; {{phoneText}} — телефон для чтения, +7 915 044-69-75; {{telegram}} — ник в Telegram без @; {{email}} — email; {{site}} — адрес сайта, https://…; {{domain}} — домен сайта
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-documents".
+ */
+export interface LegalDocument {
+  id: number;
+  oferta?: string | null;
+  privacy?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bot-texts_select".
  */
@@ -812,6 +827,17 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   legalBankName?: T;
   legalBik?: T;
   legalCorrespondentAccount?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-documents_select".
+ */
+export interface LegalDocumentsSelect<T extends boolean = true> {
+  oferta?: T;
+  privacy?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

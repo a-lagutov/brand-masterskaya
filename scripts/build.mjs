@@ -40,6 +40,15 @@ const PRICE_ITEMS = { ...PRICES.plans, ...PRICES.electives };
 const RUBLES = new Intl.NumberFormat('ru-RU');
 // Social networks need absolute image URLs in og:image, so meta tags point here.
 const SITE_URL = 'https://brandmasterskaya.ru';
+// The offer and the privacy policy: texts with {{variables}}, and the values the variables take
+// until the admin panel sets its own (src/legal/). The pages get the defaults baked in; the
+// server fills the same templates with the panel's values (src/api/legal.php).
+const LEGAL_DIR = 'legal';
+const LEGAL_DOCUMENTS = ['oferta', 'privacy'];
+const LEGAL_DEFAULTS_FILE = 'defaults.json';
+const LEGAL_DEFAULTS = JSON.parse(
+  await readFile(path.join(SRC_DIR, LEGAL_DIR, LEGAL_DEFAULTS_FILE), 'utf8'),
+);
 
 /**
  * Converts a raster image to WebP and writes it to dist.
@@ -127,6 +136,47 @@ function fillPrices(html, pageName) {
 }
 
 /**
+ * Values for the {{variables}} of the legal texts: contacts, legal details, the site address.
+ * @returns {Record<string, string>}
+ */
+function legalVariables() {
+  const { phone, telegram, email } = LEGAL_DEFAULTS.contacts;
+  // Russian numbers are written +7 915 044-69-75.
+  const phoneText = phone.replace(/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/, '+7 $1 $2-$3-$4');
+  return {
+    ...LEGAL_DEFAULTS.legal,
+    phone,
+    phoneText,
+    telegram,
+    email,
+    site: SITE_URL,
+    domain: new URL(SITE_URL).host,
+  };
+}
+
+/**
+ * Replaces {{legal:oferta}} and {{legal:privacy}} with the text from src/legal/ and fills its
+ * {{variables}} with the defaults.
+ * @param {string} html Page source.
+ * @param {string} pageName For the error message.
+ * @returns {Promise<string>}
+ * @throws {Error} On an unknown document or variable.
+ */
+async function fillLegal(html, pageName) {
+  const variables = legalVariables();
+  for (const [placeholder, name] of [...html.matchAll(/\{\{legal:(\w+)\}\}/g)]) {
+    if (!LEGAL_DOCUMENTS.includes(name)) throw new Error(`${pageName}: unknown ${placeholder}`);
+    const template = await readFile(path.join(SRC_DIR, LEGAL_DIR, `${name}.html`), 'utf8');
+    const text = template.replace(/\{\{(\w+)\}\}/g, (variable, key) => {
+      if (!(key in variables)) throw new Error(`${name}.html: unknown variable ${variable}`);
+      return variables[key];
+    });
+    html = html.replace(placeholder, () => text);
+  }
+  return html;
+}
+
+/**
  * Builds one page: inlines its CSS and JS, builds its assets and minifies the HTML.
  * @param {string} pageName File name inside src/.
  * @param {Map<string, string>} builtAssets Source path -> output path of assets already
@@ -136,7 +186,7 @@ function fillPrices(html, pageName) {
 async function buildPage(pageName, builtAssets) {
   let html = await readFile(path.join(SRC_DIR, pageName), 'utf8');
   let sourceBytes = Buffer.byteLength(html);
-  html = fillPrices(html, pageName);
+  html = fillPrices(await fillLegal(html, pageName), pageName);
 
   // Inline stylesheets and scripts so the page needs a single HTML request.
   const inlineTargets = [
@@ -231,7 +281,13 @@ async function copyApi() {
   );
   for (const fileName of files) await copyAsset(path.join(API_DIR, fileName));
   await copyFile(path.join(SRC_DIR, PRICES_FILE), path.join(DIST_DIR, API_DIR, PRICES_FILE));
-  console.log(`${API_DIR}/: ${files.join(', ')}`);
+  // The server fills these templates with the values from the admin panel.
+  const legalOutputDir = path.join(DIST_DIR, API_DIR, LEGAL_DIR);
+  await mkdir(legalOutputDir, { recursive: true });
+  for (const fileName of [...LEGAL_DOCUMENTS.map((name) => `${name}.html`), LEGAL_DEFAULTS_FILE]) {
+    await copyFile(path.join(SRC_DIR, LEGAL_DIR, fileName), path.join(legalOutputDir, fileName));
+  }
+  console.log(`${API_DIR}/: ${files.join(', ')}, ${LEGAL_DIR}/`);
 }
 
 /** Runs the full build. */

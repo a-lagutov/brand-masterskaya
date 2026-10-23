@@ -15,7 +15,9 @@ import { Products } from './collections/Products';
 import { PromoCodes } from './collections/PromoCodes';
 import { Scenarios } from './collections/Scenarios';
 import { Users } from './collections/Users';
+import { seedLegalDocuments } from './bot/legalDocuments';
 import { BotTexts } from './globals/BotTexts';
+import { LegalDocuments } from './globals/LegalDocuments';
 import { SiteSettings } from './globals/SiteSettings';
 import { migrations } from './migrations';
 import { ensureFirstAdmin } from './seed';
@@ -34,7 +36,7 @@ export default buildConfig({
     fallbackLanguage: 'ru',
   },
   collections: [Orders, Members, Chats, Products, PromoCodes, Scenarios, Users],
-  globals: [BotTexts, SiteSettings],
+  globals: [BotTexts, SiteSettings, LegalDocuments],
   editor: lexicalEditor(),
   graphQL: { disable: true },
   secret: process.env.PAYLOAD_SECRET ?? '',
@@ -47,6 +49,7 @@ export default buildConfig({
   sharp,
   onInit: async (payload) => {
     await ensureFirstAdmin(payload);
+    await seedLegalDocuments(payload);
     startBackgroundWork(payload);
   },
 });

@@ -1,6 +1,9 @@
 // Replaces the contacts and legal details baked into the page with those set in the admin
-// panel; see src/api/contacts.php. The baked values stay if the request fails.
+// panel; see src/api/contacts.php. On the offer and the privacy policy (<main data-legal>) also
+// loads the text, which the panel can edit; see src/api/legal.php. The baked values stay if a
+// request fails.
 const CONTACTS_ENDPOINT = 'api/contacts.php';
+const LEGAL_ENDPOINT = 'api/legal.php?doc=';
 
 /**
  * Writes one contact into every link marked with its data-contact name.
@@ -38,4 +41,20 @@ async function refreshContacts() {
   showLegal(data.legal);
 }
 
+/** Replaces the text of the offer or the policy with the one the panel serves. */
+async function refreshLegalText() {
+  const main = document.querySelector('main[data-legal]');
+  if (!main) return;
+  const response = await fetch(LEGAL_ENDPOINT + encodeURIComponent(main.dataset.legal), {
+    cache: 'no-store',
+  });
+  if (!response.ok) return;
+  const text = await response.text();
+  // The text is the owners' own HTML from the panel; the server drops one with scripts.
+  if (text.trim()) main.innerHTML = text;
+  // A link to a part of the text (#consent) was not there when the browser looked for it.
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+}
+
 refreshContacts().catch(() => {});
+refreshLegalText().catch(() => {});
