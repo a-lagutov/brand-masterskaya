@@ -31,6 +31,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Dependabot gets no repository secrets, so its branches cannot deploy; the checks still run.
+    if: github.actor != 'dependabot[bot]'
     # Shows each deploy under Deployments on GitHub: site, live from main, test from other branches.
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'test' }}
