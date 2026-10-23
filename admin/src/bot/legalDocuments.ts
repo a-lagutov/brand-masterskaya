@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import type { Payload } from 'payload';
 
+import { renderLegalMarkdown } from './legalMarkdown';
 import { settings } from './settings';
 
 /** The documents whose text the panel edits, with the name of their field and file. */
@@ -32,7 +33,8 @@ export const LEGAL_VARIABLES: Record<string, string> = {
   domain: 'домен сайта',
 };
 
-/** Tags and attributes that would run code on the site; the site ignores such a text. */
+/** Tags and attributes that would run code on the site; the site ignores such a text.
+ * Checked on the Markdown, where raw HTML is allowed. */
 const UNSAFE_MARKUP = /<\s*(script|iframe|object|embed)\b|\son\w+\s*=|javascript:/i;
 
 /**
@@ -56,7 +58,7 @@ export function validateLegalText(text: string | null | undefined): true | strin
   return true;
 }
 
-/** Folder of the shipped texts, dist/api/legal next to the site's prices.json. */
+/** Folder of the shipped texts (Markdown), dist/api/legal next to the site's prices.json. */
 function templatesDir(): string {
   return settings.pricesFile ? path.join(path.dirname(settings.pricesFile), 'legal') : '';
 }
@@ -67,8 +69,9 @@ function documentsDir(): string {
 }
 
 /**
- * Writes the texts for the site as legal-<name>.html; an empty text removes the file, so the
- * site shows the shipped one. src/api/legal.php reads them.
+ * Writes the texts for the site as HTML, legal-<name>.html, rendered from the Markdown in the
+ * panel; an empty text removes the file, so the site shows the shipped one. src/api/legal.php
+ * reads them.
  * @param payload
  */
 export async function writeLegalDocuments(payload: Payload): Promise<void> {
@@ -86,7 +89,7 @@ export async function writeLegalDocuments(payload: Payload): Promise<void> {
       continue;
     }
     // The site may read the file at any moment; a rename never leaves it half-written.
-    await writeFile(`${file}.tmp`, text);
+    await writeFile(`${file}.tmp`, renderLegalMarkdown(text));
     await rename(`${file}.tmp`, file);
   }
   payload.logger.info('legal documents written for the site');
@@ -113,7 +116,7 @@ export async function seedLegalDocuments(payload: Payload): Promise<void> {
 /**
  * Reads the shipped texts for the documents that are empty and saves them.
  * @param payload
- * @param directory Folder with oferta.html and privacy.html.
+ * @param directory Folder with oferta.md and privacy.md.
  */
 async function fillEmptyDocuments(payload: Payload, directory: string): Promise<void> {
   const documents = await payload.findGlobal({ slug: 'legal-documents', depth: 0 });
@@ -123,7 +126,7 @@ async function fillEmptyDocuments(payload: Payload, directory: string): Promise<
       continue;
     }
     try {
-      seeded[name] = await readFile(path.join(directory, `${name}.html`), 'utf8');
+      seeded[name] = await readFile(path.join(directory, `${name}.md`), 'utf8');
     } catch {
       payload.logger.warn(`no shipped text for ${name} in ${directory}`);
     }

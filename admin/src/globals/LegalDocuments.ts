@@ -17,7 +17,7 @@ export const LegalDocuments: GlobalConfig = {
   label: 'Юридические документы',
   admin: {
     description:
-      'Полный текст договора-оферты и политики на сайте (HTML). Значения подставляются из «Настроек сайта» → ' +
+      'Полный текст договора-оферты и политики на сайте в формате Markdown (# заголовок, ## раздел, - список, [текст](адрес), таблицы через |). Значения подставляются из «Настроек сайта» → ' +
       '«Контакты» и «Юридическая информация». Применяется сразу после сохранения. ' +
       'Если очистить поле и сохранить, сайт покажет текст, поставляемый с сайтом. Переменные: ' +
       VARIABLES_HINT,
@@ -29,7 +29,7 @@ export const LegalDocuments: GlobalConfig = {
     name,
     type: 'code' as const,
     label: title,
-    admin: { language: 'html' },
+    admin: { language: 'markdown' },
     validate: (value: string | null | undefined) => validateLegalText(value),
   })),
 };
