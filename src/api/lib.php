@@ -262,11 +262,120 @@ function dolyame_button_visible(): bool
     if (!dolyame_enabled()) {
         return false;
     }
+    return (site_settings()['hideDolyame'] ?? true) === false;
+}
+
+/**
+ * Reads site-settings.json, which the admin panel writes to private_dir().
+ * @return array Empty when the file is missing or unreadable.
+ */
+function site_settings(): array
+{
     $settingsFile = private_dir() . '/site-settings.json';
     $siteSettings = is_file($settingsFile)
         ? json_decode((string) file_get_contents($settingsFile), true)
         : null;
-    return is_array($siteSettings) && ($siteSettings['hideDolyame'] ?? true) === false;
+    return is_array($siteSettings) ? $siteSettings : [];
+}
+
+/**
+ * Defaults for the contacts and legal details: src/legal/defaults.json, which the build copies
+ * next to this file (api/legal/). The admin panel overrides them.
+ * @return array{contacts: array<string, string>, legal: array<string, string>}
+ */
+function legal_defaults(): array
+{
+    static $defaults = null;
+    if ($defaults === null) {
+        $defaults = json_decode((string) file_get_contents(__DIR__ . '/legal/defaults.json'), true, 512, JSON_THROW_ON_ERROR);
+    }
+    return $defaults;
+}
+
+/**
+ * Contacts for the page, the letter to the buyer and the legal documents: set in the admin
+ * panel ("Настройки сайта"), otherwise the defaults.
+ * @return array{phone: string, phoneText: string, telegram: string, email: string}
+ */
+function site_contacts(): array
+{
+    $defaults = legal_defaults()['contacts'];
+    $siteSettings = site_settings();
+    $phone = (string) ($siteSettings['contactPhone'] ?? '');
+    $telegram = (string) ($siteSettings['contactTelegram'] ?? '');
+    $email = (string) ($siteSettings['contactEmail'] ?? '');
+    // A broken value never reaches the page: each field falls back on its own.
+    if (!preg_match('/^\+[1-9]\d{7,14}$/', $phone)) {
+        $phone = $defaults['phone'];
+    }
+    if (!preg_match('/^[A-Za-z0-9_]{5,32}$/', $telegram)) {
+        $telegram = $defaults['telegram'];
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $email = $defaults['email'];
+    }
+    // Russian numbers are written +7 915 044-69-75; others stay as stored.
+    $phoneText = preg_match('/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/', $phone, $parts)
+        ? "+7 {$parts[1]} {$parts[2]}-{$parts[3]}-{$parts[4]}"
+        : $phone;
+    return ['phone' => $phone, 'phoneText' => $phoneText, 'telegram' => $telegram, 'email' => $email];
+}
+
+/**
+ * Legal details of the seller for the pages: set in the admin panel ("Настройки сайта"),
+ * otherwise the defaults.
+ * @return array<string, string>
+ */
+function site_legal(): array
+{
+    $legal = legal_defaults()['legal'];
+    // Digit-only details must have the exact length; a broken one keeps its default.
+    $digitPatterns = [
+        'inn' => '/^(\d{10}|\d{12})$/',
+        'ogrnip' => '/^\d{15}$/',
+        'bankAccount' => '/^\d{20}$/',
+        'bik' => '/^\d{9}$/',
+        'correspondentAccount' => '/^\d{20}$/',
+    ];
+    $fromPanel = site_settings()['legal'] ?? [];
+    foreach ($legal as $key => $default) {
+        $value = is_array($fromPanel) ? trim((string) ($fromPanel[$key] ?? '')) : '';
+        $valid = $value !== '' && mb_strlen($value) <= 200
+            && (!isset($digitPatterns[$key]) || preg_match($digitPatterns[$key], $value));
+        $legal[$key] = $valid ? $value : $default;
+    }
+    return $legal;
+}
+
+/**
+ * A legal document with its {{variables}} filled: the text saved in the admin panel
+ * (legal-<name>.html in private_dir()), or the one shipped with the site (api/legal/<name>.html).
+ * Values are escaped, the text itself is the owners' HTML; a text with scripts is ignored.
+ * @param string $name oferta or privacy.
+ * @return string HTML for inside <main>.
+ */
+function render_legal_document(string $name): string
+{
+    $shipped = (string) file_get_contents(__DIR__ . "/legal/$name.html");
+    $savedFile = private_dir() . "/legal-$name.html";
+    $saved = is_file($savedFile) ? (string) file_get_contents($savedFile) : '';
+    $unsafe = preg_match('/<\s*(script|iframe|object|embed)\b|\son\w+\s*=|javascript:/i', $saved) === 1;
+    $template = trim($saved) !== '' && !$unsafe ? $saved : $shipped;
+    $siteUrl = rtrim((string) config()['site_url'], '/');
+    $values = [
+        ...site_legal(),
+        ...site_contacts(),
+        'site' => $siteUrl,
+        'domain' => (string) parse_url($siteUrl, PHP_URL_HOST),
+    ];
+    return preg_replace_callback(
+        '/\{\{(\w+)\}\}/',
+        // An unknown variable stays visible, so a typo is noticed.
+        static fn (array $match): string => isset($values[$match[1]])
+            ? htmlspecialchars($values[$match[1]], ENT_QUOTES)
+            : $match[0],
+        $template,
+    );
 }
 
 /**
@@ -576,12 +685,13 @@ function notify_paid(array $order): void
     $electives = array_map(fn($item) => $item['title'], $order['electives']);
     $format = $order['plan']['title'] . ($electives ? ' + ' . implode(', ', $electives) : '');
     $total = number_format($order['total'], 0, ',', ' ') . ' ₽';
+    $contacts = site_contacts();
     $customerText = "Здравствуйте, {$order['name']}!\n\n"
         . "Оплата участия в программе «" . PRODUCT_NAME . "» получена.\n"
         . "Формат: $format\nСумма: $total\n\n"
         . "Чтобы завершить регистрацию, откройте Telegram-бота по ссылке:\n$link\n\n"
         . "Кассовый чек банк пришлёт отдельным письмом.\n\n"
-        . "Если остались вопросы, напишите нам: contact@brandmasterskaya.ru";
+        . "Если остались вопросы, напишите нам: {$contacts['email']} или в Telegram @{$contacts['telegram']}";
     $notifyEmail = (string) config()['notify_email'];
     // mail() keeps no "Sent" copy, so a hidden copy shows the organizers what the customer got.
     if (!send_mail($order['email'], 'Оплата получена — ' . PRODUCT_NAME, $customerText, $notifyEmail)) {

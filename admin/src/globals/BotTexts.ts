@@ -1,7 +1,7 @@
 import type { GlobalConfig } from 'payload';
 
 const PLACEHOLDERS =
-  'Подстановки: {name} — имя, {site} — адрес сайта, {contact} — email для связи.' +
+  'Подстановки: {name} — имя, {site} — адрес сайта, {contact} — телефон, Telegram и email из «Настроек сайта».' +
   ' Ссылка: [слова](адрес), например [на сайте]({site}).';
 
 /** The bot's built-in messages; scenarios have their own texts. */
@@ -12,13 +12,6 @@ export const BotTexts: GlobalConfig = {
     description: 'Сообщения, которые бот отправляет сам. ' + PLACEHOLDERS,
   },
   fields: [
-    {
-      name: 'contact',
-      type: 'email',
-      label: 'Email для связи',
-      required: true,
-      defaultValue: 'contact@brandmasterskaya.ru',
-    },
     {
       name: 'start',
       type: 'textarea',

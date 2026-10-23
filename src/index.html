@@ -97,7 +97,8 @@
       ><a href="#pricing">Стоимость</a>
       <div class="mobile-nav-contacts">
         <a href="mailto:contact@brandmasterskaya.ru">contact@brandmasterskaya.ru</a
-        ><a href="tel:+79998011420">+7 999 801-14-20</a>
+        ><a href="tel:+79150446975" data-contact="phone">+7 915 044-69-75</a>
+        <a href="https://t.me/brandmasterskaya" data-contact="telegram">@brandmasterskaya</a>
       </div>
     </nav>
     <main id="main">
@@ -738,10 +739,17 @@
       >
       <p>Прикладной опыт. Совместная работа.</p>
       <div class="footer-legal">
-        <p>ИП Аверьянова Ольга Владимировна, ИНН 420526003907, ОГРНИП 326420500014874</p>
         <p>
-          <a href="mailto:contact@brandmasterskaya.ru">contact@brandmasterskaya.ru</a>
-          <a href="tel:+79998011420">+7 999 801-14-20</a>
+          ИП <span data-var="ownerName">Аверьянова Ольга Владимировна</span>, ИНН
+          <span data-var="inn">420526003907</span>, ОГРНИП
+          <span data-var="ogrnip">326420500014874</span>
+        </p>
+        <p>
+          <a href="mailto:contact@brandmasterskaya.ru" data-contact="email"
+            >contact@brandmasterskaya.ru</a
+          >
+          <a href="tel:+79150446975" data-contact="phone">+7 915 044-69-75</a>
+          <a href="https://t.me/brandmasterskaya" data-contact="telegram">@brandmasterskaya</a>
         </p>
         <p>
           <a href="oferta.html">Договор-оферта</a>
@@ -809,18 +817,33 @@
           placeholder="you@example.com"
           required
           maxlength="160"
-        /><label for="app-phone">Телефон</label
-        ><input
-          id="app-phone"
-          name="phone"
-          type="tel"
-          inputmode="tel"
-          autocomplete="tel"
-          placeholder="+7 (900) 000-00-00"
-          required
-          maxlength="24"
-        /><label for="app-telegram">Telegram</label
-        ><input
+        /><label for="app-country">Страна</label
+        ><select id="app-country" name="country" autocomplete="country" required></select
+        ><label for="app-phone">Телефон</label>
+        <div class="phone-row">
+          <span class="dial-code"
+            >+<input
+              id="app-dial-code"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="off"
+              aria-label="Код страны"
+              value="7"
+              maxlength="4"
+              required /></span
+          ><input
+            id="app-phone"
+            name="phone"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel-national"
+            placeholder="900 000-00-00"
+            required
+            maxlength="24"
+          />
+        </div>
+        <label for="app-telegram">Telegram</label>
+        <input
           id="app-telegram"
           name="telegram"
           autocapitalize="off"
@@ -852,5 +875,6 @@
       </form>
     </dialog>
     <script src="js/app.js"></script>
+    <script src="js/contacts.js"></script>
   </body>
 </html>
