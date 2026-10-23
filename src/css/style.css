@@ -143,10 +143,9 @@ summary:focus-visible {
   outline-offset: 5px;
 }
 
-form > input,
-.promo-row input {
+.field > input {
   width: 100%;
-  background: var(--white);
+  background: transparent;
   border: 1px solid #a7a89d;
   padding: 13px 12px;
   border-radius: 0;
@@ -159,9 +158,9 @@ input:focus-visible {
   outline-offset: 5px;
 }
 
-form > select {
+.field > select {
   width: 100%;
-  background: var(--white);
+  background: transparent;
   border: 1px solid #a7a89d;
   padding: 13px 12px;
   border-radius: 0;
@@ -423,7 +422,7 @@ h1 {
     transform 0.2s;
 }
 
-form > .button {
+.step-footer > .button {
   width: 100%;
   margin-top: 25px;
 }
@@ -1274,16 +1273,11 @@ details[open] summary .expand {
 
 .consent {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  gap: 14px;
   font-size: 12px;
   line-height: 1.5;
   margin-top: 18px;
-}
-
-.consent input {
-  margin: 3px 0 0;
-  flex-shrink: 0;
 }
 
 .workshop-story p {
@@ -1372,13 +1366,19 @@ details[open] summary .expand {
 
 dialog {
   border: 0;
-  background: var(--paper);
+  background: var(--white);
   color: var(--ink);
   padding: 40px;
   max-width: 570px;
   width: calc(100% - 32px);
   max-height: 90dvh;
   overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* Keep the page still behind the open form. */
+html:has(dialog[open]) {
+  overflow: hidden;
 }
 
 dialog::backdrop {
@@ -1394,12 +1394,6 @@ dialog::backdrop {
   background: none;
   font-size: 30px;
   padding: 5px 10px;
-}
-
-form > label {
-  font-size: 12px;
-  display: block;
-  margin: 18px 0 6px;
 }
 
 fieldset {
@@ -1440,20 +1434,28 @@ input[type='checkbox'] {
   letter-spacing: -0.6px;
 }
 
+.field {
+  position: relative;
+  margin-top: 22px;
+}
+
 .promo-row {
   display: flex;
-  gap: 10px;
+  margin-top: 22px;
 }
 
-.promo-row input {
+.promo-row .field {
   flex: 1;
   min-width: 0;
+  margin-top: 0;
 }
 
+/* Attached to the field and as tall as it (49px); the shared border is drawn once. */
 .promo-row .button {
   flex: none;
-  padding-top: 0;
-  padding-bottom: 0;
+  min-height: 49px;
+  margin-left: -1px;
+  padding: 0 24px;
 }
 
 #promo-status {
@@ -1469,6 +1471,43 @@ input[type='checkbox'] {
   font-size: 11px;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.form-progress {
+  margin-top: 18px;
+}
+
+.form-progress-label {
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.progress-bar {
+  height: 4px;
+  background: var(--line);
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  width: 50%;
+  background: var(--red);
+  transition: width 0.3s;
+}
+
+.form-group {
+  margin-top: 26px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.form-group:first-child {
+  margin-top: 0;
+  border-top: 0;
+}
+
+.total-recap {
+  margin-top: 22px;
 }
 
 #form-status {
@@ -2547,13 +2586,12 @@ input[type='checkbox'] {
 .phone-row {
   display: flex;
   align-items: stretch;
-  background: var(--white);
+  background: transparent;
   border: 1px solid #a7a89d;
 }
 
 .phone-row:focus-within {
-  outline: 3px solid var(--red);
-  outline-offset: 5px;
+  border-color: var(--red);
 }
 
 .dial-code {
@@ -2581,6 +2619,334 @@ input[type='checkbox'] {
 
 .phone-row .dial-code input {
   flex: none;
-  width: 4ch;
-  padding: 13px 12px 13px 2px;
+  width: 4.5ch;
+  padding: 13px 8px 13px 2px;
+}
+
+/* A square as tall as the text fields. */
+:is(.consent, .option) input[type='checkbox'] {
+  appearance: none;
+  flex: none;
+  width: 49px;
+  height: 49px;
+  margin: 0;
+  background: transparent center / 26px no-repeat;
+  border: 1px solid #a7a89d;
+  border-radius: 0;
+}
+
+:is(.consent, .option) input[type='checkbox']:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc3e27' stroke-width='2.5'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E");
+}
+
+/* Beats the generic form-label display so the box and text sit in one row. */
+.step-body > .consent,
+.option {
+  display: flex;
+}
+
+/* Floating label: sits inside the empty field, rises onto the border on focus or when filled. */
+.field > label {
+  position: absolute;
+  top: 25px;
+  left: 8px;
+  padding: 0 4px;
+  font-size: 14px;
+  color: var(--muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition:
+    top 0.15s,
+    font-size 0.15s;
+}
+
+.field:focus-within > label {
+  color: var(--red);
+}
+
+.field.field-static > label {
+  top: 0;
+  font-size: 11px;
+  background: var(--white);
+}
+
+.field:focus-within > label,
+.field > input:not(:placeholder-shown) + label,
+.field > input:-webkit-autofill + label {
+  top: 0;
+  font-size: 11px;
+  background: var(--white);
+}
+
+/* The hint replaces the label inside the field, so it shows only while the label is up. */
+.field > input::placeholder {
+  opacity: 0;
+}
+
+.field > input:focus::placeholder {
+  opacity: 1;
+}
+
+/* Elective rows: the same square box, title and price stacked beside it. */
+.option {
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.option-price {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+/* Focus recolors the field's own border instead of drawing a second frame. */
+.field > input:focus-visible,
+.field > select:focus-visible {
+  outline: 0;
+  border-color: var(--red);
+}
+
+/* Secondary buttons in the form: white with the field's border. */
+.form-step .button:not(.primary) {
+  background: var(--white);
+  border-color: #a7a89d;
+}
+
+/* The focused field's red border stays on top of the attached button. */
+.promo-row .field:focus-within {
+  z-index: 1;
+}
+
+/* Back and pay share one row; the pay button takes the rest. */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.form-actions .primary {
+  flex: 1;
+}
+
+.form-actions #step-back {
+  flex: none;
+  justify-content: center;
+  gap: 12px;
+  padding: 17px 20px;
+}
+
+/* Fixed @ before the Telegram name, like the code before the phone number. */
+.field-prefix {
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.phone-row .field-prefix + input {
+  padding-left: 2px;
+}
+
+/* Popular mail domains under the email field. */
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  margin: -1px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--white);
+  border: 1px solid var(--red);
+  font-size: 14px;
+}
+
+.suggestion-hint {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.dropdown-list [role='option'] {
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.dropdown-list [role='option']:hover,
+.dropdown-list .active {
+  background: var(--paper);
+}
+
+/* The main page's ↗ turned to point right or left. */
+.arrow-next,
+.arrow-back {
+  display: inline-block;
+}
+
+.arrow-next {
+  transform: rotate(45deg);
+}
+
+/* The turned glyph sits low in its box; lift it to the text's middle. */
+.arrow-back {
+  transform: translateY(-3px) rotate(-135deg);
+}
+
+/* On phones the form fills the screen. */
+@media (width <= 760px) {
+  dialog {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 32px 22px max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+/* The pay button's label: full on desktop, short on phones. */
+.button .pay-full,
+.button .pay-short {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.button .pay-short {
+  display: none;
+}
+
+@media (width <= 760px) {
+  .button .pay-full {
+    display: none;
+  }
+
+  .button .pay-short {
+    display: inline;
+  }
+}
+
+/* A step's body and footer flow as one column; the footer holds the total and the buttons. */
+.form-step:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-body,
+.step-footer {
+  display: contents;
+}
+
+/* Notes stay last when the footer's children flow in the same column. */
+.step-body > .form-note,
+.step-body > #form-status {
+  order: 1;
+}
+
+/* On phones the total and the buttons sit at the bottom of the screen, or after the fields
+   when those are taller; the dialog itself scrolls. */
+@media (width <= 760px) {
+  dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #application {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+  }
+
+  .form-step:not([hidden]) {
+    flex: 1 0 auto;
+  }
+
+  .step-body {
+    display: block;
+    flex: 1 0 auto;
+  }
+
+  .step-footer {
+    display: block;
+    flex: none;
+  }
+
+  .step-footer .total-row {
+    margin-top: 0;
+  }
+
+  .step-footer > .button,
+  .step-footer .form-actions {
+    margin-top: 16px;
+  }
+}
+
+/* The select's own control is hidden; its button and list replace it. */
+.field > select.native-select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.select-trigger {
+  display: block;
+  width: 100%;
+  min-height: 49px;
+  padding: 13px 36px 13px 12px;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%2322231f' stroke-width='1.4'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E")
+    no-repeat right 12px center / 12px;
+  border: 1px solid #a7a89d;
+  border-radius: 0;
+  font-size: 14px;
+  color: var(--ink);
+  text-align: left;
+}
+
+.select-trigger.placeholder {
+  color: var(--muted);
+}
+
+.select-trigger:focus-visible,
+.select-trigger[aria-expanded='true'] {
+  outline: 0;
+  border-color: var(--red);
+}
+
+.select-list {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.dropdown-list .selected {
+  font-weight: 600;
+}
+
+/* Search box pinned to the top of a long list. */
+.dropdown-search {
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+}
+
+.dropdown-search input[type='search'] {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.dropdown-search input[type='search']:focus-visible {
+  outline: 0;
+}
+
+.dropdown-search input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
 }

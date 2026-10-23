@@ -762,119 +762,211 @@
       <button class="dialog-close" aria-label="Закрыть">×</button
       ><span class="eyebrow">ВАШЕ УЧАСТИЕ</span>
       <h2 id="enroll-title">Соберите свой формат.</h2>
-      <form id="application">
-        <label for="plan">Основная программа</label
-        ><select id="plan" name="plan">
-          <option value="watch">{{title:watch}} — {{amount:watch}} ₽</option>
-          <option value="work">{{title:work}} — {{amount:work}} ₽</option>
-        </select>
-        <fieldset id="extra-options" hidden disabled="">
-          <legend>Добавить факультатив</legend>
-          <label
-            ><input type="checkbox" name="director" /> {{title:director}}
-            <span>+ {{price:director}} <span class="ruble">₽</span></span></label
-          ><label
-            ><input type="checkbox" name="business" /> {{title:business}}
-            <span>+ {{price:business}} <span class="ruble">₽</span></span></label
+      <form id="application" novalidate>
+        <div class="form-progress">
+          <p class="form-progress-label" id="progress-label" aria-live="polite">
+            Шаг <span id="progress-current">1</span> из 2 ·
+            <span id="progress-title">Программа</span>
+          </p>
+          <div
+            class="progress-bar"
+            role="progressbar"
+            aria-valuemin="1"
+            aria-valuemax="2"
+            aria-valuenow="1"
+            aria-labelledby="progress-label"
           >
-        </fieldset>
-        <label for="app-promo">Промокод</label>
-        <div class="promo-row">
-          <input
-            id="app-promo"
-            name="promoCode"
-            autocapitalize="characters"
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="Если есть"
-            maxlength="32"
-          /><button class="button" type="button" id="apply-promo">Применить</button>
+            <span class="progress-fill"></span>
+          </div>
         </div>
-        <p id="promo-status" role="status"></p>
-        <div class="total-row">
-          <span>Стоимость участия</span
-          ><output id="total" aria-live="polite"
-            >{{amount:watch}} <span class="ruble">₽</span></output
-          >
+        <div class="form-step" data-step="1">
+          <div class="step-body">
+            <div class="field field-static">
+              <select id="plan" name="plan">
+                <option value="watch">{{title:watch}} — {{amount:watch}} ₽</option>
+                <option value="work">{{title:work}} — {{amount:work}} ₽</option>
+              </select>
+              <label for="plan">Основная программа</label>
+            </div>
+            <fieldset id="extra-options" hidden disabled="">
+              <legend>Добавить факультатив</legend>
+              <label class="option"
+                ><input type="checkbox" name="director" /><span
+                  ><span>{{title:director}}</span
+                  ><span class="option-price"
+                    >+ {{price:director}} <span class="ruble">₽</span></span
+                  ></span
+                ></label
+              ><label class="option"
+                ><input type="checkbox" name="business" /><span
+                  ><span>{{title:business}}</span
+                  ><span class="option-price"
+                    >+ {{price:business}} <span class="ruble">₽</span></span
+                  ></span
+                ></label
+              >
+            </fieldset>
+            <div class="promo-row">
+              <div class="field">
+                <input
+                  id="app-promo"
+                  name="promoCode"
+                  autocapitalize="characters"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Если есть"
+                  maxlength="32"
+                />
+                <label for="app-promo">Промокод</label>
+              </div>
+              <button class="button" type="button" id="apply-promo">Применить</button>
+            </div>
+            <p id="promo-status" role="status"></p>
+          </div>
+          <div class="step-footer">
+            <div class="total-row">
+              <span>Стоимость участия</span
+              ><output id="total" aria-live="polite"
+                >{{amount:watch}} <span class="ruble">₽</span></output
+              >
+            </div>
+            <button class="button primary" type="button" id="step-next">
+              Продолжить
+              <span class="arrow-next">↗</span>
+            </button>
+          </div>
         </div>
-        <label for="app-name">Ваше имя</label
-        ><input
-          id="app-name"
-          name="name"
-          autocomplete="name"
-          placeholder="Как к вам обращаться"
-          required
-          maxlength="100"
-        /><label for="app-email">Email</label
-        ><input
-          id="app-email"
-          name="email"
-          type="email"
-          inputmode="email"
-          autocomplete="email"
-          autocapitalize="off"
-          spellcheck="false"
-          placeholder="you@example.com"
-          required
-          maxlength="160"
-        /><label for="app-country">Страна</label
-        ><select id="app-country" name="country" autocomplete="country" required></select
-        ><label for="app-phone">Телефон</label>
-        <div class="phone-row">
-          <span class="dial-code"
-            >+<input
-              id="app-dial-code"
-              type="tel"
-              inputmode="numeric"
-              autocomplete="off"
-              aria-label="Код страны"
-              value="7"
-              maxlength="4"
-              required /></span
-          ><input
-            id="app-phone"
-            name="phone"
-            type="tel"
-            inputmode="tel"
-            autocomplete="tel-national"
-            placeholder="900 000-00-00"
-            required
-            maxlength="24"
-          />
+        <div class="form-step" data-step="2" hidden>
+          <div class="step-body">
+            <div class="form-group">
+              <div class="field">
+                <input
+                  id="app-name"
+                  name="name"
+                  autocomplete="name"
+                  placeholder="Как к вам обращаться"
+                  required
+                  maxlength="100"
+                />
+                <label for="app-name">Ваше имя</label>
+              </div>
+              <div class="field">
+                <input
+                  id="app-email"
+                  name="email"
+                  type="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  placeholder="you@example.com"
+                  required
+                  maxlength="160"
+                />
+                <label for="app-email">Email</label>
+                <ul class="dropdown-list" id="email-suggestions" role="listbox" hidden></ul>
+              </div>
+              <div class="field field-static">
+                <div class="phone-row">
+                  <span class="field-prefix">@</span
+                  ><input
+                    id="app-telegram"
+                    name="telegram"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    placeholder="username"
+                    required
+                    maxlength="64"
+                  />
+                </div>
+                <label for="app-telegram">Telegram</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="field field-static">
+                <select
+                  id="app-country"
+                  name="country"
+                  autocomplete="country"
+                  data-search="Поиск страны"
+                  required
+                ></select>
+                <label for="app-country">Страна</label>
+              </div>
+              <div class="field field-static">
+                <div class="phone-row">
+                  <span class="dial-code"
+                    >+<input
+                      id="app-dial-code"
+                      type="tel"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      aria-label="Код страны"
+                      value="7"
+                      maxlength="3"
+                      required /></span
+                  ><input
+                    id="app-phone"
+                    name="phone"
+                    type="tel"
+                    inputmode="tel"
+                    autocomplete="tel-national"
+                    placeholder="900 000 00 00"
+                    required
+                    maxlength="24"
+                  />
+                </div>
+                <label for="app-phone">Телефон</label>
+              </div>
+            </div>
+            <label class="consent"
+              ><input type="checkbox" name="consent" required />
+              <span
+                >Даю
+                <a href="privacy.html#consent" target="_blank"
+                  >согласие на обработку персональных данных</a
+                ></span
+              ></label
+            >
+            <p class="form-note">
+              Оплата картой, через СБП или частями в Долями на странице банка Точка. После оплаты
+              пришлём на почту ссылку на Telegram-бота для завершения регистрации. Оплачивая
+              участие, вы принимаете условия
+              <a href="oferta.html" target="_blank">договора-оферты</a>.
+            </p>
+            <p id="form-status" role="status"></p>
+          </div>
+          <div class="step-footer">
+            <div class="total-row total-recap">
+              <span>Стоимость участия</span><output id="total-recap" aria-live="polite"></output>
+            </div>
+            <div class="form-actions">
+              <button class="button" type="button" id="step-back">
+                <span class="arrow-back">↗</span>
+                Назад
+              </button>
+              <button class="button primary" type="submit">
+                <span class="pay-full">Перейти к оплате</span
+                ><span class="pay-short">К оплате</span>
+                <span>↗</span>
+              </button>
+            </div>
+            <button
+              class="button"
+              type="submit"
+              name="method"
+              value="dolyame"
+              id="pay-dolyame"
+              hidden
+            >
+              Оплатить частями в Долями <span>↗</span>
+            </button>
+          </div>
         </div>
-        <label for="app-telegram">Telegram</label>
-        <input
-          id="app-telegram"
-          name="telegram"
-          autocapitalize="off"
-          spellcheck="false"
-          placeholder="@username"
-          required
-          maxlength="64"
-        />
-        <label class="consent"
-          ><input type="checkbox" name="consent" required />
-          <span
-            >Даю
-            <a href="privacy.html#consent" target="_blank"
-              >согласие на обработку персональных данных</a
-            ></span
-          ></label
-        >
-        <button class="button primary" type="submit">Перейти к оплате <span>↗</span></button>
-        <button class="button" type="submit" name="method" value="dolyame" id="pay-dolyame" hidden>
-          Оплатить частями в Долями <span>↗</span>
-        </button>
-        <p class="form-note">
-          Оплата картой, через СБП или частями в Долями на странице банка Точка. После оплаты
-          пришлём на почту ссылку на Telegram-бота для завершения регистрации. Оплачивая участие, вы
-          принимаете условия
-          <a href="oferta.html" target="_blank">договора-оферты</a>.
-        </p>
-        <p id="form-status" role="status"></p>
       </form>
     </dialog>
     <script src="js/app.js"></script>
+    <script src="js/select.js"></script>
     <script src="js/contacts.js"></script>
   </body>
 </html>
