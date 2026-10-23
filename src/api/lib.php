@@ -307,6 +307,43 @@ function site_contacts(): array
 }
 
 /**
+ * Legal details of the seller for the pages: set in the admin panel ("Настройки сайта"),
+ * otherwise the defaults below (same as in admin/ and in the pages).
+ * @return array<string, string>
+ */
+function site_legal(): array
+{
+    $legal = [
+        'ownerName' => 'Аверьянова Ольга Владимировна',
+        'ownerNameGenitive' => 'Аверьяновой Ольги Владимировны',
+        'ownerNameDative' => 'Аверьяновой Ольге Владимировне',
+        'ownerNameInstrumental' => 'Аверьяновой Ольгой Владимировной',
+        'inn' => '420526003907',
+        'ogrnip' => '326420500014874',
+        'bankAccount' => '40802810020000903497',
+        'bankName' => 'ООО «Банк Точка»',
+        'bik' => '044525104',
+        'correspondentAccount' => '30101810745374525104',
+    ];
+    // Digit-only details must have the exact length; a broken one keeps its default.
+    $digitPatterns = [
+        'inn' => '/^(\d{10}|\d{12})$/',
+        'ogrnip' => '/^\d{15}$/',
+        'bankAccount' => '/^\d{20}$/',
+        'bik' => '/^\d{9}$/',
+        'correspondentAccount' => '/^\d{20}$/',
+    ];
+    $fromPanel = site_settings()['legal'] ?? [];
+    foreach ($legal as $key => $default) {
+        $value = is_array($fromPanel) ? trim((string) ($fromPanel[$key] ?? '')) : '';
+        $valid = $value !== '' && mb_strlen($value) <= 200
+            && (!isset($digitPatterns[$key]) || preg_match($digitPatterns[$key], $value));
+        $legal[$key] = $valid ? $value : $default;
+    }
+    return $legal;
+}
+
+/**
  * Calls the Dolyame partner API over mTLS with Basic auth.
  * @param string $method HTTP method.
  * @param string $path Path after the base URL, e.g. /orders/create.

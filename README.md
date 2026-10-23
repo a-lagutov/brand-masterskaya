@@ -138,6 +138,8 @@ Email и телефон обязательны и проверяются в бр
 
 Контакты (телефон, Telegram, email) задаются там же, в «Настройки сайта» → «Контакты». В страницах они зашиты по умолчанию (`data-contact` у ссылок), а `src/js/contacts.js` подменяет их значениями из `api/contacts.php` (читает тот же `site-settings.json`; без файла или при неверном значении остаются `+79150446975`, `@brandmasterskaya`, `contact@brandmasterskaya.ru`). Те же контакты попадают в письмо покупателю и в `{contact}` сообщений бота. Если менять контакты по умолчанию, их нужно поправить в HTML, `src/api/lib.php` и `admin/src/bot/siteSettings.ts`.
 
+Юридическая информация (ФИО предпринимателя в четырёх падежах, ИНН, ОГРНИП, расчётный счёт, банк, БИК, корсчёт) — там же, «Настройки сайта» → «Юридическая информация». В договоре-оферте, политике, подвалах и странице после оплаты эти значения стоят в `<span data-var="inn">…</span>` (имена: `ownerName`, `ownerNameGenitive`, `ownerNameDative`, `ownerNameInstrumental`, `inn`, `ogrnip`, `bankAccount`, `bankName`, `bik`, `correspondentAccount`), а `src/js/contacts.js` подменяет их значениями из `api/contacts.php`. Тексты документов не переписываются: слова вроде «индивидуальный предприниматель» остаются как есть. Значения по умолчанию лежат в HTML, `site_legal()` в `src/api/lib.php` и `DEFAULT_LEGAL` в `admin/src/bot/siteSettings.ts`; цифровые реквизиты неверной длины сервер игнорирует.
+
 Журнал платежей: `~/private/<папка сайта>/payments.log`, заказы: `~/private/<папка сайта>/orders/`.
 
 Для локальной проверки без денег: `BM_PRIVATE_DIR` указывает на папку с `config.php`, в нём `'sandbox' => true` и `customer_code`/`merchant_id` из песочницы (`1234567ab`, `200000000001098` с `payment_modes` `['sbp']`). Песочница сразу отвечает «оплачено».

@@ -735,6 +735,43 @@ export interface SiteSetting {
    */
   contactTelegram: string;
   contactEmail: string;
+  /**
+   * Именительный падеж: Аверьянова Ольга Владимировна. Перед ним в текстах стоят слова «индивидуальный предприниматель» или «ИП».
+   */
+  legalOwnerName: string;
+  /**
+   * Кого: Аверьяновой Ольги Владимировны.
+   */
+  legalOwnerNameGenitive: string;
+  /**
+   * Кому: Аверьяновой Ольге Владимировне.
+   */
+  legalOwnerNameDative: string;
+  /**
+   * С кем: Аверьяновой Ольгой Владимировной.
+   */
+  legalOwnerNameInstrumental: string;
+  /**
+   * 10 или 12 цифр.
+   */
+  legalInn: string;
+  /**
+   * 15 цифр.
+   */
+  legalOgrnip: string;
+  /**
+   * 20 цифр.
+   */
+  legalBankAccount: string;
+  legalBankName: string;
+  /**
+   * 9 цифр.
+   */
+  legalBik: string;
+  /**
+   * 20 цифр.
+   */
+  legalCorrespondentAccount: string;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -765,6 +802,16 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   contactPhone?: T;
   contactTelegram?: T;
   contactEmail?: T;
+  legalOwnerName?: T;
+  legalOwnerNameGenitive?: T;
+  legalOwnerNameDative?: T;
+  legalOwnerNameInstrumental?: T;
+  legalInn?: T;
+  legalOgrnip?: T;
+  legalBankAccount?: T;
+  legalBankName?: T;
+  legalBik?: T;
+  legalCorrespondentAccount?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
