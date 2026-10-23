@@ -689,14 +689,13 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
- * Сообщения, которые бот отправляет сам. Подстановки: {name} — имя, {site} — адрес сайта, {contact} — email для связи. Ссылка: [слова](адрес), например [на сайте]({site}).
+ * Сообщения, которые бот отправляет сам. Подстановки: {name} — имя, {site} — адрес сайта, {contact} — телефон, Telegram и email из «Настроек сайта». Ссылка: [слова](адрес), например [на сайте]({site}).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bot-texts".
  */
 export interface BotText {
   id: number;
-  contact: string;
   /**
    * Можно заменить сценарием с галочкой «Вместо приветствия по /start».
    */
@@ -719,7 +718,7 @@ export interface BotText {
   createdAt?: string | null;
 }
 /**
- * Переключатели для сайта. Применяются сразу после сохранения.
+ * Переключатели и контакты для сайта. Применяются сразу после сохранения.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
@@ -730,6 +729,12 @@ export interface SiteSetting {
    * Это вторая кнопка под основной «Перейти к оплате». Оплата картой и СБП не меняется.
    */
   hideDolyame?: boolean | null;
+  contactPhone: string;
+  /**
+   * Ник без @, например brandmasterskaya.
+   */
+  contactTelegram: string;
+  contactEmail: string;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -738,7 +743,6 @@ export interface SiteSetting {
  * via the `definition` "bot-texts_select".
  */
 export interface BotTextsSelect<T extends boolean = true> {
-  contact?: T;
   start?: T;
   paid?: T;
   chats?: T;
@@ -758,6 +762,9 @@ export interface BotTextsSelect<T extends boolean = true> {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   hideDolyame?: T;
+  contactPhone?: T;
+  contactTelegram?: T;
+  contactEmail?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

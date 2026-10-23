@@ -262,11 +262,48 @@ function dolyame_button_visible(): bool
     if (!dolyame_enabled()) {
         return false;
     }
+    return (site_settings()['hideDolyame'] ?? true) === false;
+}
+
+/**
+ * Reads site-settings.json, which the admin panel writes to private_dir().
+ * @return array Empty when the file is missing or unreadable.
+ */
+function site_settings(): array
+{
     $settingsFile = private_dir() . '/site-settings.json';
     $siteSettings = is_file($settingsFile)
         ? json_decode((string) file_get_contents($settingsFile), true)
         : null;
-    return is_array($siteSettings) && ($siteSettings['hideDolyame'] ?? true) === false;
+    return is_array($siteSettings) ? $siteSettings : [];
+}
+
+/**
+ * Contacts for the page, the letter to the buyer and the legal documents: set in the admin
+ * panel ("Настройки сайта"), otherwise the defaults below (same as in admin/).
+ * @return array{phone: string, phoneText: string, telegram: string, email: string}
+ */
+function site_contacts(): array
+{
+    $siteSettings = site_settings();
+    $phone = (string) ($siteSettings['contactPhone'] ?? '');
+    $telegram = (string) ($siteSettings['contactTelegram'] ?? '');
+    $email = (string) ($siteSettings['contactEmail'] ?? '');
+    // A broken value never reaches the page: each field falls back on its own.
+    if (!preg_match('/^\+[1-9]\d{7,14}$/', $phone)) {
+        $phone = '+79150446975';
+    }
+    if (!preg_match('/^[A-Za-z0-9_]{5,32}$/', $telegram)) {
+        $telegram = 'brandmasterskaya';
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $email = 'contact@brandmasterskaya.ru';
+    }
+    // Russian numbers are written +7 915 044-69-75; others stay as stored.
+    $phoneText = preg_match('/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/', $phone, $parts)
+        ? "+7 {$parts[1]} {$parts[2]}-{$parts[3]}-{$parts[4]}"
+        : $phone;
+    return ['phone' => $phone, 'phoneText' => $phoneText, 'telegram' => $telegram, 'email' => $email];
 }
 
 /**
@@ -576,12 +613,13 @@ function notify_paid(array $order): void
     $electives = array_map(fn($item) => $item['title'], $order['electives']);
     $format = $order['plan']['title'] . ($electives ? ' + ' . implode(', ', $electives) : '');
     $total = number_format($order['total'], 0, ',', ' ') . ' ₽';
+    $contacts = site_contacts();
     $customerText = "Здравствуйте, {$order['name']}!\n\n"
         . "Оплата участия в программе «" . PRODUCT_NAME . "» получена.\n"
         . "Формат: $format\nСумма: $total\n\n"
         . "Чтобы завершить регистрацию, откройте Telegram-бота по ссылке:\n$link\n\n"
         . "Кассовый чек банк пришлёт отдельным письмом.\n\n"
-        . "Если остались вопросы, напишите нам: contact@brandmasterskaya.ru";
+        . "Если остались вопросы, напишите нам: {$contacts['email']} или в Telegram @{$contacts['telegram']}";
     $notifyEmail = (string) config()['notify_email'];
     // mail() keeps no "Sent" copy, so a hidden copy shows the organizers what the customer got.
     if (!send_mail($order['email'], 'Оплата получена — ' . PRODUCT_NAME, $customerText, $notifyEmail)) {

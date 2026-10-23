@@ -5,7 +5,8 @@ const orderId = new URLSearchParams(window.location.search).get('order') || '';
 // The bank usually confirms within seconds; give up after about two minutes.
 const POLL_INTERVAL_MS = 3000;
 const MAX_ATTEMPTS = 40;
-const CONTACT = 'contact@brandmasterskaya.ru';
+// The email in the footer, which src/js/contacts.js keeps current.
+const CONTACT_LINK = document.querySelector('[data-contact="email"]');
 
 /**
  * Asks the server for the order status and updates the page; schedules the next check.
@@ -32,14 +33,16 @@ async function checkPayment(attempt) {
   }
   if (result.status === 'not_found' || result.status === 'expired') {
     statusText.textContent =
-      'Не нашли оплаченный заказ. Если деньги списались, напишите нам: ' + CONTACT + '.';
+      'Не нашли оплаченный заказ. Если деньги списались, напишите нам: ' +
+      CONTACT_LINK.textContent +
+      '.';
     return;
   }
   if (attempt + 1 >= MAX_ATTEMPTS) {
     statusText.textContent =
       'Банк ещё не подтвердил оплату. Как только подтвердит, пришлём ссылку на почту. ' +
       'Если письма нет дольше часа, напишите нам: ' +
-      CONTACT +
+      CONTACT_LINK.textContent +
       '.';
     return;
   }
