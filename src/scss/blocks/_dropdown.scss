@@ -1,0 +1,66 @@
+@use '../abstracts' as *;
+
+/* Popular mail domains under the email field. */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  margin: -1px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--white);
+  border: 1px solid var(--red);
+  font-size: 14px;
+
+  &__hint {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  &__option {
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+
+  &__option:hover,
+  &__option--active {
+    background: var(--paper);
+  }
+
+  &--select {
+    max-height: 260px;
+    overflow: auto;
+  }
+
+  &__option--selected {
+    font-weight: 600;
+  }
+
+  /* Search box pinned to the top of a long list. */
+  &__search {
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    background: transparent;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  &__search-input:focus-visible {
+    outline: 0;
+  }
+
+  &__search-input::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}

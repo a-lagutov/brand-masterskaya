@@ -1,0 +1,10 @@
+@use '../abstracts' as *;
+
+/* The build swaps every ↗ for this SVG; it is as big as the glyph and sits on the same baseline. */
+.arrow-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  fill: currentcolor;
+  vertical-align: -0.085em;
+}

@@ -1,0 +1,10 @@
+@use '../abstracts' as *;
+
+.consent {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 18px;
+}

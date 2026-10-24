@@ -1,0 +1,18 @@
+@use '../abstracts' as *;
+
+.wrap {
+  max-width: 1440px;
+  margin: auto;
+  padding-left: 64px;
+  padding-right: 64px;
+
+  @include below($bp-tablet) {
+    padding-left: 35px;
+    padding-right: 35px;
+  }
+
+  @include below($bp-mobile) {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+}

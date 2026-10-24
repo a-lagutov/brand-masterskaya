@@ -1,0 +1,31 @@
+@use '../abstracts' as *;
+
+.expand {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 11px;
+    left: 4px;
+    width: 16px;
+    height: 1px;
+    background: currentcolor;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 11px;
+    left: 4px;
+    width: 16px;
+    height: 1px;
+    background: currentcolor;
+    transform: rotate(90deg);
+    transition: transform 0.2s;
+  }
+}

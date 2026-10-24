@@ -1,0 +1,134 @@
+@use '../abstracts' as *;
+
+.outcomes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  padding-top: 77px;
+  padding-bottom: 75px;
+
+  &__num {
+    font-size: 11px;
+    font-family: $font-mono;
+    color: #b5b5ab;
+    padding-top: 5px;
+  }
+
+  & .eyebrow {
+    color: #b5b5ab;
+  }
+
+  &__star {
+    font-size: 103px;
+    color: var(--red);
+    line-height: 1.2;
+    display: block;
+    margin-top: 30px;
+
+    @include below($bp-mobile) {
+      display: none;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    align-self: center;
+  }
+
+  &__item {
+    display: flex;
+    border-top: 1px solid #55564e;
+    padding: 26px 0;
+    gap: 24px;
+    align-items: flex-start;
+
+    @include below($bp-mobile) {
+      padding: 23px 0;
+      gap: 18px;
+    }
+  }
+
+  &__item:last-child {
+    border-bottom: 1px solid #55564e;
+  }
+
+  &__title {
+    font-size: 23px;
+    line-height: 1.2;
+    margin: 0 0 10px;
+    letter-spacing: -0.5px;
+
+    @include below($bp-mobile) {
+      font-size: 21px;
+    }
+  }
+
+  &__text {
+    font-size: 13px;
+    color: #babbb1;
+    margin: 0;
+  }
+
+  &__arrow {
+    margin-left: auto;
+    color: var(--red);
+    font-weight: 400;
+    font-size: 25px;
+  }
+
+  &__story-text {
+    font-size: 19px;
+    line-height: 1.55;
+    margin: 0 0 23px;
+    color: var(--paper);
+
+    @include below($bp-tablet) {
+      font-size: 17px;
+    }
+
+    @include below($bp-mobile) {
+      font-size: 18px;
+      line-height: 1.55;
+    }
+  }
+
+  @include below($bp-tablet) {
+    gap: 50px;
+  }
+
+  @include below($bp-mobile) {
+    grid-template-columns: 1fr;
+    gap: 35px;
+    padding-top: 55px;
+    padding-bottom: 50px;
+  }
+
+  &__story {
+    margin-top: 28px;
+
+    @include below($bp-mobile) {
+      margin-top: 24px;
+    }
+  }
+
+  &__story-text.outcomes__story-text--last {
+    font-size: 25px;
+    line-height: 1.3;
+    margin-bottom: 0;
+
+    @include below($bp-tablet) {
+      font-size: 23px;
+    }
+
+    @include below($bp-mobile) {
+      font-size: 24px;
+    }
+  }
+
+  &__star--outline {
+    font-size: 63px;
+    margin-top: 25px;
+  }
+}

@@ -1,0 +1,46 @@
+@use '../abstracts' as *;
+
+.audience {
+  border-bottom: 1px solid var(--line);
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+
+    @include below($bp-mobile) {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+  }
+
+  &__tag {
+    font-family: $font-mono;
+    font-size: 10px;
+    letter-spacing: 1px;
+    border: 1px solid #b9b9b0;
+    padding: 5px 9px;
+  }
+
+  &__title {
+    font-size: 23px;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    margin: 25px 0 13px;
+
+    @include below($bp-mobile) {
+      margin-top: 20px;
+    }
+  }
+
+  &__text {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 330px;
+
+    @include below($bp-mobile) {
+      max-width: 100%;
+      margin-bottom: 0;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+@use '../abstracts' as *;
+
+/* A square as tall as the text fields. */
+.checkbox {
+  appearance: none;
+  flex: none;
+  width: 49px;
+  height: 49px;
+  margin: 0;
+  background: transparent center / 26px no-repeat;
+  border: 1px solid $color-field-border;
+  border-radius: 0;
+
+  &:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc3e27' stroke-width='2.5'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E");
+  }
+}

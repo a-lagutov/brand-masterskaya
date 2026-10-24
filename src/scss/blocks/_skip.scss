@@ -1,0 +1,15 @@
+@use '../abstracts' as *;
+
+.skip {
+  position: fixed;
+  top: -100px;
+  left: 20px;
+  background: var(--ink);
+  color: white;
+  padding: 12px;
+  z-index: 99;
+
+  &:focus {
+    top: 10px;
+  }
+}

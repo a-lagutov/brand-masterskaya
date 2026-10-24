@@ -1,0 +1,83 @@
+@use '../abstracts' as *;
+
+.field {
+  position: relative;
+  margin-top: 22px;
+
+  &__input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid $color-field-border;
+    padding: 13px 12px;
+    border-radius: 0;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  &__select {
+    width: 100%;
+    background: transparent;
+    border: 1px solid $color-field-border;
+    padding: 13px 12px;
+    border-radius: 0;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  /* Floating label: sits inside the empty field, rises onto the border on focus or when filled. */
+  &__label {
+    position: absolute;
+    top: 25px;
+    left: 8px;
+    padding: 0 4px;
+    font-size: 14px;
+    color: var(--muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition:
+      top 0.15s,
+      font-size 0.15s;
+  }
+
+  &:focus-within .field__label {
+    color: var(--red);
+  }
+
+  &--static .field__label {
+    top: 0;
+    font-size: 11px;
+    background: var(--white);
+  }
+
+  &:focus-within .field__label,
+  &__input:not(:placeholder-shown) + .field__label,
+  &__input:-webkit-autofill + .field__label {
+    top: 0;
+    font-size: 11px;
+    background: var(--white);
+  }
+
+  /* The hint replaces the label inside the field, so it shows only while the label is up. */
+  &__input::placeholder {
+    opacity: 0;
+  }
+
+  &__input:focus::placeholder {
+    opacity: 1;
+  }
+
+  /* Focus recolors the field's own border instead of drawing a second frame. */
+  &__input:focus-visible,
+  &__select:focus-visible {
+    outline: 0;
+    border-color: var(--red);
+  }
+
+  /* The select's own control is hidden; its button and list replace it. */
+  &__select--native {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+}

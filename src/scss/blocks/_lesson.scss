@@ -1,0 +1,43 @@
+@use '../abstracts' as *;
+
+.lesson {
+  padding: 0 55px 30px 118px;
+
+  &__label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    font-family: $font-mono;
+    color: var(--red);
+  }
+
+  &__text {
+    font-size: 15px;
+    line-height: 1.65;
+    margin: 15px 0;
+
+    @include below($bp-mobile) {
+      font-size: 14px;
+    }
+  }
+
+  &__practice {
+    border-left: 2px solid var(--red);
+    padding: 5px 0 5px 15px;
+  }
+
+  &__practice-title {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  @include below($bp-tablet) {
+    padding-left: 0;
+  }
+
+  @include below($bp-mobile) {
+    padding: 0 10px 25px 0;
+  }
+}

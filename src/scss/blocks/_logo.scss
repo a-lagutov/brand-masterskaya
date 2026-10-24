@@ -1,0 +1,127 @@
+@use '../abstracts' as *;
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 39px;
+  width: 145px;
+  position: relative;
+  overflow: hidden;
+  mix-blend-mode: multiply;
+
+  &__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: grayscale(1);
+    opacity: 0.95;
+  }
+
+  /* Brand green turns pale grey under grayscale; darken to match the other logos */
+  &--vkusvill .logo__image {
+    filter: grayscale(1) brightness(0.45);
+  }
+
+  &--azbuka {
+    width: 122px;
+    height: 43px;
+
+    @include below($bp-mobile) {
+      width: 96px;
+    }
+  }
+
+  &--brusnika {
+    width: 139px;
+
+    @include below($bp-mobile) {
+      width: 101px;
+    }
+  }
+
+  &--lavka {
+    width: 150px;
+
+    @include below($bp-mobile) {
+      width: 104px;
+    }
+  }
+
+  @include below($bp-mobile) {
+    max-width: 100%;
+    height: 30px;
+  }
+
+  &--tele2 {
+    width: 94px;
+
+    @include below($bp-mobile) {
+      width: 78px;
+    }
+  }
+
+  &--eda {
+    width: 150px;
+
+    @include below($bp-mobile) {
+      width: 105px;
+    }
+  }
+
+  &--ingos {
+    width: 160px;
+
+    @include below($bp-mobile) {
+      width: 108px;
+    }
+  }
+
+  &--vk {
+    width: 138px;
+
+    @include below($bp-mobile) {
+      width: 96px;
+    }
+  }
+
+  &--indrive {
+    width: 120px;
+
+    @include below($bp-mobile) {
+      width: 84px;
+    }
+  }
+
+  &--dodo {
+    width: 150px;
+
+    @include below($bp-mobile) {
+      width: 104px;
+    }
+  }
+
+  &--vkusvill {
+    width: 140px;
+
+    @include below($bp-mobile) {
+      width: 100px;
+    }
+  }
+
+  &--storeez {
+    width: 140px;
+
+    @include below($bp-mobile) {
+      width: 96px;
+    }
+  }
+
+  &--beeline {
+    width: 125px;
+
+    @include below($bp-mobile) {
+      width: 88px;
+    }
+  }
+}

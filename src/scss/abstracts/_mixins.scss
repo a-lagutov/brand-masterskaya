@@ -1,0 +1,7 @@
+/// Applies the styles at the given width and below.
+/// @param {Number} $width Breakpoint from _variables.scss.
+@mixin below($width) {
+  @media (width <= #{$width}) {
+    @content;
+  }
+}

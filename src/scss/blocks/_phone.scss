@@ -1,0 +1,55 @@
+@use '../abstracts' as *;
+
+/* Country code and number share one box, like a single field. */
+.phone {
+  display: flex;
+  align-items: stretch;
+  background: transparent;
+  border: 1px solid $color-field-border;
+
+  &:focus-within {
+    border-color: var(--red);
+  }
+
+  &__code {
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    border-right: 1px solid $color-field-border;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 13px 12px;
+    font-size: 14px;
+    color: var(--ink);
+    background: transparent;
+  }
+
+  &__input:focus-visible {
+    outline: 0;
+  }
+
+  &__code-input {
+    flex: none;
+    width: 4.5ch;
+    padding: 13px 8px 13px 2px;
+  }
+
+  /* Fixed @ before the Telegram name, like the code before the phone number. */
+  &__prefix {
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  &__prefix + .phone__input {
+    padding-left: 2px;
+  }
+}

@@ -1,0 +1,34 @@
+@use '../abstracts' as *;
+
+.promo {
+  display: flex;
+  margin-top: 22px;
+
+  & .field {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0;
+  }
+
+  /* Attached to the field and as tall as it (49px); the shared border is drawn once. */
+  & .button {
+    flex: none;
+    min-height: 49px;
+    margin-left: -1px;
+    padding: 0 24px;
+  }
+
+  &__status {
+    font-size: 12px;
+    margin: 6px 0 0;
+  }
+
+  &__status--error {
+    color: var(--red);
+  }
+
+  /* The focused field's red border stays on top of the attached button. */
+  & .field:focus-within {
+    z-index: 1;
+  }
+}
