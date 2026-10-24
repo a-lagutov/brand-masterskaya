@@ -2,6 +2,10 @@
 // The native select stays in the page, hidden, as the source of truth: app.js reads and sets
 // its value, and the browser validates it on submit.
 const SELECT_TYPEAHEAD_RESET_MS = 800;
+const SELECT_LIST_ANIMATION_MS = 160;
+const SELECT_LIST_HIDDEN_FRAME = { opacity: 0, transform: 'translateY(-6px)' };
+const SELECT_LIST_SHOWN_FRAME = { opacity: 1, transform: 'translateY(0)' };
+const SELECT_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /**
  * Option text without a leading flag emoji, lower case, for finding an option by typing.
@@ -42,6 +46,8 @@ function enhanceSelect(select) {
   let activeIndex = -1;
   let typedText = '';
   let typedTimer = 0;
+  // The list fading out; kept so that opening again can cancel it.
+  let closingAnimation = null;
 
   /** Shows the selected option's text on the button. */
   function showCurrent() {
@@ -67,10 +73,30 @@ function enhanceSelect(select) {
     all[activeIndex].scrollIntoView({ block: 'nearest' });
   }
 
-  /** Closes the list. */
+  /** @returns {boolean} Whether the list is open; a list fading out already counts as closed. */
+  function isOpen() {
+    return trigger.getAttribute('aria-expanded') === 'true';
+  }
+
+  /** Closes the list, fading it out. */
   function close() {
-    list.hidden = true;
     trigger.setAttribute('aria-expanded', 'false');
+    if (list.hidden || closingAnimation) return;
+    if (SELECT_REDUCED_MOTION.matches) {
+      list.hidden = true;
+      return;
+    }
+    const fadeOut = list.animate([SELECT_LIST_SHOWN_FRAME, SELECT_LIST_HIDDEN_FRAME], {
+      duration: SELECT_LIST_ANIMATION_MS,
+      easing: 'ease-in',
+      fill: 'forwards',
+    });
+    closingAnimation = fadeOut;
+    fadeOut.addEventListener('finish', () => {
+      closingAnimation = null;
+      list.hidden = true;
+      fadeOut.cancel();
+    });
   }
 
   /**
@@ -114,8 +140,19 @@ function enhanceSelect(select) {
   function open() {
     if (searchInput) searchInput.value = '';
     renderOptions('');
+    // Opening while the list is still fading out: drop that fade and fade in from here.
+    if (closingAnimation) {
+      closingAnimation.cancel();
+      closingAnimation = null;
+    }
     list.hidden = false;
     trigger.setAttribute('aria-expanded', 'true');
+    if (!SELECT_REDUCED_MOTION.matches) {
+      list.animate([SELECT_LIST_HIDDEN_FRAME, SELECT_LIST_SHOWN_FRAME], {
+        duration: SELECT_LIST_ANIMATION_MS,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      });
+    }
     // Scrolling to the highlight needs the list on screen, so highlight again now.
     highlight(activeIndex);
     if (searchInput) searchInput.focus({ preventScroll: true });
@@ -141,7 +178,7 @@ function enhanceSelect(select) {
     typedText += key.toLowerCase();
     clearTimeout(typedTimer);
     typedTimer = setTimeout(() => (typedText = ''), SELECT_TYPEAHEAD_RESET_MS);
-    if (list.hidden) open();
+    if (!isOpen()) open();
     const options = [...select.options].filter((option) => !option.disabled);
     const found = options.findIndex((option) => plainOptionText(option).startsWith(typedText));
     if (found >= 0) highlight(found);
@@ -215,13 +252,13 @@ function enhanceSelect(select) {
   select.after(trigger);
   field.append(list);
 
-  trigger.addEventListener('click', () => (list.hidden ? open() : close()));
+  trigger.addEventListener('click', () => (isOpen() ? close() : open()));
   // Leaving the field, trigger and list together, closes the list; moving inside it does not.
   field.addEventListener('focusout', (event) => {
     if (!field.contains(event.relatedTarget)) close();
   });
   trigger.addEventListener('keydown', (event) => {
-    if (!list.hidden) {
+    if (isOpen()) {
       handleOpenKey(event);
     } else if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
       event.preventDefault();

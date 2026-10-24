@@ -900,11 +900,11 @@ summary::-webkit-details-marker {
   transition: transform 0.2s;
 }
 
-details[open] .expand::after {
+details[open]:not(.closing) .expand::after {
   transform: rotate(0deg);
 }
 
-details[open] summary .expand {
+details[open]:not(.closing) summary .expand {
   color: var(--red);
 }
 
