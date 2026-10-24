@@ -843,7 +843,6 @@ if (new URLSearchParams(window.location.search).get('payment') === 'failed') {
   showFormStatus('Оплата не прошла. Проверьте данные и попробуйте ещё раз.');
 }
 
-const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 const ACCORDION_MS = 280;
 const ACCORDION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
