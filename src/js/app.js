@@ -844,7 +844,13 @@ function animateDetails(details) {
     if (details.open && !details.classList.contains('closing')) {
       // Closing: shrink to the summary's row, then drop [open].
       details.classList.add('closing');
-      const closeAnimation = tween(startHeight, summary.getBoundingClientRect().height);
+      // The closed height, borders included, read by closing it for a moment before any paint.
+      running?.cancel();
+      details.style.overflow = '';
+      details.open = false;
+      const closedHeight = details.getBoundingClientRect().height;
+      details.open = true;
+      const closeAnimation = tween(startHeight, closedHeight);
       closeAnimation.addEventListener('finish', () => {
         // A newer animation took over: this one's end no longer matters.
         if (running !== closeAnimation) return;
@@ -856,7 +862,12 @@ function animateDetails(details) {
     // Opening, or reopening while it is still closing.
     details.classList.remove('closing');
     details.open = true;
-    const openAnimation = tween(startHeight, details.scrollHeight);
+    // Measure the natural height, borders included: scrollHeight leaves them out and the line
+    // under the item would jump at the end. Cancel a running tween first so it does not skew this.
+    running?.cancel();
+    details.style.overflow = '';
+    const openHeight = details.getBoundingClientRect().height;
+    const openAnimation = tween(startHeight, openHeight);
     openAnimation.addEventListener('finish', () => {
       if (running === openAnimation) settle();
     });
