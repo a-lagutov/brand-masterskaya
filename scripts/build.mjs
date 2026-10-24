@@ -26,6 +26,7 @@ const SRC_DIR = path.join(PROJECT_DIR, 'src');
 const DIST_DIR = path.join(PROJECT_DIR, 'dist');
 // Max width per asset folder. Logos render at <=160px, so 480px covers 3x screens.
 // Folders not listed here keep their original size.
+/** @type {Record<string, number>} */
 const MAX_WIDTH_BY_FOLDER = {
   'assets/logos': 480,
 };
@@ -77,7 +78,7 @@ async function minifyCode(sourcePath) {
   const extension = path.extname(sourcePath);
   const source = await readFile(path.join(SRC_DIR, sourcePath), 'utf8');
   const { code } = await transform(source, {
-    loader: extension.slice(1),
+    loader: /** @type {'css' | 'js'} */ (extension.slice(1)),
     minify: true,
     charset: 'utf8',
     target: ['es2020', 'chrome90', 'safari14', 'firefox90'],

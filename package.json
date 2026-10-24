@@ -6,14 +6,16 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "og-image": "node scripts/og-image.mjs",
+    "typecheck": "tsc -p jsconfig.json",
     "lint": "eslint . --max-warnings=0 && stylelint \"src/css/**/*.css\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run format:check",
+    "check": "npm run typecheck && npm run lint && npm run format:check",
     "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@types/node": "^26.6.5",
     "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "globals": "^17.13.0",
@@ -24,6 +26,7 @@
     "prettier": "^3.9.9",
     "sharp": "^0.35.5",
     "stylelint": "^17.16.0",
-    "stylelint-config-standard": "^40.0.0"
+    "stylelint-config-standard": "^40.0.0",
+    "typescript": "5.7.3"
   }
 }

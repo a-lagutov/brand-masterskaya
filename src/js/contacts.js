@@ -12,7 +12,10 @@ const LEGAL_ENDPOINT = 'api/legal.php?doc=';
  * @param {string} text Link text.
  */
 function showContact(name, href, text) {
-  document.querySelectorAll('[data-contact="' + name + '"]').forEach((link) => {
+  const links = /** @type {NodeListOf<HTMLAnchorElement>} */ (
+    document.querySelectorAll('[data-contact="' + name + '"]')
+  );
+  links.forEach((link) => {
     link.href = href;
     link.textContent = text;
   });
@@ -23,8 +26,9 @@ function showContact(name, href, text) {
  * @param {Record<string, string>} legal Details by name.
  */
 function showLegal(legal) {
-  document.querySelectorAll('[data-var]').forEach((element) => {
-    const value = legal[element.dataset.var];
+  const elements = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-var]'));
+  elements.forEach((element) => {
+    const value = legal[element.dataset.var ?? ''];
     if (typeof value === 'string' && value) element.textContent = value;
   });
 }
@@ -43,9 +47,9 @@ async function refreshContacts() {
 
 /** Replaces the text of the offer or the policy with the one the panel serves. */
 async function refreshLegalText() {
-  const main = document.querySelector('main[data-legal]');
+  const main = /** @type {HTMLElement | null} */ (document.querySelector('main[data-legal]'));
   if (!main) return;
-  const response = await fetch(LEGAL_ENDPOINT + encodeURIComponent(main.dataset.legal), {
+  const response = await fetch(LEGAL_ENDPOINT + encodeURIComponent(main.dataset.legal ?? ''), {
     cache: 'no-store',
   });
   if (!response.ok) return;

@@ -35,18 +35,21 @@ function matchesSearch(option, needle) {
  * @param {HTMLSelectElement} select Select inside a .field.
  */
 function enhanceSelect(select) {
-  const field = select.closest('.field');
-  const label = field.querySelector('label');
+  const field = /** @type {HTMLElement} */ (select.closest('.field'));
+  const label = /** @type {HTMLLabelElement} */ (field.querySelector('label'));
   const trigger = document.createElement('button');
   const list = document.createElement('ul');
   // Countries and the like get a search box at the top of the list.
   const searchRow = select.dataset.search ? document.createElement('li') : null;
   const searchInput = searchRow ? document.createElement('input') : null;
+  const searchPlaceholder = select.dataset.search ?? '';
   // Index into the list items of the highlighted option; -1 when none is.
   let activeIndex = -1;
   let typedText = '';
-  let typedTimer = 0;
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let typedTimer;
   // The list fading out; kept so that opening again can cancel it.
+  /** @type {Animation | null} */
   let closingAnimation = null;
 
   /** Shows the selected option's text on the button. */
@@ -58,7 +61,7 @@ function enhanceSelect(select) {
 
   /** @returns {HTMLLIElement[]} The options currently in the list, without the search row. */
   function items() {
-    return [...list.querySelectorAll('[role="option"]')];
+    return /** @type {HTMLLIElement[]} */ ([...list.querySelectorAll('[role="option"]')]);
   }
 
   /**
@@ -189,19 +192,15 @@ function enhanceSelect(select) {
    * @param {KeyboardEvent} event
    */
   function handleOpenKey(event) {
-    const moves = {
-      ArrowDown: () => highlight(activeIndex + 1),
-      ArrowUp: () => highlight(activeIndex - 1),
-    };
-    if (moves[event.key]) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
-      moves[event.key]();
+      highlight(activeIndex + (event.key === 'ArrowDown' ? 1 : -1));
     } else if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
       highlight(event.key === 'Home' ? 0 : items().length - 1);
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      if (activeIndex >= 0) choose(items()[activeIndex].dataset.value);
+      if (activeIndex >= 0) choose(items()[activeIndex].dataset.value ?? '');
     } else if (event.key === 'Escape') {
       // Closes only the list, not the whole dialog.
       event.stopPropagation();
@@ -222,12 +221,12 @@ function enhanceSelect(select) {
   list.className = 'dropdown-list select-list';
   list.setAttribute('role', 'listbox');
   list.hidden = true;
-  if (searchRow) {
+  if (searchRow && searchInput) {
     searchRow.className = 'dropdown-search';
     searchRow.setAttribute('role', 'presentation');
     searchInput.type = 'search';
-    searchInput.placeholder = select.dataset.search;
-    searchInput.setAttribute('aria-label', select.dataset.search);
+    searchInput.placeholder = searchPlaceholder;
+    searchInput.setAttribute('aria-label', searchPlaceholder);
     searchInput.autocomplete = 'off';
     searchRow.append(searchInput);
     searchInput.addEventListener('input', () => renderOptions(searchInput.value));
@@ -237,7 +236,8 @@ function enhanceSelect(select) {
         highlight(activeIndex + (event.key === 'ArrowDown' ? 1 : -1));
       } else if (event.key === 'Enter') {
         event.preventDefault();
-        if (activeIndex >= 0 && items()[activeIndex]) choose(items()[activeIndex].dataset.value);
+        if (activeIndex >= 0 && items()[activeIndex])
+          choose(items()[activeIndex].dataset.value ?? '');
       } else if (event.key === 'Escape') {
         // Closes only the list, not the whole dialog.
         event.stopPropagation();
@@ -255,7 +255,7 @@ function enhanceSelect(select) {
   trigger.addEventListener('click', () => (isOpen() ? close() : open()));
   // Leaving the field, trigger and list together, closes the list; moving inside it does not.
   field.addEventListener('focusout', (event) => {
-    if (!field.contains(event.relatedTarget)) close();
+    if (!field.contains(/** @type {Node | null} */ (event.relatedTarget))) close();
   });
   trigger.addEventListener('keydown', (event) => {
     if (isOpen()) {
@@ -271,14 +271,16 @@ function enhanceSelect(select) {
   select.addEventListener('focus', () => trigger.focus());
 
   // app.js sets select.value in code, which fires no event: refresh the button on every set.
-  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+  const valueDescriptor = /** @type {PropertyDescriptor} */ (
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')
+  );
   Object.defineProperty(select, 'value', {
     configurable: true,
     get() {
-      return valueDescriptor.get.call(this);
+      return /** @type {() => string} */ (valueDescriptor.get).call(this);
     },
     set(newValue) {
-      valueDescriptor.set.call(this, newValue);
+      /** @type {(value: string) => void} */ (valueDescriptor.set).call(this, newValue);
       showCurrent();
     },
   });
@@ -291,4 +293,6 @@ function enhanceSelect(select) {
   showCurrent();
 }
 
-document.querySelectorAll('.field > select').forEach(enhanceSelect);
+/** @type {NodeListOf<HTMLSelectElement>} */ (document.querySelectorAll('.field > select')).forEach(
+  enhanceSelect,
+);
