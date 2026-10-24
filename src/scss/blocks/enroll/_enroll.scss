@@ -1,0 +1,63 @@
+@use '../../abstracts' as *;
+
+/* On phones the form fills the screen. */
+.enroll {
+  border: 0;
+  background: var(--white);
+  color: var(--ink);
+  padding: 40px;
+  max-width: 570px;
+  width: calc(100% - 32px);
+  max-height: 90dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+
+  &__title {
+    font-size: 35px;
+    letter-spacing: -1.2px;
+    margin: 20px 0 27px;
+
+    @include below($bp-mobile) {
+      font-size: 29px;
+      margin-top: 23px;
+    }
+  }
+
+  &::backdrop {
+    background: rgb(20 21 17 / 65%);
+    backdrop-filter: blur(4px);
+  }
+
+  &__close {
+    position: absolute;
+    top: 10px;
+    right: 16px;
+    border: 0;
+    background: none;
+    font-size: 30px;
+    padding: 5px 10px;
+  }
+
+  @include below($bp-mobile) {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 32px 22px max(24px, env(safe-area-inset-bottom));
+  }
+
+  /* On phones the total and the buttons sit at the bottom of the screen, or after the fields
+   when those are taller; the dialog itself scrolls. */
+  &[open] {
+    @include below($bp-mobile) {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+/* Keep the page still behind the open form. */
+html:has(.enroll[open]) {
+  overflow: hidden;
+}

@@ -1,0 +1,27 @@
+@use '../../abstracts' as *;
+
+/* Elective rows: the same square box, title and price stacked beside it. */
+.option {
+  display: flex;
+
+  &__text {
+    display: block;
+    padding-left: 24px;
+    color: var(--muted);
+  }
+
+  @include below($bp-mobile) {
+    font-size: 11px;
+  }
+
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  font-size: 14px;
+
+  &__price {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+  }
+}

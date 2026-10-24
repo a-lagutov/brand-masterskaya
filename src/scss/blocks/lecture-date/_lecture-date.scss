@@ -1,0 +1,12 @@
+@use '../../abstracts' as *;
+
+.lecture-date {
+  font-family: $font-mono;
+  font-size: 11px;
+  color: var(--muted);
+
+  &__time {
+    color: var(--ink);
+    font-weight: 700;
+  }
+}

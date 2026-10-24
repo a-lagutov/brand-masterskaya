@@ -1,0 +1,119 @@
+@use '../../abstracts' as *;
+
+.electives {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 60px;
+  border-top: 1px solid var(--line);
+  padding-top: 55px;
+  margin-top: 60px;
+
+  &__week-num {
+    font-family: $font-mono;
+    color: var(--red);
+    font-size: 10px;
+    white-space: nowrap;
+    padding-top: 4px;
+  }
+
+  &__heading {
+    margin: 20px 0;
+    font-size: 30px;
+    line-height: 1.17;
+    letter-spacing: -1px;
+
+    @include below($bp-tablet) {
+      font-size: 27px;
+    }
+
+    @include below($bp-mobile) {
+      font-size: 30px;
+      max-width: 480px;
+    }
+  }
+
+  &__text {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 340px;
+
+    @include below($bp-mobile) {
+      max-width: 100%;
+      margin-bottom: 25px;
+    }
+  }
+
+  &__panel-title {
+    font-size: 23px;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    margin: 0 0 25px;
+
+    @include below($bp-mobile) {
+      font-size: 22px;
+    }
+  }
+
+  &__week {
+    display: flex;
+    gap: 24px;
+    margin: 24px 0;
+  }
+
+  &__week-title {
+    font-size: 17px;
+    font-weight: 400;
+    margin: 0 0 8px;
+  }
+
+  &__week-text {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 7px 0;
+    line-height: 1.6;
+  }
+
+  &__week-text--result {
+    color: var(--ink);
+  }
+
+  &__week-text--compact {
+    font-size: 11px;
+    margin: 0 0 8px;
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    margin: 25px 0 0;
+    font-size: 12px;
+
+    @include below($bp-mobile) {
+      gap: 10px;
+      font-size: 11px;
+      align-items: center;
+    }
+  }
+
+  &__total {
+    font-size: 16px;
+    font-weight: 400;
+
+    @include below($bp-mobile) {
+      font-size: 15px;
+      white-space: nowrap;
+    }
+  }
+
+  @include below($bp-tablet) {
+    gap: 35px;
+  }
+
+  @include below($bp-mobile) {
+    display: block;
+    margin-top: 40px;
+    padding-top: 35px;
+  }
+}

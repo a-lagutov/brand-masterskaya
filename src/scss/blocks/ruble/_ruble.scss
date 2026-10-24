@@ -1,0 +1,6 @@
+@use '../../abstracts' as *;
+
+/* The ruble sign in the system UI font: SF Pro on Apple devices, Segoe UI on Windows, Roboto on Android. */
+.ruble {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}

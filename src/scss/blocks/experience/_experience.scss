@@ -1,0 +1,77 @@
+@use '../../abstracts' as *;
+
+.experience {
+  background: #e5e4dc;
+  padding: 25px 0 30px;
+
+  &__item {
+    font-size: 24px;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: -1px;
+    min-width: 0;
+    justify-self: center;
+
+    @include below($bp-tablet) {
+      font-size: 20px;
+    }
+
+    @include below($bp-mobile) {
+      font-size: 18px;
+    }
+  }
+
+  &__eyebrow {
+    color: var(--muted);
+    margin: 0 0 27px;
+    font-size: 9px;
+    text-transform: uppercase;
+
+    @include below($bp-mobile) {
+      font-size: 8px;
+      margin-bottom: 23px;
+      letter-spacing: 0.7px;
+    }
+  }
+
+  &__wordmarks {
+    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 27px 30px;
+    align-items: center;
+
+    @include below($bp-tablet) {
+      gap: 24px;
+    }
+
+    @include below($bp-mobile) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 25px 12px;
+    }
+  }
+
+  &__item.experience__more {
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0;
+    white-space: normal;
+    grid-column: 1/-1;
+    max-width: none;
+    justify-self: end;
+    text-align: right;
+
+    @include below($bp-mobile) {
+      font-size: 8px;
+      grid-column: 1/-1;
+      justify-self: end;
+      max-width: none;
+      text-align: right;
+    }
+  }
+
+  @include below($bp-mobile) {
+    padding: 23px 0;
+  }
+}

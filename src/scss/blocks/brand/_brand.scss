@@ -1,0 +1,17 @@
+@use '../../abstracts' as *;
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 1.1px;
+
+  @include below($bp-mobile) {
+    gap: 10px;
+    font-size: 9px;
+    letter-spacing: 0.7px;
+  }
+}

@@ -17,7 +17,7 @@ src/                исходники сайта
   scss/main.scss    точка входа стилей: порядок подключения = порядок каскада
   scss/abstracts/   брейкпоинты, переменные и миксин below()
   scss/base/        шрифты, reset, :root с цветами
-  scss/blocks/      по файлу на BEM-блок: .block { &__element, &--modifier }
+  scss/blocks/      папка на BEM-блок (blocks/hero/_hero.scss): .block { &__element, &--modifier }
   js/app.js         лендинг и форма заявки
   js/thanks.js      страница после оплаты
   assets/images/    фотографии (без уменьшения) и og.jpg — превью ссылки в соцсетях

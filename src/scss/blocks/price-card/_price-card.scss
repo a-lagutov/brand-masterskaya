@@ -1,0 +1,137 @@
+@use '../../abstracts' as *;
+
+.price-card {
+  padding: 32px 35px 26px;
+  border: 1px solid #b4b5ab;
+  display: flex;
+  flex-direction: column;
+
+  &__currency {
+    font-size: 29px;
+  }
+
+  &__feature {
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 10px 0 10px 23px;
+    position: relative;
+  }
+
+  &--recommended {
+    border: 1px solid var(--red);
+    background: var(--paper);
+  }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 26px;
+  }
+
+  &__badge {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    font-family: $font-mono;
+
+    @include below($bp-mobile) {
+      font-size: 7px;
+      max-width: 145px;
+      text-align: right;
+    }
+  }
+
+  &__top .price-card__places {
+    background: var(--red);
+    color: var(--white);
+    padding: 6px 8px;
+  }
+
+  &__title {
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -1.2px;
+    margin: 26px 0 14px;
+
+    @include below($bp-tablet) {
+      font-size: 31px;
+    }
+
+    @include below($bp-mobile) {
+      font-size: 31px;
+    }
+  }
+
+  &__intro {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0;
+    max-width: 390px;
+    min-height: 70px;
+
+    @include below($bp-mobile) {
+      min-height: 0;
+    }
+  }
+
+  &__price {
+    font-size: 60px;
+    letter-spacing: -2.5px;
+    margin: 20px 0 28px;
+    line-height: 1;
+
+    @include below($bp-mobile) {
+      font-size: 57px;
+      margin: 25px 0;
+    }
+  }
+
+  &__button {
+    width: 100%;
+  }
+
+  &__features {
+    list-style: none;
+    margin: 29px 0 20px;
+    padding: 0;
+  }
+
+  &__feature::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+    font-size: 19px;
+    top: 5px;
+  }
+
+  &__note {
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    margin-top: auto;
+    line-height: 1.55;
+    min-height: 58px;
+
+    @include below($bp-mobile) {
+      min-height: 0;
+    }
+  }
+
+  @include below($bp-tablet) {
+    padding: 28px;
+  }
+
+  @include below($bp-mobile) {
+    padding: 25px 23px 20px;
+  }
+
+  &__eyebrow {
+    @include below($bp-mobile) {
+      font-size: 9px;
+    }
+  }
+}
