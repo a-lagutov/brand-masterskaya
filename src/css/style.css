@@ -823,6 +823,13 @@ dialog h2 {
   border-top: 1px solid var(--line);
 }
 
+/* Contain the last paragraph's margin: otherwise it spills out once the height animation ends
+   and the line below jumps. */
+.curriculum details,
+.faq details {
+  display: flow-root;
+}
+
 .curriculum details:last-child {
   border-bottom: 1px solid var(--ink);
 }
@@ -900,11 +907,11 @@ summary::-webkit-details-marker {
   transition: transform 0.2s;
 }
 
-details[open] .expand::after {
+details[open]:not(.closing) .expand::after {
   transform: rotate(0deg);
 }
 
-details[open] summary .expand {
+details[open]:not(.closing) summary .expand {
   color: var(--red);
 }
 
@@ -1269,6 +1276,12 @@ details[open] summary .expand {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 20px;
+}
+
+/* Requisites are one sentence: flow as left-aligned inline text, not flex items with gaps. */
+.footer-legal > :first-child {
+  display: block;
+  text-align: left;
 }
 
 .consent {
@@ -1682,7 +1695,7 @@ input[type='checkbox'] {
   }
 
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding-top: 35px;
     gap: 20px;
   }
@@ -2957,4 +2970,12 @@ input[type='checkbox'] {
   height: 1em;
   fill: currentcolor;
   vertical-align: -0.085em;
+}
+
+/* The 60px heading floor is wider than a 320px screen's text column: scale it with the width. */
+@media (width <= 420px) {
+  h1 {
+    font-size: 17vw;
+    letter-spacing: -0.066em;
+  }
 }
