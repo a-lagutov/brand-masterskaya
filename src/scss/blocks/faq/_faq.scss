@@ -2,6 +2,8 @@
 
 .faq {
   &__item {
+    /* Contain the last paragraph's margin, as in .curriculum__item. */
+    display: flow-root;
     border-top: 1px solid var(--line);
   }
 

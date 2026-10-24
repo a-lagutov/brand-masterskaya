@@ -56,8 +56,3 @@
     }
   }
 }
-
-/* Keep the page still behind the open form. */
-html:has(.enroll[open]) {
-  overflow: hidden;
-}

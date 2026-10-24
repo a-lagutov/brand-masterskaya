@@ -65,7 +65,6 @@
 
 /* Contain the last paragraph's margin: otherwise it spills out once the height animation ends
    and the line below jumps. */
-.curriculum__item,
-.faq__item {
+.curriculum__item {
   display: flow-root;
 }
