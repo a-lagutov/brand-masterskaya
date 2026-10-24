@@ -1271,6 +1271,12 @@ details[open] summary .expand {
   gap: 8px 20px;
 }
 
+/* Requisites are one sentence: flow as left-aligned inline text, not flex items with gaps. */
+.footer-legal > :first-child {
+  display: block;
+  text-align: left;
+}
+
 .consent {
   display: flex;
   align-items: center;
