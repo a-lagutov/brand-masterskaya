@@ -446,14 +446,54 @@ async function applyPromo() {
   }
 }
 
+const DIALOG_RESIZE_MS = 320;
+const DIALOG_RESIZE_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/**
+ * Runs a content change and smoothly animates the open dialog from its old height to the new one.
+ * @param {() => void} applyChange Mutates the dialog's content.
+ */
+function animateDialogHeight(applyChange) {
+  if (!dialog.open || REDUCED_MOTION.matches) {
+    applyChange();
+    return;
+  }
+  const heightBefore = dialog.getBoundingClientRect().height;
+  applyChange();
+  // Cancel a running resize so the new one measures the real height, not a mid-animation one.
+  dialog.getAnimations().forEach((animation) => animation.cancel());
+  const heightAfter = dialog.getBoundingClientRect().height;
+  if (Math.abs(heightAfter - heightBefore) < 1) return;
+  const originalOverflow = dialog.style.overflow;
+  dialog.style.overflow = 'hidden';
+  const resize = dialog.animate([{ height: `${heightBefore}px` }, { height: `${heightAfter}px` }], {
+    duration: DIALOG_RESIZE_MS,
+    easing: DIALOG_RESIZE_EASING,
+  });
+  resize.addEventListener('finish', () => (dialog.style.overflow = originalOverflow));
+  resize.addEventListener('cancel', () => (dialog.style.overflow = originalOverflow));
+}
+
 /**
  * Shows electives only for the full plan and refreshes the total and the promo code's discount.
  * @returns {number} Current total in rubles.
  */
 function updateTotal() {
   const working = plan.value === ELECTIVES_PLAN;
-  extras.hidden = !working;
-  extras.disabled = !working;
+  if (extras.hidden === working) {
+    animateDialogHeight(() => {
+      extras.hidden = !working;
+      extras.disabled = !working;
+    });
+    // Fade the electives in; they are removed at once when hidden.
+    if (working && dialog.open && !REDUCED_MOTION.matches) {
+      extras.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: DIALOG_RESIZE_MS,
+        easing: DIALOG_RESIZE_EASING,
+      });
+    }
+  }
   if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
   const total = collectSelection().total;
   // Markup, not text, so the ruble sign keeps its own font; the amount is a formatted number.
@@ -710,7 +750,9 @@ let currentStep = 1;
  */
 function showStep(step) {
   currentStep = step;
-  formSteps.forEach((section, index) => (section.hidden = index + 1 !== step));
+  animateDialogHeight(() =>
+    formSteps.forEach((section, index) => (section.hidden = index + 1 !== step)),
+  );
   progressFill.style.width = `${(step / formSteps.length) * 100}%`;
   progressBar.setAttribute('aria-valuenow', String(step));
   document.querySelector('#progress-current').textContent = String(step);
