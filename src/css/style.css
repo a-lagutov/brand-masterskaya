@@ -1682,7 +1682,7 @@ input[type='checkbox'] {
   }
 
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding-top: 35px;
     gap: 20px;
   }
@@ -2957,4 +2957,12 @@ input[type='checkbox'] {
   height: 1em;
   fill: currentcolor;
   vertical-align: -0.085em;
+}
+
+/* The 60px heading floor is wider than a 320px screen's text column: scale it with the width. */
+@media (width <= 420px) {
+  h1 {
+    font-size: 17vw;
+    letter-spacing: -0.066em;
+  }
 }
