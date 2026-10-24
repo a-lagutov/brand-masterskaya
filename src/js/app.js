@@ -10,7 +10,7 @@ function queryRequired(selector) {
   return element;
 }
 
-const menuButton = /** @type {HTMLButtonElement} */ (document.querySelector('.menu-toggle'));
+const menuButton = /** @type {HTMLButtonElement} */ (document.querySelector('.header__toggle'));
 const mobileNav = /** @type {HTMLElement} */ (document.querySelector('#mobile-nav'));
 menuButton.addEventListener('click', () => {
   const open = menuButton.getAttribute('aria-expanded') !== 'true';
@@ -417,7 +417,7 @@ function collectSelection() {
  * @param {string} [error] Error text; without it the status follows appliedPromo.
  */
 function showPromoStatus(error) {
-  promoStatus.classList.toggle('error', Boolean(error));
+  promoStatus.classList.toggle('promo__status--error', Boolean(error));
   if (error) {
     promoStatus.textContent = error;
     return;
@@ -433,7 +433,7 @@ function showPromoStatus(error) {
       .map((key) => '«' + (PLANS[key] ?? ELECTIVES[key]).title + '»')
       .join(', ');
     promoStatus.textContent = 'Промокод действует только на ' + covered;
-    promoStatus.classList.add('error');
+    promoStatus.classList.add('promo__status--error');
     return;
   }
   const parts = discounted.map((item) => '«' + item.title + '» −' + item.percent + '%');
@@ -566,7 +566,7 @@ async function refreshPrices() {
 refreshPrices()
   .catch(() => {})
   .finally(() => document.documentElement.classList.remove('prices-loading'));
-/** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.choose-plan')).forEach(
+/** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.price-card__button')).forEach(
   (button) =>
     button.addEventListener('click', (e) => {
       e.preventDefault();
@@ -576,7 +576,7 @@ refreshPrices()
       dialog.showModal();
     }),
 );
-/** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.add-elective')).forEach(
+/** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.button--elective')).forEach(
   (button) =>
     button.addEventListener('click', () => {
       plan.value = ELECTIVES_PLAN;
@@ -592,7 +592,7 @@ refreshPrices()
       checkbox.focus();
     }),
 );
-queryRequired('.dialog-close').addEventListener('click', () => dialog.close());
+queryRequired('.enroll__close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', (e) => {
   if (e.target === dialog) {
     const r = dialog.getBoundingClientRect();
@@ -678,11 +678,12 @@ function showEmailSuggestions() {
     return;
   }
   const hint = document.createElement('li');
-  hint.className = 'suggestion-hint';
+  hint.className = 'dropdown__hint';
   hint.setAttribute('role', 'presentation');
   hint.textContent = EMAIL_HINT;
   const options = matches.map((domain) => {
     const option = document.createElement('li');
+    option.className = 'dropdown__option';
     option.setAttribute('role', 'option');
     option.dataset.domain = domain;
     option.textContent = `${localPart}@${domain}`;
@@ -705,7 +706,9 @@ function showEmailSuggestions() {
 function moveSuggestion(step) {
   const options = [...emailSuggestions.querySelectorAll('[role="option"]')];
   activeSuggestion = (activeSuggestion + step + options.length) % options.length;
-  options.forEach((option, index) => option.classList.toggle('active', index === activeSuggestion));
+  options.forEach((option, index) =>
+    option.classList.toggle('dropdown__option--active', index === activeSuggestion),
+  );
 }
 
 emailInput.addEventListener('input', () => {
@@ -778,10 +781,10 @@ countrySelect.addEventListener('change', () => {
   showDialCode();
   phoneInput.value = formatPhone(phoneInput.value);
 });
-const formSteps = /** @type {HTMLElement[]} */ ([...form.querySelectorAll('.form-step')]);
+const formSteps = /** @type {HTMLElement[]} */ ([...form.querySelectorAll('.form__step')]);
 const STEP_TITLES = ['Программа', 'Контакты и оплата'];
-const progressBar = /** @type {HTMLElement} */ (form.querySelector('.progress-bar'));
-const progressFill = /** @type {HTMLElement} */ (form.querySelector('.progress-fill'));
+const progressBar = /** @type {HTMLElement} */ (form.querySelector('.form__progress-bar'));
+const progressFill = /** @type {HTMLElement} */ (form.querySelector('.form__progress-fill'));
 // 1-based number of the step on screen.
 let currentStep = 1;
 
@@ -921,7 +924,7 @@ function animateDetails(details) {
   function settle() {
     running = null;
     details.style.overflow = '';
-    details.classList.remove('closing');
+    details.classList.remove('accordion--closing');
   }
 
   summary.addEventListener('click', (event) => {
@@ -929,9 +932,9 @@ function animateDetails(details) {
     event.preventDefault();
     // Measure from the size on screen now, so a click mid-animation reverses smoothly.
     const startHeight = details.getBoundingClientRect().height;
-    if (details.open && !details.classList.contains('closing')) {
+    if (details.open && !details.classList.contains('accordion--closing')) {
       // Closing: shrink to the summary's row, then drop [open].
-      details.classList.add('closing');
+      details.classList.add('accordion--closing');
       // The closed height, borders included, read by closing it for a moment before any paint.
       running?.cancel();
       details.style.overflow = '';
@@ -948,7 +951,7 @@ function animateDetails(details) {
       return;
     }
     // Opening, or reopening while it is still closing.
-    details.classList.remove('closing');
+    details.classList.remove('accordion--closing');
     details.open = true;
     // Measure the natural height, borders included: scrollHeight leaves them out and the line
     // under the item would jump at the end. Cancel a running tween first so it does not skew this.
@@ -961,6 +964,6 @@ function animateDetails(details) {
     });
   });
 }
-/** @type {NodeListOf<HTMLDetailsElement>} */ (
-  document.querySelectorAll('.curriculum details, .faq details')
-).forEach(animateDetails);
+/** @type {NodeListOf<HTMLDetailsElement>} */ (document.querySelectorAll('.accordion')).forEach(
+  animateDetails,
+);

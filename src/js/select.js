@@ -56,7 +56,7 @@ function enhanceSelect(select) {
   function showCurrent() {
     const option = select.options[select.selectedIndex];
     trigger.textContent = option ? option.text : '';
-    trigger.classList.toggle('placeholder', !select.value);
+    trigger.classList.toggle('select__trigger--placeholder', !select.value);
   }
 
   /** @returns {HTMLLIElement[]} The options currently in the list, without the search row. */
@@ -72,7 +72,9 @@ function enhanceSelect(select) {
     const all = items();
     if (!all.length) return;
     activeIndex = (index + all.length) % all.length;
-    all.forEach((item, position) => item.classList.toggle('active', position === activeIndex));
+    all.forEach((item, position) =>
+      item.classList.toggle('dropdown__option--active', position === activeIndex),
+    );
     all[activeIndex].scrollIntoView({ block: 'nearest' });
   }
 
@@ -113,10 +115,11 @@ function enhanceSelect(select) {
     );
     const rows = choices.map((option) => {
       const item = document.createElement('li');
+      item.className = 'dropdown__option';
       item.setAttribute('role', 'option');
       item.dataset.value = option.value;
       item.textContent = option.text;
-      item.classList.toggle('selected', option.value === select.value);
+      item.classList.toggle('dropdown__option--selected', option.value === select.value);
       // mousedown, not click: the focused field would lose focus and close the list first.
       item.addEventListener('mousedown', (event) => {
         event.preventDefault();
@@ -126,13 +129,13 @@ function enhanceSelect(select) {
     });
     if (!rows.length) {
       const empty = document.createElement('li');
-      empty.className = 'suggestion-hint';
+      empty.className = 'dropdown__hint';
       empty.setAttribute('role', 'presentation');
       empty.textContent = 'Ничего не найдено';
       rows.push(empty);
     }
     // The search row stays in place: removing the focused input would close the list.
-    list.querySelectorAll('li:not(.dropdown-search)').forEach((row) => row.remove());
+    list.querySelectorAll('li:not(.dropdown__search)').forEach((row) => row.remove());
     if (searchRow && !searchRow.isConnected) list.prepend(searchRow);
     list.append(...rows);
     // Searching starts from the first match; opening starts from the current option.
@@ -213,17 +216,18 @@ function enhanceSelect(select) {
   }
 
   trigger.type = 'button';
-  trigger.className = 'select-trigger';
+  trigger.className = 'select__trigger';
   trigger.setAttribute('aria-haspopup', 'listbox');
   trigger.setAttribute('aria-expanded', 'false');
   label.id = label.id || select.id + '-label';
   trigger.setAttribute('aria-labelledby', label.id);
-  list.className = 'dropdown-list select-list';
+  list.className = 'dropdown dropdown--select';
   list.setAttribute('role', 'listbox');
   list.hidden = true;
   if (searchRow && searchInput) {
-    searchRow.className = 'dropdown-search';
+    searchRow.className = 'dropdown__search';
     searchRow.setAttribute('role', 'presentation');
+    searchInput.className = 'dropdown__search-input';
     searchInput.type = 'search';
     searchInput.placeholder = searchPlaceholder;
     searchInput.setAttribute('aria-label', searchPlaceholder);
@@ -246,7 +250,7 @@ function enhanceSelect(select) {
       }
     });
   }
-  select.classList.add('native-select');
+  select.classList.add('field__select--native');
   select.tabIndex = -1;
   select.setAttribute('aria-hidden', 'true');
   select.after(trigger);
@@ -293,6 +297,6 @@ function enhanceSelect(select) {
   showCurrent();
 }
 
-/** @type {NodeListOf<HTMLSelectElement>} */ (document.querySelectorAll('.field > select')).forEach(
+/** @type {NodeListOf<HTMLSelectElement>} */ (document.querySelectorAll('.field__select')).forEach(
   enhanceSelect,
 );

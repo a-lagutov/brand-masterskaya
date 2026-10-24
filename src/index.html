@@ -78,13 +78,15 @@
       <a class="brand" href="#" aria-label="Мастерская, в начало"
         ><span>МАСТЕРСКАЯ <br />БРЕНД-СТРАТЕГИИ</span></a
       >
-      <nav aria-label="Основная навигация">
-        <a href="#approach">Подход</a><a href="#program">Программа</a><a href="#authors">Авторы</a
-        ><a href="#pricing">Стоимость</a>
+      <nav class="header__nav" aria-label="Основная навигация">
+        <a class="header__link" href="#approach">Подход</a
+        ><a class="header__link" href="#program">Программа</a
+        ><a class="header__link" href="#authors">Авторы</a
+        ><a class="header__link" href="#pricing">Стоимость</a>
       </nav>
-      <a class="header-cta" href="#pricing">В мастерскую <span>↗</span></a
+      <a class="header__cta" href="#pricing">В мастерскую <span>↗</span></a
       ><button
-        class="menu-toggle"
+        class="header__toggle"
         aria-expanded="false"
         aria-controls="mobile-nav"
         aria-label="Открыть меню"
@@ -93,56 +95,75 @@
       </button>
     </header>
     <nav id="mobile-nav" class="mobile-nav" aria-label="Мобильная навигация" hidden>
-      <a href="#approach">Подход</a><a href="#program">Программа</a><a href="#authors">Авторы</a
-      ><a href="#pricing">Стоимость</a>
-      <div class="mobile-nav-contacts">
-        <a href="mailto:contact@brandmasterskaya.ru">contact@brandmasterskaya.ru</a
-        ><a href="tel:+79150446975" data-contact="phone">+7 915 044-69-75</a>
-        <a href="https://t.me/brandmasterskaya" data-contact="telegram">@brandmasterskaya</a>
+      <a class="mobile-nav__link" href="#approach">Подход</a
+      ><a class="mobile-nav__link" href="#program">Программа</a
+      ><a class="mobile-nav__link" href="#authors">Авторы</a
+      ><a class="mobile-nav__link" href="#pricing">Стоимость</a>
+      <div class="mobile-nav__contacts">
+        <a class="mobile-nav__link mobile-nav__contact" href="mailto:contact@brandmasterskaya.ru"
+          >contact@brandmasterskaya.ru</a
+        ><a
+          class="mobile-nav__link mobile-nav__contact"
+          href="tel:+79150446975"
+          data-contact="phone"
+          >+7 915 044-69-75</a
+        >
+        <a
+          class="mobile-nav__link mobile-nav__contact"
+          href="https://t.me/brandmasterskaya"
+          data-contact="telegram"
+          >@brandmasterskaya</a
+        >
       </div>
     </nav>
     <main id="main">
       <section class="hero wrap">
-        <div class="eyebrow hero-eyebrow">
-          <span><i class="dot"></i> АВТОРСКАЯ ПРОГРАММА</span
-          ><span>НАБЛЮДАТЬ. ПРОБОВАТЬ. СОЗДАВАТЬ.</span>
+        <div class="eyebrow hero__eyebrow">
+          <span class="hero__tag"><i class="hero__dot"></i> АВТОРСКАЯ ПРОГРАММА</span
+          ><span class="hero__slogan">НАБЛЮДАТЬ. ПРОБОВАТЬ. СОЗДАВАТЬ.</span>
         </div>
-        <div class="hero-grid">
-          <div class="hero-copy">
-            <h1>Мастерская <br />бренд- <br /><span>стратегии</span></h1>
-            <p class="hero-desc">
+        <div class="hero__grid">
+          <div class="hero__copy">
+            <h1>Мастерская <br />бренд- <br /><span class="hero__accent">стратегии</span></h1>
+            <p class="hero__desc">
               Прикладной опыт лидеров рынка <br />в создании и управлении брендами
             </p>
-            <p class="start-date">
-              <span>Старт мастерской</span><time datetime="2026-11-07">7 ноября 2026</time>
+            <p class="hero__date">
+              <span class="hero__date-label">Старт мастерской</span
+              ><time class="hero__date-value" datetime="2026-11-07">7 ноября 2026</time>
             </p>
-            <a class="button primary" href="#pricing">Выбрать формат участия <span>↗</span></a>
+            <a class="button button--primary" href="#pricing"
+              >Выбрать формат участия <span class="button__icon">↗</span></a
+            >
           </div>
-          <div class="hero-art">
-            <div class="art-top">
-              <div class="hero-notices">
-                <p>Мастерская пройдет один раз</p>
-                <p>
+          <div class="hero__art">
+            <div class="hero__art-top">
+              <div class="hero__notices">
+                <p class="hero__notice hero__notice--first">Мастерская пройдет один раз</p>
+                <p class="hero__notice">
                   Абсолютно новый авторский контент
-                  <span>(без повторения с других программ Антона и Миши)</span>
+                  <span class="hero__notice-note"
+                    >(без повторения с других программ Антона и Миши)</span
+                  >
                 </p>
-                <p class="notice-three-lines">
-                  <span class="notice-line">Два взгляда на</span
-                  ><span class="notice-line">бренд, одна</span
-                  ><span class="notice-line">совместная работа</span>
+                <p class="hero__notice--lines hero__notice">
+                  <span class="hero__notice-line hero__notice-note">Два взгляда на</span
+                  ><span class="hero__notice-line hero__notice-note">бренд, одна</span
+                  ><span class="hero__notice-line hero__notice-note">совместная работа</span>
                 </p>
               </div>
             </div>
-            <div class="author-photo">
-              <div class="red-disc" aria-hidden="true"></div>
+            <div class="hero__photo">
+              <div class="hero__disc hero__disc--photo" aria-hidden="true"></div>
               <img
+                class="hero__image hero__image--photo"
                 src="assets/images/authors.png"
                 width="1672"
                 height="941"
                 alt="Антон Аверьянов слева и Михаил Чернышев справа, авторы мастерской"
               />
             </div>
-            <div class="photo-caption">
+            <div class="hero__caption">
               <span>АНТОН АВЕРЬЯНОВ</span><span>МИХАИЛ ЧЕРНЫШЕВ</span>
             </div>
           </div>
@@ -150,106 +171,138 @@
       </section>
       <section class="experience">
         <div class="wrap">
-          <p class="eyebrow">От авторов которые помогали создавать бренд-стратегии:</p>
-          <div class="wordmarks" aria-label="Бренды, с которыми работали авторы">
-            <span class="brand-logo logo-indrive"
-              ><img src="assets/logos/indrive.svg" alt="inDrive" width="148" height="40" /></span
-            ><span class="brand-logo logo-dodo"
+          <p class="eyebrow experience__eyebrow">
+            От авторов которые помогали создавать бренд-стратегии:
+          </p>
+          <div class="experience__wordmarks" aria-label="Бренды, с которыми работали авторы">
+            <span class="logo logo--indrive experience__item"
               ><img
+                class="logo__image"
+                src="assets/logos/indrive.svg"
+                alt="inDrive"
+                width="148"
+                height="40" /></span
+            ><span class="logo logo--dodo experience__item"
+              ><img
+                class="logo__image"
                 src="assets/logos/dodo-pizza.svg"
                 alt="Додо Пицца"
                 width="467"
                 height="70" /></span
-            ><span class="brand-logo logo-vkusvill"
-              ><img src="assets/logos/vkusvill.svg" alt="ВкусВилл" width="607" height="76" /></span
-            ><span class="brand-logo logo-storeez"
+            ><span class="logo logo--vkusvill experience__item"
               ><img
+                class="logo__image"
+                src="assets/logos/vkusvill.svg"
+                alt="ВкусВилл"
+                width="607"
+                height="76" /></span
+            ><span class="logo logo--storeez experience__item"
+              ><img
+                class="logo__image"
                 src="assets/logos/12-storeez.svg"
                 alt="12 STOREEZ"
                 width="114"
                 height="18" /></span
-            ><span class="brand-logo logo-beeline"
-              ><img src="assets/logos/beeline.svg" alt="билайн" width="1479" height="292" /></span
-            ><span class="brand-logo logo-azbuka"
+            ><span class="logo logo--beeline experience__item"
               ><img
+                class="logo__image"
+                src="assets/logos/beeline.svg"
+                alt="билайн"
+                width="1479"
+                height="292" /></span
+            ><span class="logo logo--azbuka experience__item"
+              ><img
+                class="logo__image"
                 src="assets/logos/azbuka-vkusa.png"
                 alt="Азбука Вкуса"
                 width="473"
                 height="166" /></span
-            ><span class="brand-logo logo-brusnika"
+            ><span class="logo logo--brusnika experience__item"
               ><img
+                class="logo__image"
                 src="assets/logos/brusnika.png"
                 alt="Брусника"
                 width="1117"
                 height="330" /></span
-            ><span class="brand-logo logo-lavka"
+            ><span class="logo logo--lavka experience__item"
               ><img
+                class="logo__image"
                 src="assets/logos/yandex-lavka.svg"
                 alt="Яндекс Лавка"
                 width="762"
                 height="112" /></span
-            ><span class="brand-logo logo-tele2"
-              ><img src="assets/logos/tele2.png" alt="Tele2" width="355" height="140" /></span
-            ><span class="brand-logo logo-eda"
+            ><span class="logo logo--tele2 experience__item"
               ><img
+                class="logo__image"
+                src="assets/logos/tele2.png"
+                alt="Tele2"
+                width="355"
+                height="140" /></span
+            ><span class="logo logo--eda experience__item"
+              ><img
+                class="logo__image"
                 src="assets/logos/yandex-eda.png"
                 alt="Яндекс.Еда"
                 width="1024"
                 height="225" /></span
-            ><span class="brand-logo logo-ingos"
+            ><span class="logo logo--ingos experience__item"
               ><img
+                class="logo__image"
                 src="assets/logos/ingosstrakh.png"
                 alt="ИНГОССТРАХ"
                 width="2560"
                 height="281" /></span
-            ><span class="brand-logo logo-vk"
+            ><span class="logo logo--vk experience__item"
               ><img
+                class="logo__image"
                 src="assets/logos/vkontakte.svg"
                 alt="ВКонтакте"
                 width="574"
                 height="100" /></span
-            ><span class="more-brands">+ 50 других компаний и брендов</span>
+            ><span class="experience__more experience__item">+ 50 других компаний и брендов</span>
           </div>
         </div>
       </section>
       <section id="approach" class="section wrap approach">
-        <div class="section-rail">
+        <div class="section__rail">
           <span class="eyebrow">01 / ПОДХОД</span
-          ><span class="rail-cross" aria-hidden="true">+</span>
+          ><span class="section__cross" aria-hidden="true">+</span>
         </div>
-        <div class="section-body">
-          <h2>Бренд начинается с идеи. <br />Сильным его делает <em>работа.</em></h2>
-          <div class="intro-grid">
-            <p class="large-copy">
+        <div class="section__body">
+          <h2 class="section__title">
+            Бренд начинается с идеи. <br />Сильным его делает <em>работа.</em>
+          </h2>
+          <div class="approach__intro">
+            <p class="approach__lead approach__text">
               За полтора месяца интенсивной работы вы пройдёте путь создания, внедрения и управления
               бренд-стратегией вашей компании.
             </p>
-            <p>
+            <p class="approach__text">
               От «травмы предпринимателя» как источника идеи бренда до бренд-ориентированной
               культуры, бюджетирования и влияния на P&amp;L.
             </p>
           </div>
           <div class="principles">
-            <article>
-              <span class="small-num">01</span>
-              <h3>Оба автора <br />каждую встречу</h3>
-              <p>
+            <article class="principles__item">
+              <span class="principles__num">01</span>
+              <h3 class="principles__title">Оба автора <br />каждую встречу</h3>
+              <p class="principles__text">
                 Антон и Миша ведут программу вместе. Агентский взгляд извне встречается с опытом
                 управления брендом внутри компании.
               </p>
             </article>
-            <article>
-              <span class="small-num">02</span>
-              <h3>Свой проект <br />на рабочем столе</h3>
-              <p>
+            <article class="principles__item">
+              <span class="principles__num">02</span>
+              <h3 class="principles__title">Свой проект <br />на рабочем столе</h3>
+              <p class="principles__text">
                 Приносите собственный бренд, компанию или клиентскую задачу. Разбирайте инструменты
                 и применяйте их к своей работе.
               </p>
             </article>
-            <article>
-              <span class="small-num">03</span>
-              <h3>Теория, проверенная <br />практикой</h3>
-              <p>
+            <article class="principles__item">
+              <span class="principles__num">03</span>
+              <h3 class="principles__title">Теория, проверенная <br />практикой</h3>
+              <p class="principles__text">
                 Международная академическая база и локальный опыт создания брендов, на которые
                 ориентируется рынок.
               </p>
@@ -260,74 +313,78 @@
       <section class="dark-section">
         <div class="wrap outcomes">
           <div>
-            <span class="eyebrow">02 / ОСОБЕННОСТЬ МАСТЕРСКОЙ:</span>
-            <div class="workshop-story">
-              <p>
+            <span class="eyebrow outcomes__eyebrow">02 / ОСОБЕННОСТЬ МАСТЕРСКОЙ:</span>
+            <div class="outcomes__story">
+              <p class="outcomes__story-text">
                 Идея мастерской родилась во время многочасовых разговоров Миши и Антона о том, как
                 должен быть устроен процесс создания бренда в организации.
               </p>
-              <p>
+              <p class="outcomes__story-text">
                 Предприниматели, директора по маркетингу и бренд-директора хотят сделать бренд еще
                 одним источником конкурентного преимущества, но «работа над созданием бренда» часто
                 сводится только к появлению еще одного PDF-файла с «пирамидой».
               </p>
-              <p>Мастерская — попытка исправить это.</p>
+              <p class="outcomes__story-text outcomes__story-text--last">
+                Мастерская — попытка исправить это.
+              </p>
             </div>
-            <span class="outline-star" aria-hidden="true">✳</span>
+            <span class="outcomes__star outcomes__star--outline" aria-hidden="true">✳</span>
           </div>
-          <ol class="deliverables">
-            <li>
-              <span>01</span>
+          <ol class="outcomes__list">
+            <li class="outcomes__item">
+              <span class="outcomes__num">01</span>
               <div>
-                <h3>Платформа бренда</h3>
-                <p>Основа идентичности и ДНК вашего бренда</p>
+                <h3 class="outcomes__title">Платформа бренда</h3>
+                <p class="outcomes__text">Основа идентичности и ДНК вашего бренда</p>
               </div>
-              <b aria-hidden="true">↗</b>
+              <b class="outcomes__arrow" aria-hidden="true">↗</b>
             </li>
-            <li>
-              <span>02</span>
+            <li class="outcomes__item">
+              <span class="outcomes__num">02</span>
               <div>
-                <h3>План активации</h3>
-                <p>Коммуникации, клиентский опыт, HR-бренд и культура</p>
+                <h3 class="outcomes__title">План активации</h3>
+                <p class="outcomes__text">Коммуникации, клиентский опыт, HR-бренд и культура</p>
               </div>
-              <b aria-hidden="true">↗</b>
+              <b class="outcomes__arrow" aria-hidden="true">↗</b>
             </li>
-            <li>
-              <span>03</span>
+            <li class="outcomes__item">
+              <span class="outcomes__num">03</span>
               <div>
-                <h3>Карта внедрения и метрик</h3>
-                <p>Следующие шаги и KPI для функций компании</p>
+                <h3 class="outcomes__title">Карта внедрения и метрик</h3>
+                <p class="outcomes__text">Следующие шаги и KPI для функций компании</p>
               </div>
-              <b aria-hidden="true">↗</b>
+              <b class="outcomes__arrow" aria-hidden="true">↗</b>
             </li>
-            <li>
-              <span>04</span>
+            <li class="outcomes__item">
+              <span class="outcomes__num">04</span>
               <div>
-                <h3>Инструменты для продолжения</h3>
-                <p>Рабочая тетрадь и ИИ-агенты для работы с брендом</p>
+                <h3 class="outcomes__title">Инструменты для продолжения</h3>
+                <p class="outcomes__text">Рабочая тетрадь и ИИ-агенты для работы с брендом</p>
               </div>
-              <b aria-hidden="true">↗</b>
+              <b class="outcomes__arrow" aria-hidden="true">↗</b>
             </li>
           </ol>
         </div>
       </section>
       <section class="section wrap audience">
-        <div class="section-rail"><span class="eyebrow">03 / ДЛЯ КОГО</span></div>
-        <div class="section-body">
-          <h2>Для тех, кто принимает <br />решения о бренде</h2>
-          <div class="audience-grid">
+        <div class="section__rail"><span class="eyebrow">03 / ДЛЯ КОГО</span></div>
+        <div class="section__body">
+          <h2 class="section__title">Для тех, кто принимает <br />решения о бренде</h2>
+          <div class="audience__grid">
             <article>
-              <span class="audience-tag">БИЗНЕС</span>
-              <h3>Предприниматели <br />и руководители</h3>
-              <p>
+              <span class="audience__tag">БИЗНЕС</span>
+              <h3 class="audience__title">Предприниматели <br />и руководители</h3>
+              <p class="audience__text">
                 Чтобы сделать бренд источником конкурентного преимущества и связать его со
                 стратегией компании.
               </p>
             </article>
             <article>
-              <span class="audience-tag">МАРКЕТИНГ</span>
-              <h3>Директора по маркетингу, <br />бренд-менеджеры и бренд-директора</h3>
-              <p>
+              <span class="audience__tag">МАРКЕТИНГ</span>
+              <h3 class="audience__title">
+                Директора по маркетингу, <br />бренд-менеджеры и бренд-директора
+              </h3>
+              <p class="audience__text">
                 Чтобы собрать систему управления брендом: от идентичности до внедрения и метрик.
               </p>
             </article>
@@ -337,128 +394,141 @@
       <section id="program" class="program-section">
         <div class="wrap">
           <div class="section-heading">
-            <div>
-              <span class="eyebrow">04 / ПРОГРАММА</span>
-              <h2>От гипотезы <br />до системы управления</h2>
+            <div class="section-heading__main">
+              <span class="eyebrow section-heading__eyebrow">04 / ПРОГРАММА</span>
+              <h2 class="section-heading__title">От гипотезы <br />до системы управления</h2>
             </div>
-            <p>
+            <p class="section-heading__lead">
               Каждую неделю: 3 часа лекций <br />и обсуждений в субботу. <br /><span
+                class="section-heading__note"
                 >В рабочем формате — задания <br />и Q&amp;A с обратной связью авторов.</span
               >
             </p>
           </div>
-          <div class="program-layout">
-            <aside class="program-aside">
-              <span class="eyebrow">ПУТЬ В МАСТЕРСКОЙ</span>
-              <div class="path-step active"><span>01</span> Диагностика</div>
-              <div class="path-step"><span>02</span> Разработка <br />и внедрение</div>
-              <div class="path-step"><span>03</span> Управление</div>
-              <p>Нажмите на тему, <br />чтобы заглянуть внутрь.</p>
+          <div class="program-section__layout">
+            <aside class="program-section__aside">
+              <span class="eyebrow program-section__eyebrow">ПУТЬ В МАСТЕРСКОЙ</span>
+              <div class="program-section__step program-section__step--active">
+                <span class="program-section__step-num">01</span> Диагностика
+              </div>
+              <div class="program-section__step">
+                <span class="program-section__step-num">02</span> Разработка <br />и внедрение
+              </div>
+              <div class="program-section__step">
+                <span class="program-section__step-num">03</span> Управление
+              </div>
+              <p class="program-section__note">Нажмите на тему, <br />чтобы заглянуть внутрь.</p>
             </aside>
             <div class="curriculum">
-              <details open="">
-                <summary>
-                  <span class="week">НЕДЕЛЯ 01</span>
-                  <h3>Бренд как актив</h3>
+              <details class="accordion curriculum__item" open="">
+                <summary class="accordion__summary curriculum__head">
+                  <span class="curriculum__week">НЕДЕЛЯ 01</span>
+                  <h3 class="curriculum__title">Бренд как актив</h3>
                   <span class="expand"></span>
                   <span class="lecture-date"
-                    >Дата лекции: <time datetime="2026-11-07">7 ноября</time></span
+                    >Дата лекции:
+                    <time class="lecture-date__time" datetime="2026-11-07">7 ноября</time></span
                   >
                 </summary>
                 <div class="lesson">
-                  <span class="lesson-label">ДИАГНОСТИКА</span>
-                  <p>
+                  <span class="lesson__label">ДИАГНОСТИКА</span>
+                  <p class="lesson__text">
                     Типология брендов и подходов к их созданию и управлению. Основы и инструменты
                     формирования идентичности.
                   </p>
-                  <p class="practice">
-                    <strong>Проработаем:</strong> инструментарий формирования бренда вашей
-                    организации и его тип
+                  <p class="lesson__practice lesson__text">
+                    <strong class="lesson__practice-title">Проработаем:</strong> инструментарий
+                    формирования бренда вашей организации и его тип
                   </p>
                 </div>
               </details>
-              <details>
-                <summary>
-                  <span class="week">НЕДЕЛЯ 02</span>
-                  <h3>Внешняя среда</h3>
+              <details class="accordion curriculum__item">
+                <summary class="accordion__summary curriculum__head">
+                  <span class="curriculum__week">НЕДЕЛЯ 02</span>
+                  <h3 class="curriculum__title">Внешняя среда</h3>
                   <span class="expand"></span>
                   <span class="lecture-date"
-                    >Дата лекции: <time datetime="2026-11-14">14 ноября</time></span
+                    >Дата лекции:
+                    <time class="lecture-date__time" datetime="2026-11-14">14 ноября</time></span
                   >
                 </summary>
                 <div class="lesson">
-                  <span class="lesson-label">ДИАГНОСТИКА</span>
-                  <p>
+                  <span class="lesson__label">ДИАГНОСТИКА</span>
+                  <p class="lesson__text">
                     Связь бренда с рынком и его типом, конкурентами и целевыми аудиториями. Влияние
                     трендов и «чёрных лебедей».
                   </p>
-                  <p class="practice">
-                    <strong>Проработаем:</strong> проанализируем внешнюю среду компании, составим
-                    карту влияния на бренд
+                  <p class="lesson__practice lesson__text">
+                    <strong class="lesson__practice-title">Проработаем:</strong> проанализируем
+                    внешнюю среду компании, составим карту влияния на бренд
                   </p>
                   <div class="ai-label">✳ ИИ-агент для бренд-аналитики</div>
                 </div>
               </details>
-              <details>
-                <summary>
-                  <span class="week">НЕДЕЛЯ 03</span>
-                  <h3>Идентичность бренда</h3>
+              <details class="accordion curriculum__item">
+                <summary class="accordion__summary curriculum__head">
+                  <span class="curriculum__week">НЕДЕЛЯ 03</span>
+                  <h3 class="curriculum__title">Идентичность бренда</h3>
                   <span class="expand"></span>
                   <span class="lecture-date"
-                    >Дата лекции: <time datetime="2026-11-21">21 ноября</time></span
+                    >Дата лекции:
+                    <time class="lecture-date__time" datetime="2026-11-21">21 ноября</time></span
                   >
                 </summary>
                 <div class="lesson">
-                  <span class="lesson-label">РАЗРАБОТКА И ВНЕДРЕНИЕ</span>
-                  <p>
+                  <span class="lesson__label">РАЗРАБОТКА И ВНЕДРЕНИЕ</span>
+                  <p class="lesson__text">
                     Типы стратегий брендов. Особенности премиального сегмента и сложного B2B. Методы
                     описания идентичности.
                   </p>
-                  <p class="practice">
-                    <strong>Проработаем</strong> Основу идентичности бренда и его ДНК в виде
-                    платформы.
+                  <p class="lesson__practice lesson__text">
+                    <strong class="lesson__practice-title">Проработаем</strong> Основу идентичности
+                    бренда и его ДНК в виде платформы.
                   </p>
                   <div class="ai-label">✳ ИИ-агент для управления платформой бренда</div>
                 </div>
               </details>
-              <details>
-                <summary>
-                  <span class="week">НЕДЕЛЯ 04</span>
-                  <h3>Активация бренда</h3>
+              <details class="accordion curriculum__item">
+                <summary class="accordion__summary curriculum__head">
+                  <span class="curriculum__week">НЕДЕЛЯ 04</span>
+                  <h3 class="curriculum__title">Активация бренда</h3>
                   <span class="expand"></span>
                   <span class="lecture-date"
-                    >Дата лекции: <time datetime="2026-11-28">28 ноября</time></span
+                    >Дата лекции:
+                    <time class="lecture-date__time" datetime="2026-11-28">28 ноября</time></span
                   >
                 </summary>
                 <div class="lesson">
-                  <span class="lesson-label">РАЗРАБОТКА И ВНЕДРЕНИЕ</span>
-                  <p>
+                  <span class="lesson__label">РАЗРАБОТКА И ВНЕДРЕНИЕ</span>
+                  <p class="lesson__text">
                     Как сделать бренд-платформу основой коммуникации, клиентского опыта в офлайне и
                     онлайне, HR-бренда и культуры организации.
                   </p>
-                  <p class="practice">
-                    <strong>Проработаем</strong> План активации бренда по всем каналам и точкам
-                    контакта.
+                  <p class="lesson__practice lesson__text">
+                    <strong class="lesson__practice-title">Проработаем</strong> План активации
+                    бренда по всем каналам и точкам контакта.
                   </p>
                 </div>
               </details>
-              <details>
-                <summary>
-                  <span class="week">НЕДЕЛЯ 05</span>
-                  <h3>Метрики управления брендом</h3>
+              <details class="accordion curriculum__item">
+                <summary class="accordion__summary curriculum__head">
+                  <span class="curriculum__week">НЕДЕЛЯ 05</span>
+                  <h3 class="curriculum__title">Метрики управления брендом</h3>
                   <span class="expand"></span>
                   <span class="lecture-date"
-                    >Дата лекции: <time datetime="2026-12-05">5 декабря</time></span
+                    >Дата лекции:
+                    <time class="lecture-date__time" datetime="2026-12-05">5 декабря</time></span
                   >
                 </summary>
                 <div class="lesson">
-                  <span class="lesson-label">УПРАВЛЕНИЕ</span>
-                  <p>
+                  <span class="lesson__label">УПРАВЛЕНИЕ</span>
+                  <p class="lesson__text">
                     Связь бренд-стратегии с общей стратегией компании. Метрики эффективности для
                     вашего бренда. Следующие шаги и план активации с KPI для каждого отдела.
                   </p>
-                  <p class="practice">
-                    <strong>Проработаем</strong> Карту внедрения и активации бренда.
+                  <p class="lesson__practice lesson__text">
+                    <strong class="lesson__practice-title">Проработаем</strong> Карту внедрения и
+                    активации бренда.
                   </p>
                   <div class="ai-label">✳ ИИ-агент для управления активацией</div>
                 </div>
@@ -466,102 +536,120 @@
             </div>
           </div>
           <div class="electives">
-            <div class="electives-title">
+            <div class="electives__title">
               <span class="eyebrow">ПРОДОЛЖЕНИЕ РАБОТЫ</span>
-              <h3>Продвинутые факультативы для тех, кто хочет разобраться в деталях</h3>
-              <p>
+              <h3 class="electives__heading">
+                Продвинутые факультативы для тех, кто хочет разобраться в деталях
+              </h3>
+              <p class="electives__text">
                 Два факультатива на выбор. Каждый добавляет к&nbsp;формату
                 «Смотрю&nbsp;и&nbsp;работаю» ещё 2&nbsp;недели обучения и&nbsp;работы.
               </p>
             </div>
-            <div class="elective-content">
+            <div class="electives__content">
               <div class="tabs" role="tablist" aria-label="Факультативы">
                 <button
+                  class="tabs__tab"
                   id="tab-director"
                   role="tab"
                   aria-selected="true"
                   aria-controls="panel-director"
                 >
-                  Бренд-директор <span>↗</span></button
+                  Бренд-директор <span class="tabs__note">↗</span></button
                 ><button
+                  class="tabs__tab"
                   id="tab-business"
                   role="tab"
                   aria-selected="false"
                   aria-controls="panel-business"
                   tabindex="-1"
                 >
-                  Предприниматель / CEO <span>↗</span>
+                  Предприниматель / CEO <span class="tabs__note">↗</span>
                 </button>
               </div>
               <div id="panel-director" role="tabpanel" aria-labelledby="tab-director">
-                <h4>{{title:director}}</h4>
-                <div class="elective-week">
-                  <span>НЕДЕЛЯ 06</span>
+                <h4 class="electives__panel-title">{{title:director}}</h4>
+                <div class="electives__week">
+                  <span class="electives__week-num">НЕДЕЛЯ 06</span>
                   <div>
-                    <h5>Продвинутые метрики</h5>
-                    <p class="lecture-date">
-                      Дата лекции: <time datetime="2026-12-12">12 декабря</time>
+                    <h5 class="electives__week-title">Продвинутые метрики</h5>
+                    <p class="lecture-date electives__week-text lecture-date--compact">
+                      Дата лекции:
+                      <time class="lecture-date__time" datetime="2026-12-12">12 декабря</time>
                     </p>
-                    <p>
+                    <p class="electives__week-text">
                       CEP и DBA. Продвинутая модель BHT и её связь с P&amp;L. Обоснование инвестиций
                       в бренд перед CFO и советом директоров.
                     </p>
-                    <p class="result">Результат: карта метрик для презентации CFO.</p>
+                    <p class="result electives__week-text electives__week-text--result">
+                      Результат: карта метрик для презентации CFO.
+                    </p>
                   </div>
                 </div>
-                <div class="elective-week">
-                  <span>НЕДЕЛЯ 07</span>
+                <div class="electives__week">
+                  <span class="electives__week-num">НЕДЕЛЯ 07</span>
                   <div>
-                    <h5>Тонкое взаимодействие</h5>
-                    <p class="lecture-date">
-                      Дата лекции: <time datetime="2026-12-19">19 декабря</time>
+                    <h5 class="electives__week-title">Тонкое взаимодействие</h5>
+                    <p class="lecture-date electives__week-text lecture-date--compact">
+                      Дата лекции:
+                      <time class="lecture-date__time" datetime="2026-12-19">19 декабря</time>
                     </p>
-                    <p>Бренд в массовой культуре, семиотика, комьюнити, тренды и хайпы.</p>
-                    <p class="result">Результат: карта культурного взаимодействия бренда.</p>
+                    <p class="electives__week-text">
+                      Бренд в массовой культуре, семиотика, комьюнити, тренды и хайпы.
+                    </p>
+                    <p class="result electives__week-text electives__week-text--result">
+                      Результат: карта культурного взаимодействия бренда.
+                    </p>
                   </div>
                 </div>
                 <div class="ai-label">✳ ИИ-агент для сканирования культуры</div>
               </div>
               <div id="panel-business" role="tabpanel" aria-labelledby="tab-business" hidden>
-                <h4>{{title:business}}</h4>
-                <div class="elective-week">
-                  <span>НЕДЕЛЯ 06</span>
+                <h4 class="electives__panel-title">{{title:business}}</h4>
+                <div class="electives__week">
+                  <span class="electives__week-num">НЕДЕЛЯ 06</span>
                   <div>
-                    <h5>Бренд-ориентированная культура</h5>
-                    <p class="lecture-date">
-                      Дата лекции: <time datetime="2026-12-13">13 декабря</time>
+                    <h5 class="electives__week-title">Бренд-ориентированная культура</h5>
+                    <p class="lecture-date electives__week-text lecture-date--compact">
+                      Дата лекции:
+                      <time class="lecture-date__time" datetime="2026-12-13">13 декабря</time>
                     </p>
-                    <p>
+                    <p class="electives__week-text">
                       Управление брендом независимо от создателя. Влияние культуры организации,
                       сильный HR-бренд и уникальное EVP.
                     </p>
-                    <p class="result">Результат: план и инструменты формирования культуры.</p>
+                    <p class="result electives__week-text electives__week-text--result">
+                      Результат: план и инструменты формирования культуры.
+                    </p>
                   </div>
                 </div>
-                <div class="elective-week">
-                  <span>НЕДЕЛЯ 07</span>
+                <div class="electives__week">
+                  <span class="electives__week-num">НЕДЕЛЯ 07</span>
                   <div>
-                    <h5>Бренд как стратегия</h5>
-                    <p class="lecture-date">
-                      Дата лекции: <time datetime="2026-12-20">20 декабря</time>
+                    <h5 class="electives__week-title">Бренд как стратегия</h5>
+                    <p class="lecture-date electives__week-text lecture-date--compact">
+                      Дата лекции:
+                      <time class="lecture-date__time" datetime="2026-12-20">20 декабря</time>
                     </p>
-                    <p>
+                    <p class="electives__week-text">
                       Бренд как основа стратегии организации. KPI во всех функциональных
                       направлениях. Стоимость бренда в балансовом отчёте.
                     </p>
-                    <p class="result">
+                    <p class="result electives__week-text electives__week-text--result">
                       Результат: связь функций организации с влиянием на стоимость бренда.
                     </p>
                   </div>
                 </div>
               </div>
-              <p class="elective-foot">
+              <p class="electives__foot">
                 2 лекции + 2 Q&amp;A-сессии
-                <strong>+ {{price:director}} <span class="ruble">₽</span></strong>
+                <strong class="electives__total"
+                  >+ {{price:director}} <span class="ruble">₽</span></strong
+                >
               </p>
-              <button type="button" class="button primary add-elective">
-                <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
-                ><span aria-hidden="true">↗</span>
+              <button type="button" class="button button--primary button--elective">
+                <span class="button__label">Добавить факультатив к формату «{{title:work}}»</span
+                ><span class="button__icon" aria-hidden="true">↗</span>
               </button>
             </div>
           </div>
@@ -569,156 +657,179 @@
       </section>
       <section id="authors" class="section wrap authors">
         <div class="section-heading">
-          <div>
-            <span class="eyebrow">05 / АВТОРЫ</span>
-            <h2>Опыт с двух <br />сторон стола</h2>
+          <div class="section-heading__main">
+            <span class="eyebrow section-heading__eyebrow">05 / АВТОРЫ</span>
+            <h2 class="section__title section-heading__title">Опыт с двух <br />сторон стола</h2>
           </div>
-          <p>
+          <p class="section-heading__lead authors__text">
             Каждую встречу проводим вместе. <br />Каждое решение рассматриваем <br />с двух
             профессиональных позиций.
           </p>
         </div>
-        <div class="authors-grid">
-          <article>
-            <span class="author-index">01 / ВНУТРИ БИЗНЕСА</span>
-            <h3>Михаил <br />Чернышев<span class="red">↗</span></h3>
-            <p class="author-lead">
+        <div class="authors__grid">
+          <article class="authors__card">
+            <span class="authors__index">01 / ВНУТРИ БИЗНЕСА</span>
+            <h3 class="authors__name">
+              Михаил <br />Чернышев<span class="authors__surname">↗</span>
+            </h3>
+            <p class="authors__lead authors__text">
               Глобальный бренд inDrive. <br />48 стран. Более 20 лет в маркетинге.
             </p>
-            <p>
+            <p class="authors__text">
               Один из самых опытных бренд-директоров российского рынка. Строил и развивал бренды
               Tele2, Yota, «ВКонтакте» и Dodo Pizza в России, Европе и Великобритании.
             </p>
-            <p>Автор книги «Сильные бренды со смыслом».</p>
-            <div class="author-brands">inDrive / Dodo Pizza / Tele2 / Yota / VK</div>
+            <p class="authors__text">Автор книги «Сильные бренды со смыслом».</p>
+            <div class="authors__brands">inDrive / Dodo Pizza / Tele2 / Yota / VK</div>
           </article>
-          <article>
-            <span class="author-index">02 / СО СТОРОНЫ СТРАТЕГИИ</span>
-            <h3>Антон <br />Аверьянов<span class="red">↗</span></h3>
-            <p class="author-lead">
+          <article class="authors__card">
+            <span class="authors__index">02 / СО СТОРОНЫ СТРАТЕГИИ</span>
+            <h3 class="authors__name">
+              Антон <br />Аверьянов<span class="authors__surname">↗</span>
+            </h3>
+            <p class="authors__lead authors__text">
               Бренд-стратег с 20-летним опытом. <br />Сооснователь и директор по стратегии FANATIC.
             </p>
-            <p>
+            <p class="authors__text">
               Совладелец и издатель «Больших идей» (бывшего Harvard Business Review Russia). Делал
               стратегии брендов: билайн, ВкусВилл, 12STOREEZ, Азбука Вкуса, Яндекс.Маркет,
               Яндекс.Доставка, Яндекс.Лавка, Яндекс.Еда, Ренессанс Страхование, ИНГОССТРАХ,
               застройщиков БРУСНИКА, SMINEX и многих-многих других.
             </p>
-            <div class="author-brands">FANATIC / Большие идеи</div>
+            <div class="authors__brands">FANATIC / Большие идеи</div>
           </article>
         </div>
       </section>
       <section id="pricing" class="pricing-section">
         <div class="wrap">
           <div class="section-heading">
-            <div>
-              <span class="eyebrow">06 / УЧАСТИЕ</span>
-              <h2>Выбери свой формат <br />работы в мастерской:</h2>
+            <div class="section-heading__main section-heading__main--pricing">
+              <span class="eyebrow section-heading__eyebrow">06 / УЧАСТИЕ</span>
+              <h2 class="section-heading__title">Выбери свой формат <br />работы в мастерской:</h2>
             </div>
-            <p>
+            <p class="section-heading__lead">
               Доступ к системе и инструментам <br />или работа над своим брендом <br />с обратной
               связью авторов.
             </p>
           </div>
-          <div class="prices">
+          <div class="pricing-section__cards">
             <article class="price-card">
-              <div class="card-top">
-                <span class="eyebrow">ФОРМАТ 01</span><span>ДЛЯ САМОСТОЯТЕЛЬНОЙ РАБОТЫ</span>
+              <div class="price-card__top">
+                <span class="eyebrow">ФОРМАТ 01</span
+                ><span class="price-card__badge">ДЛЯ САМОСТОЯТЕЛЬНОЙ РАБОТЫ</span>
               </div>
-              <h3>{{title:watch}}</h3>
-              <p class="price-intro">
+              <h3 class="price-card__title">{{title:watch}}</h3>
+              <p class="price-card__intro">
                 Для тех, кому нужен доступ к системе, способу мышления и рабочим приёмам.
               </p>
-              <div class="price">{{price:watch}} <span class="price-currency ruble">₽</span></div>
-              <a href="#enroll" class="button outline choose-plan" data-plan="watch"
-                >Выбрать формат <span>↗</span></a
-              >
-              <ul class="features">
-                <li>6 живых лекций мастерской</li>
-                <li>Инструменты и рабочая тетрадь</li>
-                <li>Неограниченный доступ к записям</li>
-                <li>Система разработки бренда для самостоятельного применения</li>
-              </ul>
-              <p class="price-note">Без участия в Q&amp;A и разбора собственного проекта.</p>
-            </article>
-            <article class="price-card recommended">
-              <div class="card-top">
-                <span class="eyebrow">ФОРМАТ 02 / ОСНОВНОЙ</span><span class="places">20 МЕСТ</span>
+              <div class="price-card__price">
+                {{price:watch}} <span class="price-card__currency ruble">₽</span>
               </div>
-              <h3>{{title:work}}</h3>
-              <p class="price-intro">
+              <a href="#enroll" class="button button--outline price-card__button" data-plan="watch"
+                >Выбрать формат <span class="button__icon">↗</span></a
+              >
+              <ul class="price-card__features">
+                <li class="price-card__feature">6 живых лекций мастерской</li>
+                <li class="price-card__feature">Инструменты и рабочая тетрадь</li>
+                <li class="price-card__feature">Неограниченный доступ к записям</li>
+                <li class="price-card__feature">
+                  Система разработки бренда для самостоятельного применения
+                </li>
+              </ul>
+              <p class="price-card__note">Без участия в Q&amp;A и разбора собственного проекта.</p>
+            </article>
+            <article class="price-card price-card--recommended">
+              <div class="price-card__top">
+                <span class="eyebrow">ФОРМАТ 02 / ОСНОВНОЙ</span
+                ><span class="price-card__places price-card__badge">20 МЕСТ</span>
+              </div>
+              <h3 class="price-card__title">{{title:work}}</h3>
+              <p class="price-card__intro">
                 Приносите свой бренд или клиентский проект и шесть недель работаете вместе с нами.
               </p>
-              <div class="price">{{price:work}} <span class="price-currency ruble">₽</span></div>
-              <a href="#enroll" class="button primary choose-plan" data-plan="work"
-                >Начать свою работу <span>↗</span></a
+              <div class="price-card__price">
+                {{price:work}} <span class="price-card__currency ruble">₽</span>
+              </div>
+              <a href="#enroll" class="button button--primary price-card__button" data-plan="work"
+                >Начать свою работу <span class="button__icon">↗</span></a
               >
-              <ul class="features">
-                <li>Всё из формата «{{title:watch}}»</li>
-                <li>5 рабочих Q&amp;A-сессий с авторами</li>
-                <li>Задания между сессиями с разборами</li>
-                <li>Закрытая группа потока</li>
-                <li>Финальная презентация с обратной связью</li>
+              <ul class="price-card__features">
+                <li class="price-card__feature">Всё из формата «{{title:watch}}»</li>
+                <li class="price-card__feature">5 рабочих Q&amp;A-сессий с авторами</li>
+                <li class="price-card__feature">Задания между сессиями с разборами</li>
+                <li class="price-card__feature">Закрытая группа потока</li>
+                <li class="price-card__feature">Финальная презентация с обратной связью</li>
               </ul>
-              <p class="price-note">
+              <p class="price-card__note">
                 На выходе — собственная бренд-стратегия и подробный план её активации и управления.
               </p>
             </article>
           </div>
           <div class="pricing-addendum">
-            <span aria-hidden="true">+</span>
-            <p>
+            <span class="pricing-addendum__plus" aria-hidden="true">+</span>
+            <p class="pricing-addendum__text">
               К рабочему формату можно добавить факультатив: <br /><strong
+                class="pricing-addendum__strong"
                 >«{{title:director}}»</strong
               >
-              или <strong>«{{title:business}}»</strong>.
+              или <strong class="pricing-addendum__strong">«{{title:business}}»</strong>.
             </p>
-            <b
+            <b class="pricing-addendum__price"
               >{{price:director}} <span class="ruble">₽</span
-              ><small>за каждый факультатив</small></b
-            ><button type="button" class="button primary add-elective">
-              <span class="button-label">Добавить факультатив к формату «{{title:work}}»</span
-              ><span aria-hidden="true">↗</span>
+              ><small class="pricing-addendum__small">за каждый факультатив</small></b
+            ><button type="button" class="button button--primary button--elective">
+              <span class="button__label">Добавить факультатив к формату «{{title:work}}»</span
+              ><span class="button__icon" aria-hidden="true">↗</span>
             </button>
           </div>
         </div>
       </section>
       <section class="section wrap faq">
-        <div class="section-rail"><span class="eyebrow">07 / ДЕТАЛИ</span></div>
-        <div class="section-body">
-          <h2>Ответы на вопросы:</h2>
-          <details>
-            <summary>Подходит ли программа для B2B?<span class="expand"></span></summary>
-            <p>
+        <div class="section__rail"><span class="eyebrow">07 / ДЕТАЛИ</span></div>
+        <div class="section__body">
+          <h2 class="section__title">Ответы на вопросы:</h2>
+          <details class="accordion faq__item">
+            <summary class="accordion__summary faq__question">
+              Подходит ли программа для B2B?<span class="expand"></span>
+            </summary>
+            <p class="faq__answer">
               Да. В программе разбираем разные типы стратегий, включая сложный B2B и премиальный
               сегмент. В рабочем формате вы применяете инструменты к своему бренду или клиентскому
               проекту.
             </p>
           </details>
-          <details>
-            <summary>Как устроена работа в течение недели?<span class="expand"></span></summary>
-            <p>
+          <details class="accordion faq__item">
+            <summary class="accordion__summary faq__question">
+              Как устроена работа в течение недели?<span class="expand"></span>
+            </summary>
+            <p class="faq__answer">
               В субботу — 3 часа лекций и обсуждений с двумя авторами. В формате «{{title:work}}»
               между встречами вы выполняете задания, а на Q&amp;A разбираете результаты и получаете
               обратную связь.
             </p>
           </details>
-          <details>
-            <summary>Будут ли записи?<span class="expand"></span></summary>
-            <p>
+          <details class="accordion faq__item">
+            <summary class="accordion__summary faq__question">
+              Будут ли записи?<span class="expand"></span>
+            </summary>
+            <p class="faq__answer">
               Оба формата включают неограниченный доступ к записям лекций, инструменты и рабочую
               тетрадь.
             </p>
           </details>
-          <details>
-            <summary>Это повтор других программ авторов?<span class="expand"></span></summary>
-            <p>
+          <details class="accordion faq__item">
+            <summary class="accordion__summary faq__question">
+              Это повтор других программ авторов?<span class="expand"></span>
+            </summary>
+            <p class="faq__answer">
               Нет. Для мастерской создан новый контент без повторения других программ Миши и Антона.
             </p>
           </details>
-          <details>
-            <summary>Когда начинается программа?<span class="expand"></span></summary>
-            <p>
+          <details class="accordion faq__item">
+            <summary class="accordion__summary faq__question">
+              Когда начинается программа?<span class="expand"></span>
+            </summary>
+            <p class="faq__answer">
               Старт мастерской — 7 ноября 2026 года. Лекции и обсуждения проходят по субботам.
               Точное время встреч будет объявлено отдельно.
             </p>
@@ -726,89 +837,98 @@
         </div>
       </section>
       <section class="final-section">
-        <div class="wrap">
-          <span class="eyebrow">Два автора. Два взгляда. Одна мастерская.</span>
-          <div><a href="#pricing" class="round-cta" aria-label="Выбрать формат участия">↗</a></div>
-          <p>Антон Аверьянов &amp; Михаил Чернышев</p>
+        <div class="wrap final-section__inner">
+          <span class="eyebrow final-section__eyebrow"
+            >Два автора. Два взгляда. Одна мастерская.</span
+          >
+          <div class="final-section__cta-box">
+            <a href="#pricing" class="final-section__cta" aria-label="Выбрать формат участия">↗</a>
+          </div>
+          <p class="final-section__text">Антон Аверьянов &amp; Михаил Чернышев</p>
         </div>
       </section>
     </main>
     <footer class="wrap footer">
-      <a class="brand" href="#"
+      <a class="brand footer__link footer__brand" href="#"
         ><span>МАСТЕРСКАЯ <br />БРЕНД-СТРАТЕГИИ</span></a
       >
-      <p>Прикладной опыт. Совместная работа.</p>
-      <div class="footer-legal">
-        <p>
+      <p class="footer__text">Прикладной опыт. Совместная работа.</p>
+      <div class="footer__legal">
+        <p class="footer__legal-row">
           ИП <span data-var="ownerName">Аверьянова Ольга Владимировна</span>, ИНН
           <span data-var="inn">420526003907</span>, ОГРНИП
           <span data-var="ogrnip">326420500014874</span>
         </p>
-        <p>
-          <a href="mailto:contact@brandmasterskaya.ru" data-contact="email"
+        <p class="footer__legal-row">
+          <a class="footer__link" href="mailto:contact@brandmasterskaya.ru" data-contact="email"
             >contact@brandmasterskaya.ru</a
           >
-          <a href="tel:+79150446975" data-contact="phone">+7 915 044-69-75</a>
-          <a href="https://t.me/brandmasterskaya" data-contact="telegram">@brandmasterskaya</a>
+          <a class="footer__link" href="tel:+79150446975" data-contact="phone">+7 915 044-69-75</a>
+          <a class="footer__link" href="https://t.me/brandmasterskaya" data-contact="telegram"
+            >@brandmasterskaya</a
+          >
         </p>
-        <p>
-          <a href="oferta.html">Договор-оферта</a>
-          <a href="privacy.html">Политика обработки персональных данных</a>
+        <p class="footer__legal-row">
+          <a class="footer__link" href="oferta.html">Договор-оферта</a>
+          <a class="footer__link" href="privacy.html">Политика обработки персональных данных</a>
         </p>
       </div>
-      <a href="#">Наверх ↑</a>
+      <a class="footer__link footer__up" href="#">Наверх ↑</a>
     </footer>
-    <dialog id="enroll" aria-labelledby="enroll-title">
-      <button class="dialog-close" aria-label="Закрыть">×</button
+    <dialog class="enroll" id="enroll" aria-labelledby="enroll-title">
+      <button class="enroll__close" aria-label="Закрыть">×</button
       ><span class="eyebrow">ВАШЕ УЧАСТИЕ</span>
-      <h2 id="enroll-title">Соберите свой формат.</h2>
-      <form id="application" novalidate>
-        <div class="form-progress">
-          <p class="form-progress-label" id="progress-label" aria-live="polite">
+      <h2 class="enroll__title" id="enroll-title">Соберите свой формат.</h2>
+      <form class="form" id="application" novalidate>
+        <div class="form__progress">
+          <p class="form__progress-label" id="progress-label" aria-live="polite">
             Шаг <span id="progress-current">1</span> из 2 ·
             <span id="progress-title">Программа</span>
           </p>
           <div
-            class="progress-bar"
+            class="form__progress-bar"
             role="progressbar"
             aria-valuemin="1"
             aria-valuemax="2"
             aria-valuenow="1"
             aria-labelledby="progress-label"
           >
-            <span class="progress-fill"></span>
+            <span class="form__progress-fill"></span>
           </div>
         </div>
-        <div class="form-step" data-step="1">
-          <div class="step-body">
-            <div class="field field-static">
-              <select id="plan" name="plan">
+        <div class="form__step" data-step="1">
+          <div class="form__body">
+            <div class="field field--static">
+              <select class="field__select" id="plan" name="plan">
                 <option value="watch">{{title:watch}} — {{amount:watch}} ₽</option>
                 <option value="work">{{title:work}} — {{amount:work}} ₽</option>
               </select>
-              <label for="plan">Основная программа</label>
+              <label class="field__label" for="plan">Основная программа</label>
             </div>
             <fieldset id="extra-options" hidden disabled="">
               <legend>Добавить факультатив</legend>
               <label class="option"
-                ><input type="checkbox" name="director" /><span
+                ><input class="checkbox" type="checkbox" name="director" /><span
+                  class="option__text"
                   ><span>{{title:director}}</span
-                  ><span class="option-price"
+                  ><span class="option__price"
                     >+ {{price:director}} <span class="ruble">₽</span></span
                   ></span
                 ></label
               ><label class="option"
-                ><input type="checkbox" name="business" /><span
+                ><input class="checkbox" type="checkbox" name="business" /><span
+                  class="option__text"
                   ><span>{{title:business}}</span
-                  ><span class="option-price"
+                  ><span class="option__price"
                     >+ {{price:business}} <span class="ruble">₽</span></span
                   ></span
                 ></label
               >
             </fieldset>
-            <div class="promo-row">
+            <div class="promo">
               <div class="field">
                 <input
+                  class="field__input"
                   id="app-promo"
                   name="promoCode"
                   autocapitalize="characters"
@@ -817,30 +937,31 @@
                   placeholder="Если есть"
                   maxlength="32"
                 />
-                <label for="app-promo">Промокод</label>
+                <label class="field__label" for="app-promo">Промокод</label>
               </div>
               <button class="button" type="button" id="apply-promo">Применить</button>
             </div>
-            <p id="promo-status" role="status"></p>
+            <p class="promo__status" id="promo-status" role="status"></p>
           </div>
-          <div class="step-footer">
-            <div class="total-row">
+          <div class="form__footer">
+            <div class="form__total">
               <span>Стоимость участия</span
-              ><output id="total" aria-live="polite"
+              ><output class="form__total-value" id="total" aria-live="polite"
                 >{{amount:watch}} <span class="ruble">₽</span></output
               >
             </div>
-            <button class="button primary" type="button" id="step-next">
+            <button class="button button--primary" type="button" id="step-next">
               Продолжить
-              <span class="arrow-next">↗</span>
+              <span class="button__arrow--next button__icon">↗</span>
             </button>
           </div>
         </div>
-        <div class="form-step" data-step="2" hidden>
-          <div class="step-body">
-            <div class="form-group">
+        <div class="form__step" data-step="2" hidden>
+          <div class="form__body">
+            <div class="form__group">
               <div class="field">
                 <input
+                  class="field__input"
                   id="app-name"
                   name="name"
                   autocomplete="name"
@@ -848,10 +969,11 @@
                   required
                   maxlength="100"
                 />
-                <label for="app-name">Ваше имя</label>
+                <label class="field__label" for="app-name">Ваше имя</label>
               </div>
               <div class="field">
                 <input
+                  class="field__input"
                   id="app-email"
                   name="email"
                   type="email"
@@ -863,13 +985,14 @@
                   required
                   maxlength="160"
                 />
-                <label for="app-email">Email</label>
-                <ul class="dropdown-list" id="email-suggestions" role="listbox" hidden></ul>
+                <label class="field__label" for="app-email">Email</label>
+                <ul class="dropdown" id="email-suggestions" role="listbox" hidden></ul>
               </div>
-              <div class="field field-static">
-                <div class="phone-row">
-                  <span class="field-prefix">@</span
+              <div class="field field--static">
+                <div class="phone">
+                  <span class="phone__prefix">@</span
                   ><input
+                    class="phone__input"
                     id="app-telegram"
                     name="telegram"
                     autocapitalize="off"
@@ -879,24 +1002,26 @@
                     maxlength="64"
                   />
                 </div>
-                <label for="app-telegram">Telegram</label>
+                <label class="field__label" for="app-telegram">Telegram</label>
               </div>
             </div>
-            <div class="form-group">
-              <div class="field field-static">
+            <div class="form__group">
+              <div class="field field--static">
                 <select
+                  class="field__select"
                   id="app-country"
                   name="country"
                   autocomplete="country"
                   data-search="Поиск страны"
                   required
                 ></select>
-                <label for="app-country">Страна</label>
+                <label class="field__label" for="app-country">Страна</label>
               </div>
-              <div class="field field-static">
-                <div class="phone-row">
-                  <span class="dial-code"
+              <div class="field field--static">
+                <div class="phone">
+                  <span class="phone__code"
                     >+<input
+                      class="phone__input phone__code-input"
                       id="app-dial-code"
                       type="tel"
                       inputmode="numeric"
@@ -906,6 +1031,7 @@
                       maxlength="3"
                       required /></span
                   ><input
+                    class="phone__input"
                     id="app-phone"
                     name="phone"
                     type="tel"
@@ -916,39 +1042,40 @@
                     maxlength="24"
                   />
                 </div>
-                <label for="app-phone">Телефон</label>
+                <label class="field__label" for="app-phone">Телефон</label>
               </div>
             </div>
             <label class="consent"
-              ><input type="checkbox" name="consent" required />
+              ><input class="checkbox" type="checkbox" name="consent" required />
               <span
                 >Даю
-                <a href="privacy.html#consent" target="_blank"
+                <a class="text-link" href="privacy.html#consent" target="_blank"
                   >согласие на обработку персональных данных</a
                 ></span
               ></label
             >
-            <p class="form-note">
+            <p class="form__note">
               Оплата картой, через СБП или частями в Долями на странице банка Точка. После оплаты
               пришлём на почту ссылку на Telegram-бота для завершения регистрации. Оплачивая
               участие, вы принимаете условия
-              <a href="oferta.html" target="_blank">договора-оферты</a>.
+              <a class="text-link" href="oferta.html" target="_blank">договора-оферты</a>.
             </p>
-            <p id="form-status" role="status"></p>
+            <p class="form__status" id="form-status" role="status"></p>
           </div>
-          <div class="step-footer">
-            <div class="total-row total-recap">
-              <span>Стоимость участия</span><output id="total-recap" aria-live="polite"></output>
+          <div class="form__footer">
+            <div class="form__total form__total--recap">
+              <span>Стоимость участия</span
+              ><output class="form__total-value" id="total-recap" aria-live="polite"></output>
             </div>
-            <div class="form-actions">
+            <div class="form__actions">
               <button class="button" type="button" id="step-back">
-                <span class="arrow-back">↗</span>
+                <span class="button__arrow--back button__icon">↗</span>
                 Назад
               </button>
-              <button class="button primary" type="submit">
-                <span class="pay-full">Перейти к оплате</span
-                ><span class="pay-short">К оплате</span>
-                <span>↗</span>
+              <button class="button button--primary" type="submit">
+                <span class="button__label--full">Перейти к оплате</span
+                ><span class="button__label--short">К оплате</span>
+                <span class="button__icon">↗</span>
               </button>
             </div>
             <button
@@ -959,7 +1086,7 @@
               id="pay-dolyame"
               hidden
             >
-              Оплатить частями в Долями <span>↗</span>
+              Оплатить частями в Долями <span class="button__icon">↗</span>
             </button>
           </div>
         </div>

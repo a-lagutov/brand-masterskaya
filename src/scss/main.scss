@@ -110,8 +110,7 @@ a {
 }
 
 /* Links inside running text stay underlined. */
-.form-note a,
-.consent a,
+.text-link,
 .legal a {
   text-decoration: underline;
 }
@@ -143,7 +142,7 @@ summary:focus-visible {
   outline-offset: 5px;
 }
 
-.field > input {
+.field__input {
   width: 100%;
   background: transparent;
   border: 1px solid #a7a89d;
@@ -158,7 +157,7 @@ input:focus-visible {
   outline-offset: 5px;
 }
 
-.field > select {
+.field__select {
   width: 100%;
   background: transparent;
   border: 1px solid #a7a89d;
@@ -213,25 +212,25 @@ select:focus-visible {
   letter-spacing: 1.1px;
 }
 
-.header nav {
+.header__nav {
   display: flex;
   gap: 30px;
   font-size: 13px;
 }
 
-.footer a:hover {
+.footer__link:hover {
   color: var(--red);
 }
 
-.footer > a:last-child {
+.footer__up {
   font-size: 11px;
 }
 
-.header nav a:hover {
+.header__link:hover {
   color: var(--red);
 }
 
-.header-cta {
+.header__cta {
   font-size: 13px;
   border-bottom: 1px solid var(--ink);
   padding: 8px 0;
@@ -240,7 +239,7 @@ select:focus-visible {
   justify-content: space-between;
 }
 
-.menu-toggle {
+.header__toggle {
   display: none;
 }
 
@@ -258,24 +257,24 @@ select:focus-visible {
   overflow: hidden;
 }
 
-.hero-eyebrow {
+.hero__eyebrow {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
 }
 
-fieldset label > span {
+.option__text {
   display: block;
   padding-left: 24px;
   color: var(--muted);
 }
 
-.button span {
+.button__icon {
   font-size: 23px;
   line-height: 1;
 }
 
-.wordmarks > span {
+.experience__item {
   font-size: 24px;
   font-weight: 700;
   white-space: nowrap;
@@ -284,14 +283,14 @@ fieldset label > span {
   justify-self: center;
 }
 
-.path-step span {
+.program-section__step-num {
   font-family: 'Courier New', monospace;
   font-size: 10px;
   margin-top: 3px;
   color: var(--red);
 }
 
-.elective-week > span {
+.electives__week-num {
   font-family: 'Courier New', monospace;
   color: var(--red);
   font-size: 10px;
@@ -299,7 +298,7 @@ fieldset label > span {
   padding-top: 4px;
 }
 
-.price-currency {
+.price-card__currency {
   font-size: 29px;
 }
 
@@ -318,12 +317,12 @@ fieldset label > span {
   visibility: hidden;
 }
 
-.pricing-addendum > span {
+.pricing-addendum__plus {
   font-size: 40px;
   color: var(--red);
 }
 
-.hero-notices span {
+.hero__notice-note {
   display: block;
   color: var(--muted);
   font-size: 10px;
@@ -332,7 +331,7 @@ fieldset label > span {
   margin-top: 7px;
 }
 
-.start-date > span {
+.hero__date-label {
   display: block;
   font-family: 'Courier New', monospace;
   font-size: 11px;
@@ -340,26 +339,26 @@ fieldset label > span {
   margin-bottom: 6px;
 }
 
-h1 > span:not(.title-period) {
+.hero__accent {
   color: var(--red);
 }
 
-.deliverables li > span {
+.outcomes__num {
   font-size: 11px;
   font-family: 'Courier New', monospace;
   color: #b5b5ab;
   padding-top: 5px;
 }
 
-.section-heading > p > span {
+.section-heading__note {
   color: var(--muted);
 }
 
-.tabs button span {
+.tabs__note {
   color: var(--red);
 }
 
-.authors h3 span {
+.authors__surname {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -367,13 +366,13 @@ h1 > span:not(.title-period) {
   font-weight: 200;
 }
 
-.hero-eyebrow > span:first-child {
+.hero__tag {
   display: flex;
   align-items: center;
   gap: 9px;
 }
 
-.dot {
+.hero__dot {
   height: 6px;
   width: 6px;
   border-radius: 50%;
@@ -381,14 +380,14 @@ h1 > span:not(.title-period) {
   display: inline-block;
 }
 
-.hero-grid {
+.hero__grid {
   display: grid;
   grid-template-columns: 1.04fr 1fr;
   gap: 22px;
   padding-top: 53px;
 }
 
-.hero-copy {
+.hero__copy {
   position: relative;
   z-index: 2;
 }
@@ -401,7 +400,7 @@ h1 {
   margin: 0 0 32px;
 }
 
-.hero-desc {
+.hero__desc {
   font-size: 19px;
   line-height: 1.45;
   margin: 0 0 28px;
@@ -422,7 +421,7 @@ h1 {
     transform 0.2s;
 }
 
-.step-footer > .button {
+.form__footer > .button {
   width: 100%;
   margin-top: 25px;
 }
@@ -435,25 +434,25 @@ h1 {
   max-width: 324px;
 }
 
-.primary {
+.button--primary {
   background: var(--red);
   color: var(--white);
 }
 
-.primary:hover {
+.button--primary:hover {
   background: #bc301e;
 }
 
-.outline {
+.button--outline {
   border-color: var(--ink);
 }
 
-.outline:hover {
+.button--outline:hover {
   background: var(--ink);
   color: var(--white);
 }
 
-.hero-art {
+.hero__art {
   position: relative;
   isolation: isolate;
   margin-top: 0;
@@ -465,7 +464,7 @@ h1 {
   align-self: center;
 }
 
-.art-top {
+.hero__art-top {
   justify-content: space-between;
   font-family: 'Courier New', monospace;
   font-size: 11px;
@@ -481,7 +480,7 @@ h1 {
   margin-bottom: 26px;
 }
 
-.red-disc {
+.hero__disc {
   position: absolute;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -492,7 +491,7 @@ h1 {
   left: 23%;
 }
 
-.hero-art img {
+.hero__image {
   max-width: none;
   height: auto;
   align-self: center;
@@ -504,7 +503,7 @@ h1 {
   margin-bottom: 8px;
 }
 
-.photo-caption {
+.hero__caption {
   display: flex;
   justify-content: space-around;
   font-family: 'Courier New', monospace;
@@ -524,14 +523,14 @@ h1 {
   padding: 25px 0 30px;
 }
 
-.experience .eyebrow {
+.experience__eyebrow {
   color: var(--muted);
   margin: 0 0 27px;
   font-size: 9px;
   text-transform: uppercase;
 }
 
-.wordmarks {
+.experience__wordmarks {
   justify-content: space-between;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -539,7 +538,7 @@ h1 {
   align-items: center;
 }
 
-.wordmarks .more-brands {
+.experience__item.experience__more {
   font-family: 'Courier New', monospace;
   font-size: 10px;
   font-weight: 400;
@@ -559,13 +558,13 @@ h1 {
   gap: 45px;
 }
 
-.section-rail {
+.section__rail {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-.rail-cross {
+.section__cross {
   font-size: 50px;
   font-weight: 200;
   color: var(--red);
@@ -587,21 +586,21 @@ h2 em {
   color: var(--red);
 }
 
-.intro-grid {
+.approach__intro {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 45px;
   margin: 0 0 45px;
 }
 
-.intro-grid p {
+.approach__text {
   font-size: 14px;
   color: var(--muted);
   margin: 0;
   line-height: 1.65;
 }
 
-.intro-grid p.large-copy {
+.approach__text.approach__lead {
   font-size: 21px;
   line-height: 1.45;
   color: var(--ink);
@@ -613,12 +612,12 @@ h2 em {
   gap: 26px;
 }
 
-.principles article {
+.principles__item {
   border-top: 1px solid var(--ink);
   padding-top: 16px;
 }
 
-.small-num {
+.principles__num {
   font-size: 11px;
   color: var(--red);
   font-family: 'Courier New', monospace;
@@ -628,14 +627,14 @@ h3 {
   font-weight: 400;
 }
 
-.principles h3 {
+.principles__title {
   font-size: 20px;
   line-height: 1.25;
   letter-spacing: -0.6px;
   margin: 24px 0 15px;
 }
 
-.principles p {
+.principles__text {
   font-size: 13px;
   color: var(--muted);
   line-height: 1.6;
@@ -659,7 +658,7 @@ h3 {
   color: #b5b5ab;
 }
 
-.outline-star {
+.outcomes__star {
   font-size: 103px;
   color: var(--red);
   line-height: 1.2;
@@ -667,14 +666,14 @@ h3 {
   margin-top: 30px;
 }
 
-.deliverables {
+.outcomes__list {
   list-style: none;
   padding: 0;
   margin: 0;
   align-self: center;
 }
 
-.deliverables li {
+.outcomes__item {
   display: flex;
   border-top: 1px solid #55564e;
   padding: 26px 0;
@@ -682,31 +681,31 @@ h3 {
   align-items: flex-start;
 }
 
-.features li {
+.price-card__feature {
   font-size: 14px;
   line-height: 1.4;
   padding: 10px 0 10px 23px;
   position: relative;
 }
 
-.deliverables li:last-child {
+.outcomes__item:last-child {
   border-bottom: 1px solid #55564e;
 }
 
-.deliverables h3 {
+.outcomes__title {
   font-size: 23px;
   line-height: 1.2;
   margin: 0 0 10px;
   letter-spacing: -0.5px;
 }
 
-.deliverables p {
+.outcomes__text {
   font-size: 13px;
   color: #babbb1;
   margin: 0;
 }
 
-.deliverables b {
+.outcomes__arrow {
   margin-left: auto;
   color: var(--red);
   font-weight: 400;
@@ -717,13 +716,13 @@ h3 {
   border-bottom: 1px solid var(--line);
 }
 
-.audience-grid {
+.audience__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
 }
 
-.audience-tag {
+.audience__tag {
   font-family: 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 1px;
@@ -731,14 +730,14 @@ h3 {
   padding: 5px 9px;
 }
 
-.audience h3 {
+.audience__title {
   font-size: 23px;
   line-height: 1.25;
   letter-spacing: -0.5px;
   margin: 25px 0 13px;
 }
 
-.audience-grid p {
+.audience__text {
   font-size: 14px;
   color: var(--muted);
   max-width: 330px;
@@ -757,44 +756,44 @@ h3 {
   margin-bottom: 47px;
 }
 
-.section-heading .eyebrow {
+.section-heading__eyebrow {
   display: block;
   margin-bottom: 25px;
 }
 
-dialog h2 {
+.enroll__title {
   font-size: 35px;
   letter-spacing: -1.2px;
   margin: 20px 0 27px;
 }
 
-.section-heading h2 {
+.section-heading__title {
   margin-bottom: 0;
 }
 
-.section-heading > p {
+.section-heading__lead {
   font-size: 13px;
   line-height: 1.65;
   margin: 0 0 3px;
   max-width: 300px;
 }
 
-.program-layout {
+.program-section__layout {
   display: grid;
   grid-template-columns: 245px minmax(0, 1fr);
   gap: 45px;
 }
 
-.program-aside {
+.program-section__aside {
   padding-top: 25px;
 }
 
-.program-aside > .eyebrow {
+.program-section__eyebrow {
   font-size: 9px;
   color: var(--muted);
 }
 
-.path-step {
+.program-section__step {
   font-size: 15px;
   border-left: 1px solid var(--line);
   padding: 21px 0 21px 20px;
@@ -803,34 +802,34 @@ dialog h2 {
   line-height: 1.3;
 }
 
-.path-step.active {
+.program-section__step--active {
   margin-top: 20px;
   border-left: 2px solid var(--red);
 }
 
-.program-aside p {
+.program-section__note {
   font-family: 'Courier New', monospace;
   font-size: 10px;
   color: var(--muted);
   margin-top: 35px;
 }
 
-.curriculum details {
+.curriculum__item {
   border-top: 1px solid var(--ink);
 }
 
-.faq details {
+.faq__item {
   border-top: 1px solid var(--line);
 }
 
 /* Contain the last paragraph's margin: otherwise it spills out once the height animation ends
    and the line below jumps. */
-.curriculum details,
-.faq details {
+.curriculum__item,
+.faq__item {
   display: flow-root;
 }
 
-.curriculum details:last-child {
+.curriculum__item:last-child {
   border-bottom: 1px solid var(--ink);
 }
 
@@ -838,7 +837,7 @@ summary::-webkit-details-marker {
   display: none;
 }
 
-.curriculum summary {
+.curriculum__head {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -846,7 +845,7 @@ summary::-webkit-details-marker {
   padding: 28px 0;
 }
 
-.week {
+.curriculum__week {
   font-family: 'Courier New', monospace;
   font-size: 10px;
   white-space: nowrap;
@@ -865,12 +864,12 @@ summary::-webkit-details-marker {
   margin-top: -14px;
 }
 
-.lecture-date time {
+.lecture-date__time {
   color: var(--ink);
   font-weight: 700;
 }
 
-.curriculum h3 {
+.curriculum__title {
   font-size: 26px;
   letter-spacing: -0.8px;
   line-height: 1.2;
@@ -907,11 +906,11 @@ summary::-webkit-details-marker {
   transition: transform 0.2s;
 }
 
-details[open]:not(.closing) .expand::after {
+.accordion[open]:not(.accordion--closing) .expand::after {
   transform: rotate(0deg);
 }
 
-details[open]:not(.closing) summary .expand {
+.accordion[open]:not(.accordion--closing) .accordion__summary .expand {
   color: var(--red);
 }
 
@@ -919,25 +918,25 @@ details[open]:not(.closing) summary .expand {
   padding: 0 55px 30px 118px;
 }
 
-.lesson-label {
+.lesson__label {
   font-size: 9px;
   letter-spacing: 1px;
   font-family: 'Courier New', monospace;
   color: var(--red);
 }
 
-.lesson p {
+.lesson__text {
   font-size: 15px;
   line-height: 1.65;
   margin: 15px 0;
 }
 
-.practice {
+.lesson__practice {
   border-left: 2px solid var(--red);
   padding: 5px 0 5px 15px;
 }
 
-.practice strong {
+.lesson__practice-title {
   display: block;
   font-size: 11px;
   text-transform: uppercase;
@@ -962,14 +961,14 @@ details[open]:not(.closing) summary .expand {
   margin-top: 60px;
 }
 
-.electives-title h3 {
+.electives__heading {
   margin: 20px 0;
   font-size: 30px;
   line-height: 1.17;
   letter-spacing: -1px;
 }
 
-.electives-title p {
+.electives__text {
   font-size: 14px;
   color: var(--muted);
   max-width: 340px;
@@ -982,7 +981,7 @@ details[open]:not(.closing) summary .expand {
   margin-bottom: 28px;
 }
 
-.tabs button {
+.tabs__tab {
   padding: 16px 12px;
   border: 0;
   background: none;
@@ -995,47 +994,47 @@ details[open]:not(.closing) summary .expand {
   text-align: left;
 }
 
-.tabs button[aria-selected='true'] {
+.tabs__tab[aria-selected='true'] {
   color: var(--ink);
   border-bottom: 2px solid var(--red);
 }
 
-.elective-content h4 {
+.electives__panel-title {
   font-size: 23px;
   font-weight: 400;
   letter-spacing: -0.5px;
   margin: 0 0 25px;
 }
 
-.elective-week {
+.electives__week {
   display: flex;
   gap: 24px;
   margin: 24px 0;
 }
 
-.elective-week h5 {
+.electives__week-title {
   font-size: 17px;
   font-weight: 400;
   margin: 0 0 8px;
 }
 
-.elective-week p {
+.electives__week-text {
   font-size: 13px;
   color: var(--muted);
   margin: 7px 0;
   line-height: 1.6;
 }
 
-.elective-week p.result {
+.electives__week-text--result {
   color: var(--ink);
 }
 
-.elective-week p.lecture-date {
+.lecture-date--compact {
   font-size: 11px;
   margin: 0 0 8px;
 }
 
-.elective-foot {
+.electives__foot {
   display: flex;
   justify-content: space-between;
   border-top: 1px solid var(--line);
@@ -1044,7 +1043,7 @@ details[open]:not(.closing) summary .expand {
   font-size: 12px;
 }
 
-.elective-foot strong {
+.electives__total {
   font-size: 16px;
   font-weight: 400;
 }
@@ -1053,27 +1052,27 @@ details[open]:not(.closing) summary .expand {
   display: block;
 }
 
-.authors-grid {
+.authors__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 65px;
 }
 
-.authors-grid article {
+.authors__card {
   border-top: 1px solid var(--ink);
   padding-top: 21px;
   display: flex;
   flex-direction: column;
 }
 
-.author-index {
+.authors__index {
   font-size: 10px;
   font-family: 'Courier New', monospace;
   color: var(--muted);
   letter-spacing: 1px;
 }
 
-.authors h3 {
+.authors__name {
   position: relative;
   font-size: 55px;
   line-height: 1.05;
@@ -1081,11 +1080,11 @@ details[open]:not(.closing) summary .expand {
   margin: 27px 0;
 }
 
-.red {
+.authors__surname {
   color: var(--red);
 }
 
-.authors p {
+.authors__text {
   font-size: 14px;
   color: var(--muted);
   line-height: 1.6;
@@ -1093,7 +1092,7 @@ details[open]:not(.closing) summary .expand {
   margin: 0 0 14px;
 }
 
-.authors p.author-lead {
+.authors__lead {
   font-size: 18px;
   color: var(--ink);
   line-height: 1.45;
@@ -1101,7 +1100,7 @@ details[open]:not(.closing) summary .expand {
   min-height: 55px;
 }
 
-.author-brands {
+.authors__brands {
   font-family: 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 0.3px;
@@ -1115,7 +1114,7 @@ details[open]:not(.closing) summary .expand {
   padding: 90px 0;
 }
 
-.prices {
+.pricing-section__cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 25px;
@@ -1128,12 +1127,12 @@ details[open]:not(.closing) summary .expand {
   flex-direction: column;
 }
 
-.recommended {
+.price-card--recommended {
   border: 1px solid var(--red);
   background: var(--paper);
 }
 
-.card-top {
+.price-card__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1141,26 +1140,26 @@ details[open]:not(.closing) summary .expand {
   min-height: 26px;
 }
 
-.card-top > span:last-child {
+.price-card__badge {
   font-size: 8px;
   letter-spacing: 0.5px;
   font-family: 'Courier New', monospace;
 }
 
-.card-top .places {
+.price-card__top .price-card__places {
   background: var(--red);
   color: var(--white);
   padding: 6px 8px;
 }
 
-.price-card h3 {
+.price-card__title {
   font-size: 36px;
   line-height: 1.1;
   letter-spacing: -1.2px;
   margin: 26px 0 14px;
 }
 
-.price-intro {
+.price-card__intro {
   font-size: 14px;
   line-height: 1.6;
   color: var(--muted);
@@ -1169,24 +1168,24 @@ details[open]:not(.closing) summary .expand {
   min-height: 70px;
 }
 
-.price {
+.price-card__price {
   font-size: 60px;
   letter-spacing: -2.5px;
   margin: 20px 0 28px;
   line-height: 1;
 }
 
-.price-card .button {
+.price-card__button {
   width: 100%;
 }
 
-.features {
+.price-card__features {
   list-style: none;
   margin: 29px 0 20px;
   padding: 0;
 }
 
-.features li::before {
+.price-card__feature::before {
   content: '+';
   position: absolute;
   left: 0;
@@ -1195,7 +1194,7 @@ details[open]:not(.closing) summary .expand {
   top: 5px;
 }
 
-.price-note {
+.price-card__note {
   font-size: 12px;
   color: var(--muted);
   border-top: 1px solid var(--line);
@@ -1213,34 +1212,34 @@ details[open]:not(.closing) summary .expand {
   flex-wrap: wrap;
 }
 
-.pricing-addendum p {
+.pricing-addendum__text {
   font-size: 12px;
   line-height: 1.65;
   margin: 0;
 }
 
-.pricing-addendum strong {
+.pricing-addendum__strong {
   font-weight: 400;
 }
 
-.pricing-addendum > b {
+.pricing-addendum__price {
   font-size: 24px;
   font-weight: 400;
   margin-left: auto;
   white-space: nowrap;
 }
 
-.pricing-addendum small {
+.pricing-addendum__small {
   display: block;
   font-size: 10px;
   color: var(--muted);
 }
 
-.faq details:last-child {
+.faq__item:last-child {
   border-bottom: 1px solid var(--line);
 }
 
-.faq summary {
+.faq__question {
   display: flex;
   align-items: center;
   gap: 30px;
@@ -1248,17 +1247,17 @@ details[open]:not(.closing) summary .expand {
   font-size: 17px;
 }
 
-.final-section p {
+.final-section__text {
   font-size: 13px;
   margin: 0;
 }
 
-.footer > p {
+.footer__text {
   font-size: 11px;
 }
 
 /* Seller details and documents: a full-width row under the main footer line. */
-.footer-legal {
+.footer__legal {
   order: 1;
   width: 100%;
   border-top: 1px solid var(--line);
@@ -1271,7 +1270,7 @@ details[open]:not(.closing) summary .expand {
   color: var(--muted);
 }
 
-.footer-legal p {
+.footer__legal-row {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
@@ -1279,7 +1278,7 @@ details[open]:not(.closing) summary .expand {
 }
 
 /* Requisites are one sentence: flow as left-aligned inline text, not flex items with gaps. */
-.footer-legal > :first-child {
+.footer__legal > :first-child {
   display: block;
   text-align: left;
 }
@@ -1293,14 +1292,14 @@ details[open]:not(.closing) summary .expand {
   margin-top: 18px;
 }
 
-.workshop-story p {
+.outcomes__story-text {
   font-size: 19px;
   line-height: 1.55;
   margin: 0 0 23px;
   color: var(--paper);
 }
 
-.hero-notices p {
+.hero__notice {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
@@ -1310,7 +1309,7 @@ details[open]:not(.closing) summary .expand {
   color: var(--ink);
 }
 
-.faq details p {
+.faq__answer {
   font-size: 14px;
   line-height: 1.65;
   max-width: 660px;
@@ -1324,7 +1323,7 @@ details[open]:not(.closing) summary .expand {
   padding: 32px 0;
 }
 
-.final-section .wrap > div {
+.final-section__cta-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1333,7 +1332,7 @@ details[open]:not(.closing) summary .expand {
   grid-row: 1/3;
 }
 
-.round-cta {
+.final-section__cta {
   border: 1px solid var(--paper);
   width: 140px;
   height: 140px;
@@ -1348,7 +1347,7 @@ details[open]:not(.closing) summary .expand {
     background 0.2s;
 }
 
-.round-cta:hover {
+.final-section__cta:hover {
   background: var(--paper);
   color: var(--red);
 }
@@ -1377,7 +1376,7 @@ details[open]:not(.closing) summary .expand {
   top: 10px;
 }
 
-dialog {
+.enroll {
   border: 0;
   background: var(--white);
   color: var(--ink);
@@ -1390,16 +1389,16 @@ dialog {
 }
 
 /* Keep the page still behind the open form. */
-html:has(dialog[open]) {
+html:has(.enroll[open]) {
   overflow: hidden;
 }
 
-dialog::backdrop {
+.enroll::backdrop {
   background: rgb(20 21 17 / 65%);
   backdrop-filter: blur(4px);
 }
 
-.dialog-close {
+.enroll__close {
   position: absolute;
   top: 10px;
   right: 16px;
@@ -1420,7 +1419,7 @@ legend {
   margin-bottom: 12px;
 }
 
-fieldset label {
+.option {
   display: block;
   font-size: 12px;
   padding: 8px 0;
@@ -1430,7 +1429,7 @@ input[type='checkbox'] {
   accent-color: var(--red);
 }
 
-.total-row {
+.form__total {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   padding: 17px 0;
@@ -1442,7 +1441,7 @@ input[type='checkbox'] {
   font-size: 12px;
 }
 
-.total-row output {
+.form__total-value {
   font-size: 27px;
   letter-spacing: -0.6px;
 }
@@ -1452,55 +1451,55 @@ input[type='checkbox'] {
   margin-top: 22px;
 }
 
-.promo-row {
+.promo {
   display: flex;
   margin-top: 22px;
 }
 
-.promo-row .field {
+.promo .field {
   flex: 1;
   min-width: 0;
   margin-top: 0;
 }
 
 /* Attached to the field and as tall as it (49px); the shared border is drawn once. */
-.promo-row .button {
+.promo .button {
   flex: none;
   min-height: 49px;
   margin-left: -1px;
   padding: 0 24px;
 }
 
-#promo-status {
+.promo__status {
   font-size: 12px;
   margin: 6px 0 0;
 }
 
-#promo-status.error {
+.promo__status--error {
   color: var(--red);
 }
 
-.form-note {
+.form__note {
   font-size: 11px;
   color: var(--muted);
   line-height: 1.5;
 }
 
-.form-progress {
+.form__progress {
   margin-top: 18px;
 }
 
-.form-progress-label {
+.form__progress-label {
   font-size: 12px;
   margin: 0 0 8px;
 }
 
-.progress-bar {
+.form__progress-bar {
   height: 4px;
   background: var(--line);
 }
 
-.progress-fill {
+.form__progress-fill {
   display: block;
   height: 100%;
   width: 50%;
@@ -1508,22 +1507,22 @@ input[type='checkbox'] {
   transition: width 0.3s;
 }
 
-.form-group {
+.form__group {
   margin-top: 26px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
 }
 
-.form-group:first-child {
+.form__group:first-child {
   margin-top: 0;
   border-top: 0;
 }
 
-.total-recap {
+.form__total--recap {
   margin-top: 22px;
 }
 
-#form-status {
+.form__status {
   font-size: 13px;
   color: var(--red);
 }
@@ -1538,7 +1537,7 @@ input[type='checkbox'] {
     padding: 0 30px;
   }
 
-  .header nav {
+  .header__nav {
     gap: 20px;
   }
 
@@ -1547,15 +1546,15 @@ input[type='checkbox'] {
     letter-spacing: -5px;
   }
 
-  .hero-grid {
+  .hero__grid {
     gap: 15px;
   }
 
-  .wordmarks > span {
+  .experience__item {
     font-size: 20px;
   }
 
-  .hero-eyebrow > span:last-child {
+  .hero__slogan {
     display: none;
   }
 
@@ -1564,11 +1563,11 @@ input[type='checkbox'] {
     gap: 30px;
   }
 
-  .section h2 {
+  .section__title {
     font-size: 41px;
   }
 
-  .intro-grid {
+  .approach__intro {
     gap: 25px;
   }
 
@@ -1576,16 +1575,16 @@ input[type='checkbox'] {
     gap: 20px;
   }
 
-  .program-layout {
+  .program-section__layout {
     grid-template-columns: 180px minmax(0, 1fr);
     gap: 30px;
   }
 
-  .curriculum summary {
+  .curriculum__head {
     gap: 20px;
   }
 
-  .curriculum h3 {
+  .curriculum__title {
     font-size: 23px;
   }
 
@@ -1601,7 +1600,7 @@ input[type='checkbox'] {
     padding: 28px;
   }
 
-  .price-card h3 {
+  .price-card__title {
     font-size: 31px;
   }
 
@@ -1609,7 +1608,7 @@ input[type='checkbox'] {
     gap: 35px;
   }
 
-  .authors h3 {
+  .authors__name {
     font-size: 49px;
   }
 }
@@ -1629,7 +1628,7 @@ input[type='checkbox'] {
     padding: 0 22px;
   }
 
-  .header nav {
+  .header__nav {
     display: none;
   }
 
@@ -1639,14 +1638,14 @@ input[type='checkbox'] {
     letter-spacing: 0.7px;
   }
 
-  .header-cta {
+  .header__cta {
     margin-left: auto;
     min-width: 100px;
     font-size: 11px;
     margin-right: 20px;
   }
 
-  .menu-toggle {
+  .header__toggle {
     display: block;
     background: none;
     border: 0;
@@ -1666,19 +1665,19 @@ input[type='checkbox'] {
     border-bottom: 1px solid var(--line);
   }
 
-  .mobile-nav a {
+  .mobile-nav__link {
     display: block;
     padding: 13px 0;
     font-size: 17px;
   }
 
-  .mobile-nav-contacts {
+  .mobile-nav__contacts {
     border-top: 1px solid var(--line);
     margin-top: 10px;
     padding-top: 8px;
   }
 
-  .mobile-nav .mobile-nav-contacts a {
+  .mobile-nav__contact {
     padding: 8px 0;
     font-size: 14px;
     color: var(--muted);
@@ -1689,12 +1688,12 @@ input[type='checkbox'] {
     padding-bottom: 30px;
   }
 
-  .hero-eyebrow {
+  .hero__eyebrow {
     font-size: 8px;
     letter-spacing: 0.5px;
   }
 
-  .hero-grid {
+  .hero__grid {
     grid-template-columns: minmax(0, 1fr);
     padding-top: 35px;
     gap: 20px;
@@ -1707,7 +1706,7 @@ input[type='checkbox'] {
     margin-bottom: 23px;
   }
 
-  .hero-desc {
+  .hero__desc {
     font-size: 17px;
     line-height: 1.5;
     margin-bottom: 23px;
@@ -1721,7 +1720,7 @@ input[type='checkbox'] {
     max-width: 100%;
   }
 
-  .hero-art {
+  .hero__art {
     max-width: 520px;
     width: 100%;
     margin-left: auto;
@@ -1734,13 +1733,13 @@ input[type='checkbox'] {
     padding: 23px 0;
   }
 
-  .experience .eyebrow {
+  .experience__eyebrow {
     font-size: 8px;
     margin-bottom: 23px;
     letter-spacing: 0.7px;
   }
 
-  .wordmarks > span {
+  .experience__item {
     font-size: 18px;
   }
 
@@ -1750,11 +1749,11 @@ input[type='checkbox'] {
     padding-bottom: 65px;
   }
 
-  .section-rail {
+  .section__rail {
     margin-bottom: 25px;
   }
 
-  .rail-cross {
+  .section__cross {
     display: none;
   }
 
@@ -1764,28 +1763,28 @@ input[type='checkbox'] {
     margin-bottom: 28px;
   }
 
-  dialog h2 {
+  .enroll__title {
     font-size: 29px;
     margin-top: 23px;
   }
 
-  .section h2 {
+  .section__title {
     font-size: 36px;
     letter-spacing: -1.5px;
     margin-bottom: 28px;
   }
 
-  .intro-grid {
+  .approach__intro {
     grid-template-columns: 1fr;
     gap: 22px;
     margin-bottom: 30px;
   }
 
-  .intro-grid p.large-copy {
+  .approach__text.approach__lead {
     font-size: 19px;
   }
 
-  .intro-grid p {
+  .approach__text {
     font-size: 14px;
   }
 
@@ -1794,28 +1793,28 @@ input[type='checkbox'] {
     gap: 26px;
   }
 
-  .principles article {
+  .principles__item {
     position: relative;
     padding-left: 38px;
     padding-top: 18px;
   }
 
-  .small-num {
+  .principles__num {
     position: absolute;
     top: 20px;
     left: 0;
   }
 
-  .principles h3 {
+  .principles__title {
     margin: 0 0 12px;
     font-size: 21px;
   }
 
-  .principles h3 br {
+  .principles__title br {
     display: none;
   }
 
-  .principles p {
+  .principles__text {
     font-size: 14px;
   }
 
@@ -1826,30 +1825,30 @@ input[type='checkbox'] {
     padding-bottom: 50px;
   }
 
-  .outline-star {
+  .outcomes__star {
     display: none;
   }
 
-  .deliverables li {
+  .outcomes__item {
     padding: 23px 0;
     gap: 18px;
   }
 
-  .deliverables h3 {
+  .outcomes__title {
     font-size: 21px;
   }
 
-  .audience-grid {
+  .audience__grid {
     grid-template-columns: 1fr;
     gap: 30px;
   }
 
-  .audience-grid p {
+  .audience__text {
     max-width: 100%;
     margin-bottom: 0;
   }
 
-  .audience h3 {
+  .audience__title {
     margin-top: 20px;
   }
 
@@ -1862,35 +1861,35 @@ input[type='checkbox'] {
     margin-bottom: 30px;
   }
 
-  .section-heading .eyebrow {
+  .section-heading__eyebrow {
     margin-bottom: 24px;
   }
 
-  .section-heading > p {
+  .section-heading__lead {
     margin-top: 25px;
     max-width: 100%;
   }
 
-  .program-layout {
+  .program-section__layout {
     display: block;
   }
 
-  .program-aside {
+  .program-section__aside {
     display: none;
   }
 
-  .curriculum summary {
+  .curriculum__head {
     padding: 24px 0;
     gap: 15px;
     flex-wrap: wrap;
   }
 
-  .week {
+  .curriculum__week {
     font-size: 9px;
     width: 100%;
   }
 
-  .curriculum h3 {
+  .curriculum__title {
     font-size: 23px;
     max-width: calc(100% - 40px);
     letter-spacing: -0.7px;
@@ -1900,7 +1899,7 @@ input[type='checkbox'] {
     padding: 0 10px 25px 0;
   }
 
-  .lesson p {
+  .lesson__text {
     font-size: 14px;
   }
 
@@ -1914,52 +1913,52 @@ input[type='checkbox'] {
     padding-top: 35px;
   }
 
-  .electives-title p {
+  .electives__text {
     max-width: 100%;
     margin-bottom: 25px;
   }
 
-  .tabs button {
+  .tabs__tab {
     font-size: 11px;
     padding: 15px 6px;
     line-height: 1.4;
   }
 
-  .elective-content h4 {
+  .electives__panel-title {
     font-size: 22px;
   }
 
-  .elective-foot {
+  .electives__foot {
     gap: 10px;
     font-size: 11px;
     align-items: center;
   }
 
-  .elective-foot strong {
+  .electives__total {
     font-size: 15px;
     white-space: nowrap;
   }
 
-  .authors-grid {
+  .authors__grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
 
-  .authors h3 {
+  .authors__name {
     font-size: 49px;
     margin: 24px 0;
   }
 
-  .authors p.author-lead {
+  .authors__lead {
     font-size: 18px;
     min-height: 0;
   }
 
-  .authors p {
+  .authors__text {
     max-width: 100%;
   }
 
-  .author-brands {
+  .authors__brands {
     margin-top: 15px;
   }
 
@@ -1967,7 +1966,7 @@ input[type='checkbox'] {
     padding: 60px 0;
   }
 
-  .prices {
+  .pricing-section__cards {
     grid-template-columns: 1fr;
     gap: 20px;
   }
@@ -1976,35 +1975,35 @@ input[type='checkbox'] {
     padding: 25px 23px 20px;
   }
 
-  .price-card h3 {
+  .price-card__title {
     font-size: 31px;
   }
 
-  .price-intro {
+  .price-card__intro {
     min-height: 0;
   }
 
-  .price {
+  .price-card__price {
     font-size: 57px;
     margin: 25px 0;
   }
 
-  .pricing-addendum > span {
+  .pricing-addendum__plus {
     font-size: 32px;
     line-height: 1;
   }
 
-  .card-top > span:last-child {
+  .price-card__badge {
     font-size: 7px;
     max-width: 145px;
     text-align: right;
   }
 
-  .card-top > .eyebrow {
+  .price-card__top > .eyebrow {
     font-size: 9px;
   }
 
-  .price-note {
+  .price-card__note {
     min-height: 0;
   }
 
@@ -2013,16 +2012,16 @@ input[type='checkbox'] {
     align-items: flex-start;
   }
 
-  .pricing-addendum p {
+  .pricing-addendum__text {
     flex: 1;
   }
 
-  .pricing-addendum > b {
+  .pricing-addendum__price {
     margin-left: 32px;
     font-size: 22px;
   }
 
-  .faq summary {
+  .faq__question {
     font-size: 16px;
     line-height: 1.35;
     padding: 21px 0;
@@ -2034,18 +2033,18 @@ input[type='checkbox'] {
     letter-spacing: 0.7px;
   }
 
-  .final-section .wrap > div {
+  .final-section__cta-box {
     gap: 16px;
   }
 
-  .round-cta {
+  .final-section__cta {
     width: 62px;
     height: 62px;
     min-width: 62px;
     font-size: 35px;
   }
 
-  .final-section p {
+  .final-section__text {
     font-size: 10px;
   }
 
@@ -2056,7 +2055,7 @@ input[type='checkbox'] {
     gap: 20px;
   }
 
-  .footer > p {
+  .footer__text {
     order: 3;
     width: 100%;
     margin: 0;
@@ -2064,19 +2063,19 @@ input[type='checkbox'] {
     font-size: 10px;
   }
 
-  .footer > a:last-child {
+  .footer__up {
     font-size: 10px;
   }
 
-  dialog {
+  .enroll {
     padding: 32px 22px;
   }
 
-  .total-row output {
+  .form__total-value {
     font-size: 24px;
   }
 
-  fieldset label {
+  .option {
     font-size: 11px;
   }
 }
@@ -2093,7 +2092,7 @@ input[type='checkbox'] {
   }
 }
 
-.hero-notices {
+.hero__notices {
   font-family: Helvetica, sans-serif;
   font-size: 13px;
   line-height: 1.4;
@@ -2104,7 +2103,7 @@ input[type='checkbox'] {
   gap: 17px;
 }
 
-.brand-logo {
+.logo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2115,7 +2114,7 @@ input[type='checkbox'] {
   mix-blend-mode: multiply;
 }
 
-.brand-logo img {
+.logo__image {
   display: block;
   width: 100%;
   height: auto;
@@ -2124,43 +2123,43 @@ input[type='checkbox'] {
 }
 
 /* Brand green turns pale grey under grayscale; darken to match the other logos */
-.logo-vkusvill img {
+.logo--vkusvill .logo__image {
   filter: grayscale(1) brightness(0.45);
 }
 
-.logo-azbuka {
+.logo--azbuka {
   width: 122px;
   height: 43px;
 }
 
-.logo-brusnika {
+.logo--brusnika {
   width: 139px;
 }
 
-.logo-lavka {
+.logo--lavka {
   width: 150px;
 }
 
-.workshop-story {
+.outcomes__story {
   margin-top: 28px;
 }
 
-.workshop-story p:last-child {
+.outcomes__story-text.outcomes__story-text--last {
   font-size: 25px;
   line-height: 1.3;
   margin-bottom: 0;
 }
 
-.outcomes .outline-star {
+.outcomes__star--outline {
   font-size: 63px;
   margin-top: 25px;
 }
 
-#pricing .section-heading > div {
+.section-heading__main--pricing {
   max-width: 70%;
 }
 
-.final-section .wrap {
+.final-section__inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px 25px;
@@ -2171,83 +2170,83 @@ input[type='checkbox'] {
   text-transform: uppercase;
 }
 
-.final-section .wrap > .eyebrow {
+.final-section__inner > .eyebrow {
   grid-column: 1;
   grid-row: 1;
   align-self: end;
 }
 
-.final-section .wrap > p {
+.final-section__inner > .final-section__text {
   grid-column: 1;
   grid-row: 2;
   align-self: start;
 }
 
-.final-section .round-cta {
+.final-section .final-section__cta {
   width: 75px;
   height: 75px;
   font-size: 40px;
 }
 
 @media (width <= 1100px) {
-  .art-top {
+  .hero__art-top {
     gap: 15px;
   }
 
-  .hero-notices {
+  .hero__notices {
     font-size: 12px;
     gap: 13px;
   }
 
-  .red-disc {
+  .hero__disc {
     top: 160px;
   }
 
-  .wordmarks {
+  .experience__wordmarks {
     gap: 24px;
   }
 
-  .workshop-story p {
+  .outcomes__story-text {
     font-size: 17px;
   }
 
-  .workshop-story p:last-child {
+  .outcomes__story-text.outcomes__story-text--last {
     font-size: 23px;
   }
 
-  .electives-title h3 {
+  .electives__heading {
     font-size: 27px;
   }
 }
 
 @media (width <= 760px) {
-  .art-top {
+  .hero__art-top {
     font-size: 10px;
     grid-template-columns: minmax(80px, 0.7fr) minmax(0, 1.5fr);
     gap: 20px;
     margin-bottom: 25px;
   }
 
-  .hero-notices {
+  .hero__notices {
     font-size: 12px;
     gap: 12px;
   }
 
-  .hero-art img {
+  .hero__image {
     width: 100%;
     margin-top: 25px;
   }
 
-  .red-disc {
+  .hero__disc {
     top: 160px;
   }
 
-  .wordmarks {
+  .experience__wordmarks {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 25px 12px;
   }
 
-  .wordmarks .more-brands {
+  .experience__item.experience__more {
     font-size: 8px;
     grid-column: 1/-1;
     justify-self: end;
@@ -2255,46 +2254,46 @@ input[type='checkbox'] {
     text-align: right;
   }
 
-  .brand-logo {
+  .logo {
     max-width: 100%;
     height: 30px;
   }
 
-  .logo-azbuka {
+  .logo--azbuka {
     width: 96px;
   }
 
-  .logo-brusnika {
+  .logo--brusnika {
     width: 101px;
   }
 
-  .logo-lavka {
+  .logo--lavka {
     width: 104px;
   }
 
-  .workshop-story {
+  .outcomes__story {
     margin-top: 24px;
   }
 
-  .workshop-story p {
+  .outcomes__story-text {
     font-size: 18px;
     line-height: 1.55;
   }
 
-  .workshop-story p:last-child {
+  .outcomes__story-text.outcomes__story-text--last {
     font-size: 24px;
   }
 
-  .electives-title h3 {
+  .electives__heading {
     font-size: 30px;
     max-width: 480px;
   }
 
-  #pricing .section-heading > div {
+  .section-heading__main--pricing {
     max-width: 100%;
   }
 
-  .final-section .round-cta {
+  .final-section .final-section__cta {
     width: 60px;
     height: 60px;
     min-width: 60px;
@@ -2305,16 +2304,16 @@ input[type='checkbox'] {
     padding: 26px 0;
   }
 
-  .final-section .wrap > .eyebrow {
+  .final-section__inner > .eyebrow {
     line-height: 1.5;
   }
 
-  .footer .brand {
+  .footer__brand {
     font-size: 9px;
   }
 }
 
-.hero-notices p:first-child {
+.hero__notice--first {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
@@ -2324,34 +2323,34 @@ input[type='checkbox'] {
   color: var(--ink);
 }
 
-.author-photo {
+.hero__photo {
   position: relative;
   isolation: isolate;
   line-height: 0;
 }
 
-.author-photo .red-disc {
+.hero__disc--photo {
   top: 0;
   left: 22%;
   width: 67%;
   z-index: -1;
 }
 
-.hero-art .author-photo img {
+.hero__image--photo {
   display: block;
   width: 100%;
   margin: 0;
   height: auto;
 }
 
-.start-date {
+.hero__date {
   margin: 0 0 27px;
   padding: 17px 0 0;
   border-top: 1px solid var(--line);
   max-width: 365px;
 }
 
-.start-date time {
+.hero__date-value {
   display: block;
   font-size: 34px;
   line-height: 1.1;
@@ -2359,56 +2358,56 @@ input[type='checkbox'] {
   color: var(--red);
 }
 
-.logo-tele2 {
+.logo--tele2 {
   width: 94px;
 }
 
-.logo-eda {
+.logo--eda {
   width: 150px;
 }
 
-.logo-ingos {
+.logo--ingos {
   width: 160px;
 }
 
-.logo-vk {
+.logo--vk {
   width: 138px;
 }
 
-.logo-indrive {
+.logo--indrive {
   width: 120px;
 }
 
-.logo-dodo {
+.logo--dodo {
   width: 150px;
 }
 
-.logo-vkusvill {
+.logo--vkusvill {
   width: 140px;
 }
 
-.logo-storeez {
+.logo--storeez {
   width: 140px;
 }
 
-.logo-beeline {
+.logo--beeline {
   width: 125px;
 }
 
-.button .button-label {
+.button__label {
   font-size: 13px;
   line-height: 1.4;
   text-align: left;
 }
 
-.add-elective {
+.button--elective {
   width: 100%;
   margin-top: 24px;
   gap: 15px;
   min-height: 60px;
 }
 
-.pricing-addendum > .add-elective {
+.pricing-addendum > .button--elective {
   width: fit-content;
   margin-left: 49px;
   margin-top: 0;
@@ -2416,101 +2415,101 @@ input[type='checkbox'] {
 }
 
 @media (width <= 1100px) {
-  .hero-notices p,
-  .hero-notices p:first-child {
+  .hero__notice,
+  .hero__notice--first {
     font-size: 12px;
   }
 
-  .hero-notices span {
+  .hero__notice-note {
     font-size: 9px;
   }
 
-  .start-date time {
+  .hero__date-value {
     font-size: 31px;
   }
 }
 
 @media (width <= 760px) {
-  .hero-notices p,
-  .hero-notices p:first-child {
+  .hero__notice,
+  .hero__notice--first {
     font-size: 11px;
     line-height: 1.45;
   }
 
-  .hero-notices span {
+  .hero__notice-note {
     font-size: 9px;
   }
 
-  .start-date {
+  .hero__date {
     max-width: none;
     padding-top: 17px;
     margin-bottom: 25px;
   }
 
-  .start-date time {
+  .hero__date-value {
     font-size: 33px;
   }
 
-  .photo-caption {
+  .hero__caption {
     margin-top: 12px;
     font-size: 10px;
     letter-spacing: 0.35px;
     gap: 10px;
   }
 
-  .logo-tele2 {
+  .logo--tele2 {
     width: 78px;
   }
 
-  .logo-eda {
+  .logo--eda {
     width: 105px;
   }
 
-  .logo-ingos {
+  .logo--ingos {
     width: 108px;
   }
 
-  .logo-vk {
+  .logo--vk {
     width: 96px;
   }
 
-  .logo-indrive {
+  .logo--indrive {
     width: 84px;
   }
 
-  .logo-dodo {
+  .logo--dodo {
     width: 104px;
   }
 
-  .logo-vkusvill {
+  .logo--vkusvill {
     width: 100px;
   }
 
-  .logo-storeez {
+  .logo--storeez {
     width: 96px;
   }
 
-  .logo-beeline {
+  .logo--beeline {
     width: 88px;
   }
 
-  .add-elective {
+  .button--elective {
     padding: 14px 17px;
   }
 
-  .pricing-addendum > .add-elective {
+  .pricing-addendum > .button--elective {
     margin: 5px 0 0;
     width: 100%;
     flex-basis: 100%;
   }
 
-  .button .button-label {
+  .button__label {
     font-size: 12px;
   }
 }
 
 /* Final copy and caption refinements. */
-.hero-notices .notice-line {
+.hero__notices .hero__notice-line {
   display: block;
   white-space: nowrap;
   font: inherit;
@@ -2520,7 +2519,7 @@ input[type='checkbox'] {
 }
 
 @media (width <= 760px) {
-  .hero-notices .notice-three-lines {
+  .hero__notices .hero__notice--lines {
     font-size: clamp(8.5px, 2.75vw, 11px);
   }
 }
@@ -2596,18 +2595,18 @@ input[type='checkbox'] {
 }
 
 /* Country code and number share one box, like a single field. */
-.phone-row {
+.phone {
   display: flex;
   align-items: stretch;
   background: transparent;
   border: 1px solid #a7a89d;
 }
 
-.phone-row:focus-within {
+.phone:focus-within {
   border-color: var(--red);
 }
 
-.dial-code {
+.phone__code {
   display: flex;
   align-items: center;
   padding-left: 12px;
@@ -2616,7 +2615,7 @@ input[type='checkbox'] {
   color: var(--ink);
 }
 
-.phone-row input {
+.phone__input {
   flex: 1;
   min-width: 0;
   border: 0;
@@ -2626,18 +2625,18 @@ input[type='checkbox'] {
   background: transparent;
 }
 
-.phone-row input:focus-visible {
+.phone__input:focus-visible {
   outline: 0;
 }
 
-.phone-row .dial-code input {
+.phone__code-input {
   flex: none;
   width: 4.5ch;
   padding: 13px 8px 13px 2px;
 }
 
 /* A square as tall as the text fields. */
-:is(.consent, .option) input[type='checkbox'] {
+.checkbox {
   appearance: none;
   flex: none;
   width: 49px;
@@ -2648,18 +2647,18 @@ input[type='checkbox'] {
   border-radius: 0;
 }
 
-:is(.consent, .option) input[type='checkbox']:checked {
+.checkbox:checked {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc3e27' stroke-width='2.5'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E");
 }
 
 /* Beats the generic form-label display so the box and text sit in one row. */
-.step-body > .consent,
+.form__body > .consent,
 .option {
   display: flex;
 }
 
 /* Floating label: sits inside the empty field, rises onto the border on focus or when filled. */
-.field > label {
+.field__label {
   position: absolute;
   top: 25px;
   left: 8px;
@@ -2673,30 +2672,30 @@ input[type='checkbox'] {
     font-size 0.15s;
 }
 
-.field:focus-within > label {
+.field:focus-within .field__label {
   color: var(--red);
 }
 
-.field.field-static > label {
+.field--static .field__label {
   top: 0;
   font-size: 11px;
   background: var(--white);
 }
 
-.field:focus-within > label,
-.field > input:not(:placeholder-shown) + label,
-.field > input:-webkit-autofill + label {
+.field:focus-within .field__label,
+.field__input:not(:placeholder-shown) + .field__label,
+.field__input:-webkit-autofill + .field__label {
   top: 0;
   font-size: 11px;
   background: var(--white);
 }
 
 /* The hint replaces the label inside the field, so it shows only while the label is up. */
-.field > input::placeholder {
+.field__input::placeholder {
   opacity: 0;
 }
 
-.field > input:focus::placeholder {
+.field__input:focus::placeholder {
   opacity: 1;
 }
 
@@ -2708,42 +2707,42 @@ input[type='checkbox'] {
   font-size: 14px;
 }
 
-.option-price {
+.option__price {
   display: block;
   margin-top: 2px;
   color: var(--muted);
 }
 
 /* Focus recolors the field's own border instead of drawing a second frame. */
-.field > input:focus-visible,
-.field > select:focus-visible {
+.field__input:focus-visible,
+.field__select:focus-visible {
   outline: 0;
   border-color: var(--red);
 }
 
 /* Secondary buttons in the form: white with the field's border. */
-.form-step .button:not(.primary) {
+.form__step .button:not(.button--primary) {
   background: var(--white);
   border-color: #a7a89d;
 }
 
 /* The focused field's red border stays on top of the attached button. */
-.promo-row .field:focus-within {
+.promo .field:focus-within {
   z-index: 1;
 }
 
 /* Back and pay share one row; the pay button takes the rest. */
-.form-actions {
+.form__actions {
   display: flex;
   gap: 10px;
   margin-top: 25px;
 }
 
-.form-actions .primary {
+.form__actions .button--primary {
   flex: 1;
 }
 
-.form-actions #step-back {
+.form__actions #step-back {
   flex: none;
   justify-content: center;
   gap: 12px;
@@ -2751,7 +2750,7 @@ input[type='checkbox'] {
 }
 
 /* Fixed @ before the Telegram name, like the code before the phone number. */
-.field-prefix {
+.phone__prefix {
   display: flex;
   align-items: center;
   padding-left: 12px;
@@ -2759,12 +2758,12 @@ input[type='checkbox'] {
   color: var(--ink);
 }
 
-.phone-row .field-prefix + input {
+.phone__prefix + .phone__input {
   padding-left: 2px;
 }
 
 /* Popular mail domains under the email field. */
-.dropdown-list {
+.dropdown {
   position: absolute;
   top: 100%;
   right: 0;
@@ -2778,39 +2777,39 @@ input[type='checkbox'] {
   font-size: 14px;
 }
 
-.suggestion-hint {
+.dropdown__hint {
   padding: 8px 12px;
   font-size: 11px;
   color: var(--muted);
 }
 
-.dropdown-list [role='option'] {
+.dropdown__option {
   padding: 10px 12px;
   cursor: pointer;
 }
 
-.dropdown-list [role='option']:hover,
-.dropdown-list .active {
+.dropdown__option:hover,
+.dropdown__option--active {
   background: var(--paper);
 }
 
 /* The main page's arrow turned to point right or left. */
-.arrow-next,
-.arrow-back {
+.button__arrow--next,
+.button__arrow--back {
   display: inline-block;
 }
 
-.arrow-next {
+.button__arrow--next {
   transform: rotate(45deg);
 }
 
-.arrow-back {
+.button__arrow--back {
   transform: rotate(-135deg);
 }
 
 /* On phones the form fills the screen. */
 @media (width <= 760px) {
-  dialog {
+  .enroll {
     width: 100%;
     max-width: none;
     height: 100dvh;
@@ -2821,90 +2820,90 @@ input[type='checkbox'] {
 }
 
 /* The pay button's label: full on desktop, short on phones. */
-.button .pay-full,
-.button .pay-short {
+.button__label--full,
+.button__label--short {
   font-size: inherit;
   line-height: inherit;
 }
 
-.button .pay-short {
+.button__label--short {
   display: none;
 }
 
 @media (width <= 760px) {
-  .button .pay-full {
+  .button__label--full {
     display: none;
   }
 
-  .button .pay-short {
+  .button__label--short {
     display: inline;
   }
 }
 
 /* A step's body and footer flow as one column; the footer holds the total and the buttons. */
-.form-step:not([hidden]) {
+.form__step:not([hidden]) {
   display: flex;
   flex-direction: column;
 }
 
-.step-body,
-.step-footer {
+.form__body,
+.form__footer {
   display: contents;
 }
 
 /* Notes stay last when the footer's children flow in the same column. */
-.step-body > .form-note,
-.step-body > #form-status {
+.form__body > .form__note,
+.form__body > .form__status {
   order: 1;
 }
 
 /* On phones the total and the buttons sit at the bottom of the screen, or after the fields
    when those are taller; the dialog itself scrolls. */
 @media (width <= 760px) {
-  dialog[open] {
+  .enroll[open] {
     display: flex;
     flex-direction: column;
   }
 
-  #application {
+  .form {
     display: flex;
     flex: 1 0 auto;
     flex-direction: column;
   }
 
-  .form-step:not([hidden]) {
+  .form__step:not([hidden]) {
     flex: 1 0 auto;
   }
 
-  .step-body {
+  .form__body {
     display: block;
     flex: 1 0 auto;
   }
 
-  .step-footer {
+  .form__footer {
     display: block;
     flex: none;
   }
 
-  .step-footer .total-row {
+  .form__footer .form__total {
     margin-top: 0;
   }
 
-  .step-footer > .button,
-  .step-footer .form-actions {
+  .form__footer > .button,
+  .form__footer .form__actions {
     margin-top: 16px;
   }
 }
 
 /* The select's own control is hidden; its button and list replace it. */
-.field > select.native-select {
+.field__select--native {
   position: absolute;
   inset: 0;
   opacity: 0;
   pointer-events: none;
 }
 
-.select-trigger {
+.select__trigger {
   display: block;
   width: 100%;
   min-height: 49px;
@@ -2919,34 +2918,34 @@ input[type='checkbox'] {
   text-align: left;
 }
 
-.select-trigger.placeholder {
+.select__trigger--placeholder {
   color: var(--muted);
 }
 
-.select-trigger:focus-visible,
-.select-trigger[aria-expanded='true'] {
+.select__trigger:focus-visible,
+.select__trigger[aria-expanded='true'] {
   outline: 0;
   border-color: var(--red);
 }
 
-.select-list {
+.dropdown--select {
   max-height: 260px;
   overflow: auto;
 }
 
-.dropdown-list .selected {
+.dropdown__option--selected {
   font-weight: 600;
 }
 
 /* Search box pinned to the top of a long list. */
-.dropdown-search {
+.dropdown__search {
   position: sticky;
   top: 0;
   background: var(--white);
   border-bottom: 1px solid var(--line);
 }
 
-.dropdown-search input[type='search'] {
+.dropdown__search-input {
   width: 100%;
   padding: 12px;
   border: 0;
@@ -2955,11 +2954,11 @@ input[type='checkbox'] {
   color: var(--ink);
 }
 
-.dropdown-search input[type='search']:focus-visible {
+.dropdown__search-input:focus-visible {
   outline: 0;
 }
 
-.dropdown-search input[type='search']::-webkit-search-cancel-button {
+.dropdown__search-input::-webkit-search-cancel-button {
   appearance: none;
 }
 
