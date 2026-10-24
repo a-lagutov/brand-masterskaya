@@ -823,6 +823,13 @@ dialog h2 {
   border-top: 1px solid var(--line);
 }
 
+/* Contain the last paragraph's margin: otherwise it spills out once the height animation ends
+   and the line below jumps. */
+.curriculum details,
+.faq details {
+  display: flow-root;
+}
+
 .curriculum details:last-child {
   border-bottom: 1px solid var(--ink);
 }
@@ -900,11 +907,11 @@ summary::-webkit-details-marker {
   transition: transform 0.2s;
 }
 
-details[open] .expand::after {
+details[open]:not(.closing) .expand::after {
   transform: rotate(0deg);
 }
 
-details[open] summary .expand {
+details[open]:not(.closing) summary .expand {
   color: var(--red);
 }
 

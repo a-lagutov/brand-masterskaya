@@ -842,3 +842,77 @@ if (new URLSearchParams(window.location.search).get('payment') === 'failed') {
   showStep(2);
   showFormStatus('Оплата не прошла. Проверьте данные и попробуйте ещё раз.');
 }
+
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
+const ACCORDION_MS = 280;
+const ACCORDION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+/**
+ * Makes a <details> open and close with a height animation instead of a jump.
+ * @param {HTMLDetailsElement} details
+ */
+function animateDetails(details) {
+  const summary = details.querySelector('summary');
+  let running = null;
+
+  /**
+   * Tweens the element's height and hands back the animation.
+   * @param {number} fromHeight Pixels at the start.
+   * @param {number} toHeight Pixels at the end.
+   * @returns {Animation}
+   */
+  function tween(fromHeight, toHeight) {
+    running?.cancel();
+    details.style.overflow = 'hidden';
+    running = details.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], {
+      duration: ACCORDION_MS,
+      easing: ACCORDION_EASING,
+    });
+    return running;
+  }
+
+  /** Puts the element back to its natural size once an animation has ended or was cut. */
+  function settle() {
+    running = null;
+    details.style.overflow = '';
+    details.classList.remove('closing');
+  }
+
+  summary.addEventListener('click', (event) => {
+    if (REDUCED_MOTION.matches) return;
+    event.preventDefault();
+    // Measure from the size on screen now, so a click mid-animation reverses smoothly.
+    const startHeight = details.getBoundingClientRect().height;
+    if (details.open && !details.classList.contains('closing')) {
+      // Closing: shrink to the summary's row, then drop [open].
+      details.classList.add('closing');
+      // The closed height, borders included, read by closing it for a moment before any paint.
+      running?.cancel();
+      details.style.overflow = '';
+      details.open = false;
+      const closedHeight = details.getBoundingClientRect().height;
+      details.open = true;
+      const closeAnimation = tween(startHeight, closedHeight);
+      closeAnimation.addEventListener('finish', () => {
+        // A newer animation took over: this one's end no longer matters.
+        if (running !== closeAnimation) return;
+        details.open = false;
+        settle();
+      });
+      return;
+    }
+    // Opening, or reopening while it is still closing.
+    details.classList.remove('closing');
+    details.open = true;
+    // Measure the natural height, borders included: scrollHeight leaves them out and the line
+    // under the item would jump at the end. Cancel a running tween first so it does not skew this.
+    running?.cancel();
+    details.style.overflow = '';
+    const openHeight = details.getBoundingClientRect().height;
+    const openAnimation = tween(startHeight, openHeight);
+    openAnimation.addEventListener('finish', () => {
+      if (running === openAnimation) settle();
+    });
+  });
+}
+document.querySelectorAll('.curriculum details, .faq details').forEach(animateDetails);
