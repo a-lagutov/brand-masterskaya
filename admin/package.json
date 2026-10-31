@@ -13,9 +13,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@payloadcms/db-sqlite": "3.90.2",
+    "@payloadcms/db-sqlite": "3.92.1",
     "@payloadcms/next": "3.90.2",
-    "@payloadcms/richtext-lexical": "3.90.2",
+    "@payloadcms/richtext-lexical": "3.92.1",
     "@payloadcms/translations": "3.90.2",
     "@payloadcms/ui": "3.90.2",
     "cross-env": "^7.0.3",
