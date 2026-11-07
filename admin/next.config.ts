@@ -8,6 +8,7 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   // A self-contained server with only the files it needs: the hosting allows 150 000 files.
   output: 'standalone',
+  serverExternalPackages: ['teleproto', 'big-integer'],
   // The panel is the only page; the site itself lives elsewhere.
   redirects: async () => [{ source: '/', destination: '/admin', permanent: false }],
   webpack: (webpackConfig) => {

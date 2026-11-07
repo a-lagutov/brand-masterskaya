@@ -73,6 +73,7 @@ export interface Config {
     products: Product;
     'promo-codes': PromoCode;
     scenarios: Scenario;
+    broadcasts: Broadcast;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -83,6 +84,9 @@ export interface Config {
     members: {
       orders: 'orders';
     };
+    broadcasts: {
+      runs: 'broadcasts';
+    };
   };
   collectionsSelect: {
     orders: OrdersSelect<false> | OrdersSelect<true>;
@@ -91,6 +95,7 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     scenarios: ScenariosSelect<false> | ScenariosSelect<true>;
+    broadcasts: BroadcastsSelect<false> | BroadcastsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -105,11 +110,13 @@ export interface Config {
     'bot-texts': BotText;
     'site-settings': SiteSetting;
     'legal-documents': LegalDocument;
+    'telegram-account': TelegramAccount;
   };
   globalsSelect: {
     'bot-texts': BotTextsSelect<false> | BotTextsSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'legal-documents': LegalDocumentsSelect<false> | LegalDocumentsSelect<true>;
+    'telegram-account': TelegramAccountSelect<false> | TelegramAccountSelect<true>;
   };
   locale: null;
   widgets: {
@@ -147,6 +154,10 @@ export interface UserAuthOperations {
  */
 export interface Order {
   id: number;
+  /**
+   * Ссылка появится после сохранения заказа. Отправьте её пользователю: оплаченный заказ привяжется при первом запуске бота.
+   */
+  botLink?: string | null;
   name?: string | null;
   email?: string | null;
   phone?: string | null;
@@ -155,6 +166,9 @@ export interface Order {
    * По ним бот решает, в какие чаты пустить.
    */
   products?: (number | Product)[] | null;
+  /**
+   * Позиции ручного заказа можно менять после сохранения.
+   */
   items?:
     | {
         title?: string | null;
@@ -162,6 +176,9 @@ export interface Order {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Сумму ручного заказа можно менять в любой момент.
+   */
   total?: number | null;
   /**
    * Скидка уже учтена в цене тарифа.
@@ -169,7 +186,7 @@ export interface Order {
   promoCode?: string | null;
   createdOnSite?: string | null;
   /**
-   * Пусто — оплата не прошла. Задаётся только при создании.
+   * Пусто — не оплачен. У ручного заказа дату можно менять или очищать в любой момент.
    */
   paidAt?: string | null;
   member?: (number | null) | Member;
@@ -234,6 +251,11 @@ export interface Chat {
  */
 export interface Member {
   id: number;
+  /**
+   * Скопируйте ссылку и отправьте пользователю. Ссылка с номером заказа привязывает оплаченный заказ при первом запуске.
+   */
+  botLink?: string | null;
+  botStarted?: boolean | null;
   displayName?: string | null;
   username?: string | null;
   telegramId: string;
@@ -362,6 +384,70 @@ export interface Scenario {
   createdAt: string;
 }
 /**
+ * Сохраните черновик, проверьте получателей и текст, затем запустите рассылку. Условия фильтра применяются вместе. От бота доступны только пользователи, которые уже запускали бота.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "broadcasts".
+ */
+export interface Broadcast {
+  id: number;
+  title: string;
+  sender: 'bot' | 'account';
+  audience: 'selected' | 'all';
+  payment: 'all' | 'paid' | 'unpaid';
+  /**
+   * Пусто — любые. Иначе хотя бы одна выбранная позиция в заказе с выбранным статусом оплаты.
+   */
+  products?: (number | Product)[] | null;
+  members?: (number | Member)[] | null;
+  /**
+   * Для отправки из личного аккаунта до запуска бота. В заказе нужен Telegram username или телефон из контактов аккаунта.
+   */
+  orders?: (number | Order)[] | null;
+  /**
+   * Ссылка на текст: [Перейти в бота]({bot_link}) или [Сайт](https://example.com). Без HTML. Переменные: {name}, {first_name}, {username}, {email}, {phone}, {bot_link}, {order_id}, {site}. Данные заказа — из последнего подходящего заказа. Персональную ссылку не пересылайте другим людям.
+   */
+  message: string;
+  /**
+   * Повторы сохраняют время и день первого запуска по Москве. В коротком месяце используется последний день.
+   */
+  scheduleMode: 'now' | 'once' | 'daily' | 'weekly' | 'monthly';
+  scheduledAt?: string | null;
+  /**
+   * Пусто — повторять до остановки расписания.
+   */
+  scheduleUntil?: string | null;
+  nextRunAt?: string | null;
+  scheduleError?: string | null;
+  parentBroadcast?: (number | null) | Broadcast;
+  scheduledFor?: string | null;
+  occurrenceKey?: string | null;
+  runs?: {
+    docs?: (number | Broadcast)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  status: 'draft' | 'scheduled' | 'cancelled' | 'queued' | 'sending' | 'completed';
+  /**
+   * Telegram ограничил частоту отправки. Обработчик сам продолжит после указанного времени; менять поле не нужно.
+   */
+  retryAt?: string | null;
+  /**
+   * sent — доставлено; failed — ошибка; uncertain — процесс прерван после начала отправки, проверьте диалог перед повторной рассылкой. Автоматического повтора нет.
+   */
+  deliveries?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -437,6 +523,10 @@ export interface PayloadLockedDocument {
         value: number | Scenario;
       } | null)
     | ({
+        relationTo: 'broadcasts';
+        value: number | Broadcast;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null);
@@ -487,6 +577,7 @@ export interface PayloadMigration {
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
+  botLink?: T;
   name?: T;
   email?: T;
   phone?: T;
@@ -516,6 +607,8 @@ export interface OrdersSelect<T extends boolean = true> {
  * via the `definition` "members_select".
  */
 export interface MembersSelect<T extends boolean = true> {
+  botLink?: T;
+  botStarted?: T;
   displayName?: T;
   username?: T;
   telegramId?: T;
@@ -623,6 +716,34 @@ export interface ScenariosSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "broadcasts_select".
+ */
+export interface BroadcastsSelect<T extends boolean = true> {
+  title?: T;
+  sender?: T;
+  audience?: T;
+  payment?: T;
+  products?: T;
+  members?: T;
+  orders?: T;
+  message?: T;
+  scheduleMode?: T;
+  scheduledAt?: T;
+  scheduleUntil?: T;
+  nextRunAt?: T;
+  scheduleError?: T;
+  parentBroadcast?: T;
+  scheduledFor?: T;
+  occurrenceKey?: T;
+  runs?: T;
+  status?: T;
+  retryAt?: T;
+  deliveries?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -791,6 +912,21 @@ export interface LegalDocument {
   createdAt?: string | null;
 }
 /**
+ * Подключение личного аккаунта через Telegram API. Получите api_id и api_hash на my.telegram.org. Сессия хранится зашифрованной. Рассылки подчиняются ограничениям Telegram, включая FLOOD_WAIT.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "telegram-account".
+ */
+export interface TelegramAccount {
+  id: number;
+  connected?: boolean | null;
+  username?: string | null;
+  ownerId?: string | null;
+  encryptedSession?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bot-texts_select".
  */
@@ -838,6 +974,19 @@ export interface SiteSettingsSelect<T extends boolean = true> {
 export interface LegalDocumentsSelect<T extends boolean = true> {
   oferta?: T;
   privacy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "telegram-account_select".
+ */
+export interface TelegramAccountSelect<T extends boolean = true> {
+  connected?: T;
+  username?: T;
+  ownerId?: T;
+  encryptedSession?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

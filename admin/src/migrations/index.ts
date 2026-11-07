@@ -9,6 +9,8 @@ import * as migration_20261020_121529_site_settings from './20261020_121529_site
 import * as migration_20261023_131938_contacts from './20261023_131938_contacts';
 import * as migration_20261023_141149_legal from './20261023_141149_legal';
 import * as migration_20261023_142126_legal_documents from './20261023_142126_legal_documents';
+import * as migration_20261107_035633_telegram_broadcasts from './20261107_035633_telegram_broadcasts';
+import * as migration_20261107_063906_broadcast_schedules from './20261107_063906_broadcast_schedules';
 
 export const migrations = [
   {
@@ -64,6 +66,16 @@ export const migrations = [
   {
     up: migration_20261023_142126_legal_documents.up,
     down: migration_20261023_142126_legal_documents.down,
-    name: '20261023_142126_legal_documents'
+    name: '20261023_142126_legal_documents',
+  },
+  {
+    up: migration_20261107_035633_telegram_broadcasts.up,
+    down: migration_20261107_035633_telegram_broadcasts.down,
+    name: '20261107_035633_telegram_broadcasts',
+  },
+  {
+    up: migration_20261107_063906_broadcast_schedules.up,
+    down: migration_20261107_063906_broadcast_schedules.down,
+    name: '20261107_063906_broadcast_schedules'
   },
 ];

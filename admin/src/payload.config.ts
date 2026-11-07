@@ -15,6 +15,8 @@ import { Products } from './collections/Products';
 import { PromoCodes } from './collections/PromoCodes';
 import { Scenarios } from './collections/Scenarios';
 import { Users } from './collections/Users';
+import { Broadcasts } from './collections/Broadcasts';
+import { TelegramAccount } from './globals/TelegramAccount';
 import { seedLegalDocuments } from './bot/legalDocuments';
 import { BotTexts } from './globals/BotTexts';
 import { LegalDocuments } from './globals/LegalDocuments';
@@ -35,8 +37,8 @@ export default buildConfig({
     supportedLanguages: { ru },
     fallbackLanguage: 'ru',
   },
-  collections: [Orders, Members, Chats, Products, PromoCodes, Scenarios, Users],
-  globals: [BotTexts, SiteSettings, LegalDocuments],
+  collections: [Orders, Members, Chats, Products, PromoCodes, Scenarios, Broadcasts, Users],
+  globals: [BotTexts, SiteSettings, LegalDocuments, TelegramAccount],
   editor: lexicalEditor(),
   graphQL: { disable: true },
   secret: process.env.PAYLOAD_SECRET ?? '',

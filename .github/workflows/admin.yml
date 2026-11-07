@@ -54,6 +54,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Test
+        run: npm test
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -88,6 +91,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Test
+        run: npm test
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -115,6 +121,40 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           echo "SERVER=${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" >> "$GITHUB_ENV"
+
+      # Keep an online SQLite snapshot before the new app can apply migrations.
+      - name: Backup database
+        run: |
+          ssh -i ~/.ssh/deploy_key "$SERVER" "python3 - '$ADMIN_SITE'" <<'PYTHON'
+          """Back up only the target environment before deployment."""
+          import datetime
+          import pathlib
+          import sqlite3
+          import sys
+
+          private_directory = pathlib.Path.home() / 'private' / sys.argv[1]
+          database_path = private_directory / 'payload.db'
+          if database_path.exists():
+              backup_directory = private_directory / 'backups'
+              backup_directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+              timestamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+              backup_path = backup_directory / ('payload-' + timestamp + '.db')
+              with sqlite3.connect(str(database_path)) as source_database:
+                  if hasattr(source_database, 'backup'):
+                      with sqlite3.connect(str(backup_path)) as backup_database:
+                          source_database.backup(backup_database)
+                  else:
+                      # The hosting's Python predates sqlite3.Connection.backup.
+                      backup_path = backup_directory / ('payload-' + timestamp + '.sql')
+                      source_database.execute('BEGIN')
+                      with backup_path.open('w', encoding='utf-8') as backup_file:
+                          for statement in source_database.iterdump():
+                              backup_file.write(statement + chr(10))
+              backup_path.chmod(0o600)
+              print('Database backup created: ' + backup_path.name)
+          else:
+              print('No existing database to back up.')
+          PYTHON
 
       # Node from nodejs.org into ~/apps/node; the hosting's own node is too old.
       - name: Install Node.js on the server

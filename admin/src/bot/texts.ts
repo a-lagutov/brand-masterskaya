@@ -2,6 +2,9 @@ import type { Payload } from 'payload';
 
 import type { BotText } from '../payload-types';
 import { settings } from './settings';
+import { readMessageDocument } from '../editor/messageDocument';
+import { renderLinkedMessage } from './messaging';
+import { messageAsTelegramHtml } from './messageHtml';
 import { formatPhoneForReading, loadContacts } from './siteSettings';
 
 /** The bot texts plus the contact line from the site settings, for {contact}. */
@@ -43,6 +46,10 @@ export function fillText(
     contact: texts.contact,
     ...values,
   };
+  if (readMessageDocument(template)) {
+    const rendered = renderLinkedMessage(template, { name: '', ...allValues });
+    return messageAsTelegramHtml(rendered.text, rendered.entities);
+  }
   // Links come before the values, so a name like "[x](y)" stays plain text.
   const withLinks = escapeHtml(template).replace(
     LINK_PATTERN,
@@ -77,4 +84,21 @@ export async function loadTexts(payload: Payload): Promise<LoadedTexts> {
  */
 export function formatPrice(rubles: number): string {
   return `${rubles.toLocaleString('ru-RU').replace(/ /g, ' ')} ₽`;
+}
+
+/** Rejects invalid rich bot messages before they can break an automatic reply. */
+export function validateBotText(value: unknown, orderVariables = false): true | string {
+  if (typeof value !== 'string' || !value.trim()) return 'Введите текст сообщения.';
+  try {
+    if (readMessageDocument(value))
+      renderLinkedMessage(value, {
+        name: 'Имя',
+        site: 'https://example.com',
+        contact: 'Контакты',
+        ...(orderVariables ? { items: 'Тариф', total: '100 ₽' } : {}),
+      });
+    return true;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Проверьте текст сообщения.';
+  }
 }
