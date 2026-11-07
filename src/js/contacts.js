@@ -5,6 +5,7 @@
 const CONTACTS_ENDPOINT = 'api/contacts.php';
 const LEGAL_ENDPOINT = 'api/legal.php?doc=';
 // Saved HTML can predate the BEM stylesheet. Keep this mapping aligned with both Markdown renderers.
+/** @type {Record<string, string>} */
 const LEGAL_CLASSES = {
   h1: 'legal__title',
   h2: 'legal__heading',
@@ -69,9 +70,9 @@ async function refreshLegalText() {
   // The text is the owners' own HTML from the panel; the server drops one with scripts.
   if (text.trim()) main.innerHTML = text;
   // Preserve explicit classes while styling older saved documents without changing their content.
-  for (const [tagName, className] of Object.entries(LEGAL_CLASSES)) {
+  for (const tagName of Object.keys(LEGAL_CLASSES)) {
     for (const element of main.querySelectorAll(`${tagName}:not([class])`)) {
-      element.classList.add(className);
+      element.classList.add(LEGAL_CLASSES[tagName]);
     }
   }
   // A link to a part of the text (#consent) was not there when the browser looked for it.
