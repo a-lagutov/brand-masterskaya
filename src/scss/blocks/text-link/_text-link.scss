@@ -1,0 +1,6 @@
+@use '../../abstracts' as *;
+
+/* Links inside running text stay underlined. */
+.text-link {
+  text-decoration: underline;
+}

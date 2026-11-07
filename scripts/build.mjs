@@ -16,6 +16,7 @@ import { mkdir, readFile, rm, writeFile, copyFile, stat, readdir } from 'node:fs
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { transform } from 'esbuild';
+import * as sass from 'sass';
 import { minify } from 'html-minifier-terser';
 import sharp from 'sharp';
 
@@ -26,6 +27,7 @@ const SRC_DIR = path.join(PROJECT_DIR, 'src');
 const DIST_DIR = path.join(PROJECT_DIR, 'dist');
 // Max width per asset folder. Logos render at <=160px, so 480px covers 3x screens.
 // Folders not listed here keep their original size.
+/** @type {Record<string, number>} */
 const MAX_WIDTH_BY_FOLDER = {
   'assets/logos': 480,
 };
@@ -69,15 +71,18 @@ async function buildImage(sourcePath) {
 }
 
 /**
- * Minifies a CSS or JS file for inlining.
+ * Minifies a SCSS or JS file for inlining; SCSS is compiled to CSS first.
  * @param {string} sourcePath Path relative to src/.
  * @returns {Promise<string>} Minified code, safe to place inside <style>/<script>.
  */
 async function minifyCode(sourcePath) {
-  const extension = path.extname(sourcePath);
-  const source = await readFile(path.join(SRC_DIR, sourcePath), 'utf8');
+  const isStyle = path.extname(sourcePath) === '.scss';
+  const source = isStyle
+    ? // charset: false drops the @charset rule; inline <style> takes the page's encoding.
+      sass.compile(path.join(SRC_DIR, sourcePath), { style: 'expanded', charset: false }).css
+    : await readFile(path.join(SRC_DIR, sourcePath), 'utf8');
   const { code } = await transform(source, {
-    loader: extension.slice(1),
+    loader: isStyle ? 'css' : 'js',
     minify: true,
     charset: 'utf8',
     target: ['es2020', 'chrome90', 'safari14', 'firefox90'],
@@ -211,13 +216,13 @@ async function buildPage(pageName, builtAssets) {
 
   // Inline stylesheets and scripts so the page needs a single HTML request.
   const inlineTargets = [
-    { pattern: /<link rel="stylesheet" href="(css\/[^"]+)"\s*\/?>/g, tag: 'style' },
+    { pattern: /<link rel="stylesheet" href="(scss\/[^"]+)"\s*\/?>/g, tag: 'style' },
     { pattern: /<script src="(js\/[^"]+)"><\/script>/g, tag: 'script' },
   ];
   for (const { pattern, tag } of inlineTargets) {
     for (const [element, sourcePath] of [...html.matchAll(pattern)]) {
       let code = await minifyCode(sourcePath);
-      // CSS refers to assets from src/css/; once inlined, paths are relative to the page.
+      // SCSS refers to assets from src/scss/; once inlined, paths are relative to the page.
       if (tag === 'style') code = code.replace(/url\((["']?)\.\.\/assets\//g, 'url($1assets/');
       sourceBytes += (await stat(path.join(SRC_DIR, sourcePath))).size;
       html = html.replace(element, () => `<${tag}>${code}</${tag}>`);

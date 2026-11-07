@@ -1,0 +1,70 @@
+@use '../../abstracts' as *;
+
+.curriculum {
+  &__item {
+    border-top: 1px solid var(--ink);
+  }
+
+  &__item:last-child {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    padding: 28px 0;
+
+    @include below($bp-tablet) {
+      gap: 20px;
+    }
+
+    @include below($bp-mobile) {
+      padding: 24px 0;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+  }
+
+  &__week {
+    font-family: $font-mono;
+    font-size: 10px;
+    white-space: nowrap;
+    color: var(--muted);
+
+    @include below($bp-mobile) {
+      font-size: 9px;
+      width: 100%;
+    }
+  }
+
+  /* In the curriculum it sits on its own line under the week number and title. */
+  &__date {
+    flex-basis: 100%;
+    margin-top: -14px;
+  }
+
+  &__title {
+    font-size: 26px;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
+    margin: 0;
+
+    @include below($bp-tablet) {
+      font-size: 23px;
+    }
+
+    @include below($bp-mobile) {
+      font-size: 23px;
+      max-width: calc(100% - 40px);
+      letter-spacing: -0.7px;
+    }
+  }
+}
+
+/* Contain the last paragraph's margin: otherwise it spills out once the height animation ends
+   and the line below jumps. */
+.curriculum__item {
+  display: flow-root;
+}

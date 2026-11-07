@@ -1,0 +1,10 @@
+// Breakpoints (max-width): tablet and below, phones, very narrow phones.
+$bp-tablet: 1100px;
+$bp-mobile: 760px;
+$bp-narrow: 420px;
+
+// Courier New is the mono face of every label, date and number.
+$font-mono: 'Courier New', monospace;
+
+// Border of text fields, selects and the checkbox squares.
+$color-field-border: #a7a89d;

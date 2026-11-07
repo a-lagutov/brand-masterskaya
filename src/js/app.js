@@ -1,5 +1,17 @@
-const menuButton = document.querySelector('.menu-toggle');
-const mobileNav = document.querySelector('#mobile-nav');
+/**
+ * Finds an element the page must have.
+ * @param {string} selector CSS selector.
+ * @returns {HTMLElement} The first match.
+ * @throws {Error} When nothing matches, so a broken page fails loudly.
+ */
+function queryRequired(selector) {
+  const element = /** @type {HTMLElement | null} */ (document.querySelector(selector));
+  if (!element) throw new Error('Missing element: ' + selector);
+  return element;
+}
+
+const menuButton = /** @type {HTMLButtonElement} */ (document.querySelector('.header__toggle'));
+const mobileNav = /** @type {HTMLElement} */ (document.querySelector('#mobile-nav'));
 menuButton.addEventListener('click', () => {
   const open = menuButton.getAttribute('aria-expanded') !== 'true';
   menuButton.setAttribute('aria-expanded', String(open));
@@ -13,13 +25,19 @@ mobileNav.querySelectorAll('a').forEach((a) =>
     menuButton.setAttribute('aria-label', 'Открыть меню');
   }),
 );
-const tabs = [...document.querySelectorAll('[role=tab]')];
+const tabs = /** @type {HTMLElement[]} */ ([...document.querySelectorAll('[role=tab]')]);
+
+/**
+ * Makes one tab active and shows only its panel.
+ * @param {HTMLElement} tab Tab to select.
+ */
 function selectTab(tab) {
   tabs.forEach((t) => {
     const selected = t === tab;
     t.setAttribute('aria-selected', String(selected));
     t.tabIndex = selected ? 0 : -1;
-    document.getElementById(t.getAttribute('aria-controls')).hidden = !selected;
+    const panel = document.getElementById(t.getAttribute('aria-controls') ?? '');
+    if (panel) panel.hidden = !selected;
   });
 }
 tabs.forEach((tab, index) => {
@@ -37,10 +55,10 @@ tabs.forEach((tab, index) => {
     }
   });
 });
-const dialog = document.querySelector('#enroll');
-const form = document.querySelector('#application');
-const plan = document.querySelector('#plan');
-const extras = document.querySelector('#extra-options');
+const dialog = /** @type {HTMLDialogElement} */ (document.querySelector('#enroll'));
+const form = /** @type {HTMLFormElement} */ (document.querySelector('#application'));
+const plan = /** @type {HTMLSelectElement} */ (document.querySelector('#plan'));
+const extras = /** @type {HTMLFieldSetElement} */ (document.querySelector('#extra-options'));
 const money = new Intl.NumberFormat('ru-RU');
 // Plans and prices from src/prices.json, substituted by the build (scripts/build.mjs).
 const PLANS = __PRICES__.plans;
@@ -55,15 +73,18 @@ const PAYMENT_ERROR = 'Не удалось перейти к оплате. По�
 // Checks a promo code before payment; see src/api/promo.php.
 const PROMO_ENDPOINT = 'api/promo.php';
 const PROMO_ERROR = 'Не удалось проверить промокод. Попробуйте ещё раз.';
-const promoInput = document.querySelector('#app-promo');
-const promoButton = document.querySelector('#apply-promo');
-const promoStatus = document.querySelector('#promo-status');
-// The code the server confirmed: {code, percent, plans}; null until one is applied.
+const promoInput = /** @type {HTMLInputElement} */ (document.querySelector('#app-promo'));
+const promoButton = /** @type {HTMLButtonElement} */ (document.querySelector('#apply-promo'));
+const promoStatus = /** @type {HTMLElement} */ (document.querySelector('#promo-status'));
+/**
+ * The code the server confirmed; null until one is applied.
+ * @type {{code: string, discounts: Record<string, number>} | null}
+ */
 let appliedPromo = null;
-const submitButton = form.querySelector('button[type="submit"]');
-const emailInput = document.querySelector('#app-email');
-const phoneInput = document.querySelector('#app-phone');
-const telegramInput = document.querySelector('#app-telegram');
+const submitButton = /** @type {HTMLButtonElement} */ (form.querySelector('button[type="submit"]'));
+const emailInput = /** @type {HTMLInputElement} */ (document.querySelector('#app-email'));
+const phoneInput = /** @type {HTMLInputElement} */ (document.querySelector('#app-phone'));
+const telegramInput = /** @type {HTMLInputElement} */ (document.querySelector('#app-telegram'));
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Countries offered in the phone field: {isoCode, name, dialCode}. Russia comes first and is the default.
 const PHONE_COUNTRIES = [
@@ -142,8 +163,8 @@ const PHONE_MIN_LOCAL_DIGITS = 6;
 // International numbers (+888, e.g. Telegram's anonymous ones) have 8 digits after the code.
 const INTERNATIONAL_DIAL_CODE = '888';
 const INTERNATIONAL_LOCAL_DIGITS = 8;
-const countrySelect = document.querySelector('#app-country');
-const dialCodeInput = document.querySelector('#app-dial-code');
+const countrySelect = /** @type {HTMLSelectElement} */ (document.querySelector('#app-country'));
+const dialCodeInput = /** @type {HTMLInputElement} */ (document.querySelector('#app-dial-code'));
 // Only the codes of the listed countries can be typed.
 const DIAL_CODES = new Set(PHONE_COUNTRIES.map((country) => country.dialCode));
 const EMAIL_ERROR = 'Укажите email в формате you@example.com';
@@ -322,9 +343,9 @@ function fillCountrySelect() {
 }
 
 /**
- * Brings a Telegram username to a bare form: strips @ and a t.me link.
+ * Brings a Telegram username to a bare form: strips the at sign and a t.me link.
  * @param {string} telegram Raw field value.
- * @returns {string|null} Username without @, or null when blank or invalid.
+ * @returns {string|null} Username without the at sign, or null when blank or invalid.
  */
 function normalizeTelegram(telegram) {
   const username = telegram
@@ -357,15 +378,20 @@ function promoDiscount(price, percent) {
   return Math.max(0, Math.min(price - 1, discount));
 }
 
+/** @returns {string[]} Keys of the electives ticked in the form. */
+function checkedElectiveNames() {
+  const checked = /** @type {NodeListOf<HTMLInputElement>} */ (
+    extras.querySelectorAll('input:checked')
+  );
+  return [...checked].map((checkbox) => checkbox.name);
+}
+
 /**
  * Selected plan and electives, each with its key and price after the applied promo code.
  * @returns {{key: string, title: string, price: number, percent: number, discount: number}[]}
  */
 function selectedItems() {
-  const keys = [
-    plan.value,
-    ...[...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
-  ];
+  const keys = [plan.value, ...checkedElectiveNames()];
   return keys.map((key) => {
     const item = PLANS[key] ?? ELECTIVES[key];
     const percent = appliedPromo?.discounts[key] ?? 0;
@@ -391,7 +417,7 @@ function collectSelection() {
  * @param {string} [error] Error text; without it the status follows appliedPromo.
  */
 function showPromoStatus(error) {
-  promoStatus.classList.toggle('error', Boolean(error));
+  promoStatus.classList.toggle('promo__status--error', Boolean(error));
   if (error) {
     promoStatus.textContent = error;
     return;
@@ -407,7 +433,7 @@ function showPromoStatus(error) {
       .map((key) => '«' + (PLANS[key] ?? ELECTIVES[key]).title + '»')
       .join(', ');
     promoStatus.textContent = 'Промокод действует только на ' + covered;
-    promoStatus.classList.add('error');
+    promoStatus.classList.add('promo__status--error');
     return;
   }
   const parts = discounted.map((item) => '«' + item.title + '» −' + item.percent + '%');
@@ -438,7 +464,9 @@ async function applyPromo() {
   } catch (error) {
     // A failed fetch or broken JSON has a technical message; show ours instead.
     showPromoStatus(
-      error instanceof SyntaxError || error instanceof TypeError ? PROMO_ERROR : error.message,
+      error instanceof Error && !(error instanceof SyntaxError || error instanceof TypeError)
+        ? error.message
+        : PROMO_ERROR,
     );
   } finally {
     promoButton.disabled = false;
@@ -494,12 +522,16 @@ function updateTotal() {
       });
     }
   }
-  if (!working) extras.querySelectorAll('input').forEach((x) => (x.checked = false));
+  if (!working) {
+    /** @type {NodeListOf<HTMLInputElement>} */ (extras.querySelectorAll('input')).forEach(
+      (checkbox) => (checkbox.checked = false),
+    );
+  }
   const total = collectSelection().total;
   // Markup, not text, so the ruble sign keeps its own font; the amount is a formatted number.
   const totalMarkup = money.format(total) + ' <span class="ruble">₽</span>';
-  document.querySelector('#total').innerHTML = totalMarkup;
-  document.querySelector('#total-recap').innerHTML = totalMarkup;
+  queryRequired('#total').innerHTML = totalMarkup;
+  queryRequired('#total-recap').innerHTML = totalMarkup;
   // The plan or its price may have changed: say whether the code still applies.
   if (appliedPromo) showPromoStatus();
   return total;
@@ -512,16 +544,19 @@ async function refreshPrices() {
   const response = await fetch(PRICES_ENDPOINT, { cache: 'no-store' });
   if (!response.ok) return;
   const prices = await response.json();
-  document.querySelector('#pay-dolyame').hidden = prices.dolyame !== true;
+  queryRequired('#pay-dolyame').hidden = prices.dolyame !== true;
   Object.keys(prices).forEach((key) => {
     const item = PLANS[key] ?? ELECTIVES[key];
     const price = prices[key];
     if (item && Number.isInteger(price) && price > 0) item.price = price;
   });
-  document.querySelectorAll('[data-price]').forEach((element) => {
-    const item = PLANS[element.dataset.price] ?? ELECTIVES[element.dataset.price];
-    if (item) element.textContent = money.format(item.price);
-  });
+  /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-price]')).forEach(
+    (element) => {
+      const key = element.dataset.price ?? '';
+      const item = PLANS[key] ?? ELECTIVES[key];
+      if (item) element.textContent = money.format(item.price);
+    },
+  );
   plan.querySelectorAll('option').forEach((option) => {
     const item = PLANS[option.value];
     if (item) option.textContent = item.title + ' — ' + money.format(item.price) + ' ₽';
@@ -531,29 +566,33 @@ async function refreshPrices() {
 refreshPrices()
   .catch(() => {})
   .finally(() => document.documentElement.classList.remove('prices-loading'));
-document.querySelectorAll('.choose-plan').forEach((button) =>
-  button.addEventListener('click', (e) => {
-    e.preventDefault();
-    plan.value = button.dataset.plan;
-    showFormStatus('');
-    updateTotal();
-    dialog.showModal();
-  }),
+/** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.price-card__button')).forEach(
+  (button) =>
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      plan.value = button.dataset.plan ?? '';
+      showFormStatus('');
+      updateTotal();
+      dialog.showModal();
+    }),
 );
-document.querySelectorAll('.add-elective').forEach((button) =>
-  button.addEventListener('click', () => {
-    plan.value = ELECTIVES_PLAN;
-    const activeTab = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
-    const elective = activeTab?.id === 'tab-business' ? 'business' : 'director';
-    const checkbox = extras.querySelector('input[name="' + elective + '"]');
-    checkbox.checked = true;
-    showFormStatus('');
-    updateTotal();
-    dialog.showModal();
-    checkbox.focus();
-  }),
+/** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.button--elective')).forEach(
+  (button) =>
+    button.addEventListener('click', () => {
+      plan.value = ELECTIVES_PLAN;
+      const activeTab = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
+      const elective = activeTab?.id === 'tab-business' ? 'business' : 'director';
+      const checkbox = /** @type {HTMLInputElement} */ (
+        extras.querySelector('input[name="' + elective + '"]')
+      );
+      checkbox.checked = true;
+      showFormStatus('');
+      updateTotal();
+      dialog.showModal();
+      checkbox.focus();
+    }),
 );
-document.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+queryRequired('.enroll__close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', (e) => {
   if (e.target === dialog) {
     const r = dialog.getBoundingClientRect();
@@ -595,7 +634,7 @@ const EMAIL_DOMAINS = [
 ];
 const MAX_EMAIL_SUGGESTIONS = 6;
 const EMAIL_HINT = 'Выберите или продолжите ввод';
-const emailSuggestions = document.querySelector('#email-suggestions');
+const emailSuggestions = /** @type {HTMLElement} */ (document.querySelector('#email-suggestions'));
 // Index of the suggestion picked with the arrow keys; -1 when none is.
 let activeSuggestion = -1;
 
@@ -619,8 +658,8 @@ function chooseEmailDomain(domain) {
 }
 
 /**
- * Offers popular domains once the user has typed the @, narrowed by what follows it.
- * Nothing is shown for a second @ or when the typed domain is already complete.
+ * Offers popular domains once the user has typed the at sign, narrowed by what follows it.
+ * Nothing is shown for a second one or when the typed domain is already complete.
  */
 function showEmailSuggestions() {
   const parts = emailInput.value.split('@');
@@ -639,11 +678,12 @@ function showEmailSuggestions() {
     return;
   }
   const hint = document.createElement('li');
-  hint.className = 'suggestion-hint';
+  hint.className = 'dropdown__hint';
   hint.setAttribute('role', 'presentation');
   hint.textContent = EMAIL_HINT;
   const options = matches.map((domain) => {
     const option = document.createElement('li');
+    option.className = 'dropdown__option';
     option.setAttribute('role', 'option');
     option.dataset.domain = domain;
     option.textContent = `${localPart}@${domain}`;
@@ -666,7 +706,9 @@ function showEmailSuggestions() {
 function moveSuggestion(step) {
   const options = [...emailSuggestions.querySelectorAll('[role="option"]')];
   activeSuggestion = (activeSuggestion + step + options.length) % options.length;
-  options.forEach((option, index) => option.classList.toggle('active', index === activeSuggestion));
+  options.forEach((option, index) =>
+    option.classList.toggle('dropdown__option--active', index === activeSuggestion),
+  );
 }
 
 emailInput.addEventListener('input', () => {
@@ -682,7 +724,7 @@ emailInput.addEventListener('keydown', (event) => {
     // Enter picks the highlighted domain instead of leaving the step.
     event.preventDefault();
     const options = emailSuggestions.querySelectorAll('[role="option"]');
-    chooseEmailDomain(options[activeSuggestion].dataset.domain);
+    chooseEmailDomain(/** @type {HTMLElement} */ (options[activeSuggestion]).dataset.domain ?? '');
   } else if (event.key === 'Escape') {
     // Closes only the list, not the whole dialog.
     event.stopPropagation();
@@ -728,7 +770,8 @@ dialCodeInput.addEventListener('input', (event) => {
     : '';
   phoneInput.value = formatPhone(overflowDigits + phoneInput.value);
   // A finished code sends the user on to the number; deleting stays in the code field.
-  if (!event.inputType?.startsWith('delete') && isFinalDialCode(currentDialCode())) {
+  const isDeletion = String(/** @type {InputEvent} */ (event).inputType).startsWith('delete');
+  if (!isDeletion && isFinalDialCode(currentDialCode())) {
     phoneInput.focus();
   }
 });
@@ -738,10 +781,11 @@ countrySelect.addEventListener('change', () => {
   showDialCode();
   phoneInput.value = formatPhone(phoneInput.value);
 });
-const formSteps = [...form.querySelectorAll('.form-step')];
+const formSteps = /** @type {HTMLElement[]} */ ([...form.querySelectorAll('.form__step')]);
 const STEP_TITLES = ['Программа', 'Контакты и оплата'];
-const progressBar = form.querySelector('.progress-bar');
-const progressFill = form.querySelector('.progress-fill');
+const progressBar = /** @type {HTMLElement} */ (form.querySelector('.form__progress-bar'));
+const progressFill = /** @type {HTMLElement} */ (form.querySelector('.form__progress-fill'));
+// 1-based number of the step on screen.
 let currentStep = 1;
 
 /**
@@ -755,21 +799,21 @@ function showStep(step) {
   );
   progressFill.style.width = `${(step / formSteps.length) * 100}%`;
   progressBar.setAttribute('aria-valuenow', String(step));
-  document.querySelector('#progress-current').textContent = String(step);
-  document.querySelector('#progress-title').textContent = STEP_TITLES[step - 1];
+  queryRequired('#progress-current').textContent = String(step);
+  queryRequired('#progress-title').textContent = STEP_TITLES[step - 1];
   showFormStatus('');
   // Start the new step from its top, since the dialog scrolls.
   dialog.scrollTo({ top: 0 });
 }
-document.querySelector('#step-next').addEventListener('click', () => showStep(2));
-document.querySelector('#step-back').addEventListener('click', () => showStep(1));
+queryRequired('#step-next').addEventListener('click', () => showStep(2));
+queryRequired('#step-back').addEventListener('click', () => showStep(1));
 
 /**
  * Shows a message under the submit button.
  * @param {string} message Empty string clears it.
  */
 function showFormStatus(message) {
-  document.querySelector('#form-status').textContent = message;
+  queryRequired('#form-status').textContent = message;
 }
 
 /**
@@ -804,16 +848,19 @@ async function submitApplication(event) {
   const data = new FormData(form);
   // The server recalculates prices from these keys; amounts from the browser are not trusted.
   const application = {
-    name: data.get('name').trim(),
+    name: String(data.get('name') ?? '').trim(),
     email,
     phone,
     telegram,
     plan: plan.value,
-    electives: [...extras.querySelectorAll('input:checked')].map((checkbox) => checkbox.name),
+    electives: checkedElectiveNames(),
     // A typed but unapplied code goes too: the server checks it and says if it is wrong.
     promoCode: promoInput.value.trim(),
     // The Dolyame button submits the same form with its own value.
-    method: event.submitter?.value === 'dolyame' ? 'dolyame' : 'card',
+    method:
+      /** @type {HTMLButtonElement | null} */ (event.submitter)?.value === 'dolyame'
+        ? 'dolyame'
+        : 'card',
   };
   submitButton.disabled = true;
   showFormStatus(application.method === 'dolyame' ? 'Оформляем рассрочку…' : 'Создаём платёж…');
@@ -829,7 +876,9 @@ async function submitApplication(event) {
   } catch (error) {
     // A failed fetch or broken JSON has a technical message; show ours instead.
     showFormStatus(
-      error instanceof SyntaxError || error instanceof TypeError ? PAYMENT_ERROR : error.message,
+      error instanceof Error && !(error instanceof SyntaxError || error instanceof TypeError)
+        ? error.message
+        : PAYMENT_ERROR,
     );
     submitButton.disabled = false;
   }
@@ -851,7 +900,8 @@ const ACCORDION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
  * @param {HTMLDetailsElement} details
  */
 function animateDetails(details) {
-  const summary = details.querySelector('summary');
+  const summary = /** @type {HTMLElement} */ (details.querySelector('summary'));
+  /** @type {Animation | null} */
   let running = null;
 
   /**
@@ -874,7 +924,7 @@ function animateDetails(details) {
   function settle() {
     running = null;
     details.style.overflow = '';
-    details.classList.remove('closing');
+    details.classList.remove('accordion--closing');
   }
 
   summary.addEventListener('click', (event) => {
@@ -882,9 +932,9 @@ function animateDetails(details) {
     event.preventDefault();
     // Measure from the size on screen now, so a click mid-animation reverses smoothly.
     const startHeight = details.getBoundingClientRect().height;
-    if (details.open && !details.classList.contains('closing')) {
+    if (details.open && !details.classList.contains('accordion--closing')) {
       // Closing: shrink to the summary's row, then drop [open].
-      details.classList.add('closing');
+      details.classList.add('accordion--closing');
       // The closed height, borders included, read by closing it for a moment before any paint.
       running?.cancel();
       details.style.overflow = '';
@@ -901,7 +951,7 @@ function animateDetails(details) {
       return;
     }
     // Opening, or reopening while it is still closing.
-    details.classList.remove('closing');
+    details.classList.remove('accordion--closing');
     details.open = true;
     // Measure the natural height, borders included: scrollHeight leaves them out and the line
     // under the item would jump at the end. Cancel a running tween first so it does not skew this.
@@ -914,4 +964,6 @@ function animateDetails(details) {
     });
   });
 }
-document.querySelectorAll('.curriculum details, .faq details').forEach(animateDetails);
+/** @type {NodeListOf<HTMLDetailsElement>} */ (document.querySelectorAll('.accordion')).forEach(
+  animateDetails,
+);

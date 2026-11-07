@@ -52,6 +52,7 @@ async function callApi(method, apiPath, body) {
 }
 
 const [command, argument] = process.argv.slice(2);
+/** @type {Record<string, () => Promise<void>>} */
 const COMMANDS = {
   customers: () => callApi('GET', '/open-banking/v1.0/customers'),
   retailers: () =>

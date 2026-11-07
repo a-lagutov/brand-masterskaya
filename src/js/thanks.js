@@ -1,18 +1,19 @@
 // Thank-you page: waits until the bank confirms the payment, then shows the Telegram link.
-const statusText = document.querySelector('#payment-status');
-const telegramButton = document.querySelector('#telegram-link');
+const statusText = /** @type {HTMLElement} */ (document.querySelector('#payment-status'));
+const telegramButton = /** @type {HTMLAnchorElement} */ (document.querySelector('#telegram-link'));
 const orderId = new URLSearchParams(window.location.search).get('order') || '';
 // The bank usually confirms within seconds; give up after about two minutes.
 const POLL_INTERVAL_MS = 3000;
 const MAX_ATTEMPTS = 40;
 // The email in the footer, which src/js/contacts.js keeps current.
-const CONTACT_LINK = document.querySelector('[data-contact="email"]');
+const CONTACT_LINK = /** @type {HTMLElement} */ (document.querySelector('[data-contact="email"]'));
 
 /**
  * Asks the server for the order status and updates the page; schedules the next check.
  * @param {number} attempt Number of checks made so far.
  */
 async function checkPayment(attempt) {
+  /** @type {{status: string, email?: string, telegramLink?: string}} */
   let result = { status: 'pending' };
   try {
     const response = await fetch('api/order.php?id=' + encodeURIComponent(orderId), {
@@ -27,7 +28,7 @@ async function checkPayment(attempt) {
       'Оплата получена. Завершите регистрацию в Telegram-боте — ссылку мы также отправили на ' +
       result.email +
       '.';
-    telegramButton.href = result.telegramLink;
+    telegramButton.href = result.telegramLink ?? '';
     telegramButton.hidden = false;
     return;
   }

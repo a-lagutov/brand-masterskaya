@@ -1,0 +1,21 @@
+@use '../../abstracts' as *;
+
+.pricing-section {
+  background: #e4e3da;
+  padding: 90px 0;
+
+  &__cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+
+    @include below($bp-mobile) {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+  }
+
+  @include below($bp-mobile) {
+    padding: 60px 0;
+  }
+}

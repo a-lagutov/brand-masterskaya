@@ -1,0 +1,36 @@
+@use '../../abstracts' as *;
+
+.faq {
+  &__item {
+    /* Contain the last paragraph's margin, as in .curriculum__item. */
+    display: flow-root;
+    border-top: 1px solid var(--line);
+  }
+
+  &__item:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  &__question {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 23px 0;
+    font-size: 17px;
+
+    @include below($bp-mobile) {
+      font-size: 16px;
+      line-height: 1.35;
+      padding: 21px 0;
+      gap: 15px;
+    }
+  }
+
+  &__answer {
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 660px;
+    margin: 0 35px 25px 0;
+    color: var(--muted);
+  }
+}

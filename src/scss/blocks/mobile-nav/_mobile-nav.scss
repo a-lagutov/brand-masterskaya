@@ -1,0 +1,38 @@
+@use '../../abstracts' as *;
+
+.mobile-nav {
+  @include below($bp-mobile) {
+    position: fixed;
+    top: 75px;
+    left: 0;
+    right: 0;
+    background: var(--paper);
+    padding: 15px 22px;
+    z-index: 19;
+    border-bottom: 1px solid var(--line);
+  }
+
+  &__link {
+    @include below($bp-mobile) {
+      display: block;
+      padding: 13px 0;
+      font-size: 17px;
+    }
+  }
+
+  &__contacts {
+    @include below($bp-mobile) {
+      border-top: 1px solid var(--line);
+      margin-top: 10px;
+      padding-top: 8px;
+    }
+  }
+
+  &__contact {
+    @include below($bp-mobile) {
+      padding: 8px 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+  }
+}

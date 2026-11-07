@@ -16,9 +16,25 @@ export const Broadcasts: CollectionConfig = {
     read: ({ req }) => Boolean(req.user),
     create: ({ req }) => Boolean(req.user),
     update: ({ req }) => (req.user ? { status: { equals: 'draft' } } : false),
-    delete: ({ req }) => (req.user ? { status: { equals: 'draft' } } : false),
+    delete: ({ req }) => Boolean(req.user),
   },
   hooks: {
+    beforeDelete: [
+      /** Reject active broadcasts explicitly instead of silently filtering bulk deletion to zero. */
+      async ({ id, req }) => {
+        const broadcast = await req.payload.findByID({
+          collection: 'broadcasts',
+          id,
+          depth: 0,
+          req,
+        });
+        if (!['draft', 'completed', 'cancelled'].includes(broadcast.status))
+          throw new APIError(
+            'Нельзя удалить активную рассылку. Остановите расписание или дождитесь завершения отправки.',
+            409,
+          );
+      },
+    ],
     beforeChange: [
       ({ data, originalDoc, req }) => {
         if (req.context.broadcastInternal) {

@@ -4,6 +4,19 @@
 // request fails.
 const CONTACTS_ENDPOINT = 'api/contacts.php';
 const LEGAL_ENDPOINT = 'api/legal.php?doc=';
+// Saved HTML can predate the BEM stylesheet. Keep this mapping aligned with both Markdown renderers.
+/** @type {Record<string, string>} */
+const LEGAL_CLASSES = {
+  h1: 'legal__title',
+  h2: 'legal__heading',
+  p: 'legal__text',
+  ul: 'legal__list',
+  ol: 'legal__list',
+  li: 'legal__item',
+  table: 'legal__table',
+  td: 'legal__cell',
+  a: 'text-link',
+};
 
 /**
  * Writes one contact into every link marked with its data-contact name.
@@ -12,7 +25,10 @@ const LEGAL_ENDPOINT = 'api/legal.php?doc=';
  * @param {string} text Link text.
  */
 function showContact(name, href, text) {
-  document.querySelectorAll('[data-contact="' + name + '"]').forEach((link) => {
+  const links = /** @type {NodeListOf<HTMLAnchorElement>} */ (
+    document.querySelectorAll('[data-contact="' + name + '"]')
+  );
+  links.forEach((link) => {
     link.href = href;
     link.textContent = text;
   });
@@ -23,8 +39,9 @@ function showContact(name, href, text) {
  * @param {Record<string, string>} legal Details by name.
  */
 function showLegal(legal) {
-  document.querySelectorAll('[data-var]').forEach((element) => {
-    const value = legal[element.dataset.var];
+  const elements = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-var]'));
+  elements.forEach((element) => {
+    const value = legal[element.dataset.var ?? ''];
     if (typeof value === 'string' && value) element.textContent = value;
   });
 }
@@ -43,15 +60,21 @@ async function refreshContacts() {
 
 /** Replaces the text of the offer or the policy with the one the panel serves. */
 async function refreshLegalText() {
-  const main = document.querySelector('main[data-legal]');
+  const main = /** @type {HTMLElement | null} */ (document.querySelector('main[data-legal]'));
   if (!main) return;
-  const response = await fetch(LEGAL_ENDPOINT + encodeURIComponent(main.dataset.legal), {
+  const response = await fetch(LEGAL_ENDPOINT + encodeURIComponent(main.dataset.legal ?? ''), {
     cache: 'no-store',
   });
   if (!response.ok) return;
   const text = await response.text();
   // The text is the owners' own HTML from the panel; the server drops one with scripts.
   if (text.trim()) main.innerHTML = text;
+  // Preserve explicit classes while styling older saved documents without changing their content.
+  for (const tagName of Object.keys(LEGAL_CLASSES)) {
+    for (const element of main.querySelectorAll(`${tagName}:not([class])`)) {
+      element.classList.add(LEGAL_CLASSES[tagName]);
+    }
+  }
   // A link to a part of the text (#consent) was not there when the browser looked for it.
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 }

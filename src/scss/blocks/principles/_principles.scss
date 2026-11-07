@@ -1,0 +1,68 @@
+@use '../../abstracts' as *;
+
+.principles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+
+  &__item {
+    border-top: 1px solid var(--ink);
+    padding-top: 16px;
+
+    @include below($bp-mobile) {
+      position: relative;
+      padding-left: 38px;
+      padding-top: 18px;
+    }
+  }
+
+  &__num {
+    font-size: 11px;
+    color: var(--red);
+    font-family: $font-mono;
+
+    @include below($bp-mobile) {
+      position: absolute;
+      top: 20px;
+      left: 0;
+    }
+  }
+
+  &__title {
+    font-size: 20px;
+    line-height: 1.25;
+    letter-spacing: -0.6px;
+    margin: 24px 0 15px;
+
+    @include below($bp-mobile) {
+      margin: 0 0 12px;
+      font-size: 21px;
+    }
+  }
+
+  &__text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+
+    @include below($bp-mobile) {
+      font-size: 14px;
+    }
+  }
+
+  @include below($bp-tablet) {
+    gap: 20px;
+  }
+
+  @include below($bp-mobile) {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  &__break {
+    @include below($bp-mobile) {
+      display: none;
+    }
+  }
+}

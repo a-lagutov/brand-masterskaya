@@ -14,7 +14,10 @@ src/                исходники сайта
   privacy.html      политика обработки персональных данных и согласие
   spasibo.html      страница после оплаты
   api/              PHP: создание платежа, проверка промокода, вебхук Точки, статус заказа
-  css/style.css
+  scss/main.scss    точка входа стилей: порядок подключения = порядок каскада
+  scss/abstracts/   брейкпоинты, переменные и миксин below()
+  scss/base/        шрифты, reset, :root с цветами
+  scss/blocks/      папка на BEM-блок (blocks/hero/_hero.scss): .block { &__element, &--modifier }
   js/app.js         лендинг и форма заявки
   js/thanks.js      страница после оплаты
   assets/images/    фотографии (без уменьшения) и og.jpg — превью ссылки в соцсетях

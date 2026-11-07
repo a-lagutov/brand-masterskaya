@@ -1,0 +1,10 @@
+@use '../../abstracts' as *;
+
+/* Thank-you page after payment. */
+.thanks {
+  min-height: 50vh;
+
+  &__button {
+    margin-top: 16px;
+  }
+}

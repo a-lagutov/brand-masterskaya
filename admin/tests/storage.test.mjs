@@ -205,6 +205,33 @@ test('production migrations support campaigns and session fields remain private 
       data: { title: 'Тест', message: 'Привет, {name}', members: [member.id], orders: [order.id] },
     });
     assert.equal(campaign.status, 'draft');
+    // Exercise the same bulk delete and access checks used by the admin list.
+    for (const status of ['draft', 'completed', 'cancelled']) {
+      const removable = await payload.create({
+        collection: 'broadcasts',
+        data: { title: `Delete ${status}`, message: 'Test' },
+      });
+      if (status !== 'draft')
+        await payload.update({
+          collection: 'broadcasts',
+          id: removable.id,
+          data: { status },
+          context: { broadcastInternal: true },
+        });
+      const deleted = await payload.delete({
+        collection: 'broadcasts',
+        where: { id: { equals: removable.id } },
+        overrideAccess: false,
+        user,
+      });
+      assert.equal(deleted.docs.length, 1);
+      assert.equal(deleted.errors.length, 0);
+      assert.equal(
+        (await payload.count({ collection: 'broadcasts', where: { id: { equals: removable.id } } }))
+          .totalDocs,
+        0,
+      );
+    }
     const saved = await payload.update({
       collection: 'broadcasts',
       id: campaign.id,
@@ -215,6 +242,42 @@ test('production migrations support campaigns and session fields remain private 
       context: { broadcastInternal: true },
     });
     assert.equal(saved.status, 'queued');
+    for (const status of ['queued', 'sending', 'scheduled']) {
+      await payload.update({
+        collection: 'broadcasts',
+        id: campaign.id,
+        data: { status },
+        context: { broadcastInternal: true },
+      });
+      const blocked = await payload.delete({
+        collection: 'broadcasts',
+        where: { id: { equals: campaign.id } },
+        overrideAccess: false,
+        user,
+      });
+      assert.equal(blocked.docs.length, 0);
+      assert.equal(blocked.errors.length, 1);
+      assert.match(blocked.errors[0].message, /Нельзя удалить активную рассылку/);
+      await assert.rejects(
+        () =>
+          payload.delete({
+            collection: 'broadcasts',
+            id: campaign.id,
+            overrideAccess: false,
+            user,
+          }),
+        /Нельзя удалить активную рассылку/,
+      );
+      assert.equal(
+        (await payload.findByID({ collection: 'broadcasts', id: campaign.id })).status,
+        status,
+      );
+    }
+    await assert.rejects(
+      () => payload.delete({ collection: 'broadcasts', id: campaign.id, overrideAccess: false }),
+      /not allowed|Forbidden/i,
+    );
+
     await assert.rejects(
       () =>
         payload.update({ collection: 'broadcasts', id: campaign.id, data: { title: 'Подмена' } }),
