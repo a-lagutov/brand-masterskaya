@@ -49,9 +49,10 @@
     "node": ">=22"
   },
   "overrides": {
-    "undici": "^7.29.1",
+    "undici": "^7.30.2",
     "@esbuild-kit/core-utils": {
       "esbuild": "^0.25.0"
-    }
+    },
+    "happy-dom": "21.0.4"
   }
 }

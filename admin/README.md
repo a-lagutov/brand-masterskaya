@@ -27,6 +27,10 @@ Payload CMS 3 (Next.js) и бот на [grammY](https://grammy.dev) в одно�
 
 Node.js 22.
 
+Исправления безопасности транзитивных зависимостей закреплены в `overrides`:
+`undici` — не ниже 7.30.2, `happy-dom` — 21.0.4. Все пакеты Payload остаются
+на одной версии; обновление отдельных пакетов Payload требует отдельной проверки совместимости.
+
 ```bash
 cp .env.example .env
 npm install
