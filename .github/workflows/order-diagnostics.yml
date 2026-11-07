@@ -1,0 +1,52 @@
+name: Order HTTP diagnostics
+
+on:
+  push:
+    branches: ['fix/bulk-preview-response']
+    paths: ['.github/workflows/order-diagnostics.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read-only anonymous preview probes
+        run: |
+          python3 - <<'PYTHON'
+          """Probe only anonymous preview endpoints with synthetic CSV; print transport metadata only."""
+          import hashlib
+          import json
+          import urllib.error
+          import urllib.request
+
+          header = 'Имя;Email;Телефон;Telegram;Тарифы;Сумма;Оплачен'
+          source = header + '\r\n' + '\r\n'.join(
+              'Example{0};;;@example{0};watch;;07.11.2026'.format(index)
+              for index in range(1, 14)
+          )
+          for host in ['admin.brandmasterskaya.ru', 'admin.test.brandmasterskaya.ru']:
+              for label, content in [('minimal', {}), ('csv', {'source': '\ufeff' + source, 'products': []})]:
+                  request = urllib.request.Request(
+                      'https://' + host + '/api/orders/bulk-preview',
+                      data=json.dumps(content, ensure_ascii=False).encode('utf-8'),
+                      headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
+                      method='POST',
+                  )
+                  try:
+                      response = urllib.request.urlopen(request, timeout=30)
+                  except urllib.error.HTTPError as error:
+                      response = error
+                  data = response.read()
+                  try:
+                      json.loads(data)
+                      valid_json = True
+                  except (ValueError, UnicodeDecodeError):
+                      valid_json = False
+                  print(json.dumps({
+                      'host': host, 'case': label, 'status': response.code,
+                      'content_type': response.headers.get('Content-Type'),
+                      'json': valid_json, 'response_sha256': hashlib.sha256(data).hexdigest(),
+                  }))
+          PYTHON
