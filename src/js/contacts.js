@@ -4,6 +4,18 @@
 // request fails.
 const CONTACTS_ENDPOINT = 'api/contacts.php';
 const LEGAL_ENDPOINT = 'api/legal.php?doc=';
+// Saved HTML can predate the BEM stylesheet. Keep this mapping aligned with both Markdown renderers.
+const LEGAL_CLASSES = {
+  h1: 'legal__title',
+  h2: 'legal__heading',
+  p: 'legal__text',
+  ul: 'legal__list',
+  ol: 'legal__list',
+  li: 'legal__item',
+  table: 'legal__table',
+  td: 'legal__cell',
+  a: 'text-link',
+};
 
 /**
  * Writes one contact into every link marked with its data-contact name.
@@ -56,6 +68,12 @@ async function refreshLegalText() {
   const text = await response.text();
   // The text is the owners' own HTML from the panel; the server drops one with scripts.
   if (text.trim()) main.innerHTML = text;
+  // Preserve explicit classes while styling older saved documents without changing their content.
+  for (const [tagName, className] of Object.entries(LEGAL_CLASSES)) {
+    for (const element of main.querySelectorAll(`${tagName}:not([class])`)) {
+      element.classList.add(className);
+    }
+  }
   // A link to a part of the text (#consent) was not there when the browser looked for it.
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 }
