@@ -78,7 +78,11 @@ async function sendChatButtons(payload: Payload, member: Member, text: string): 
   const texts = await loadTexts(payload);
   const buttons = await inviteButtons(payload, member);
   if (!buttons.length) {
-    await api.sendMessage(member.telegramId, fillText(texts.chatsLater, texts), MESSAGE_FORMAT);
+    await api.sendMessage(
+      member.telegramId,
+      fillText(texts.chatsLater, texts, { name: member.displayName ?? '' }),
+      MESSAGE_FORMAT,
+    );
     return;
   }
   const keyboard = new InlineKeyboard();

@@ -1,3 +1,4 @@
+import { profileBotLink } from '../bot/botLinks';
 import type { CollectionAfterChangeHook, CollectionConfig } from 'payload';
 
 import { removeFromChat } from '../bot/access';
@@ -35,6 +36,25 @@ export const Members: CollectionConfig = {
     afterChange: [kickFromBlockedChats],
   },
   fields: [
+    {
+      name: 'botLink',
+      type: 'text',
+      virtual: true,
+      label: 'Персональная ссылка на бота',
+      admin: {
+        readOnly: true,
+        description:
+          'Скопируйте ссылку и отправьте пользователю. Ссылка с номером заказа привязывает оплаченный заказ при первом запуске.',
+      },
+      hooks: { afterRead: [profileBotLink] },
+    },
+    {
+      name: 'botStarted',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Запускал бота',
+      admin: { readOnly: true },
+    },
     {
       name: 'displayName',
       type: 'text',

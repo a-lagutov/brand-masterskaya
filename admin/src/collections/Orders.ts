@@ -1,3 +1,5 @@
+import { profileBotLink } from '../bot/botLinks';
+import { bulkOrderEndpoints } from '../bot/bulkOrders';
 import { randomBytes } from 'node:crypto';
 
 import {
@@ -5,12 +7,19 @@ import {
   type CollectionBeforeChangeHook,
   type CollectionBeforeDeleteHook,
   type CollectionConfig,
+  type FieldAccess,
 } from 'payload';
 
 import { relationIds } from '../bot/relations';
 
 /** Fields set once, when the order appears; the site's sync still fills the payment in. */
 const setOnCreateOnly = { update: () => false };
+
+/** Site imports carry a private sync snapshot; manual orders remain editable after creation. */
+const editManualFinancials: FieldAccess = ({ doc }) => !doc?.siteCopy;
+
+/** The sync uses the trusted Local API and can still update imported financial fields. */
+const manualFinancialAccess = { update: editManualFinancials };
 
 /**
  * Stamps the time the order was bound to a Telegram account, or cleared.
@@ -41,7 +50,10 @@ export const Orders: CollectionConfig = {
   labels: { singular: 'Заказ', plural: 'Заказы' },
   admin: {
     components: {
-      beforeList: ['/components/HideTrashDelete#HideTrashDelete'],
+      beforeList: [
+        '/components/HideTrashDelete#HideTrashDelete',
+        '/components/BulkOrders#BulkOrders',
+      ],
       edit: { beforeDocumentControls: ['/components/HideTrashDelete#HideTrashDelete'] },
     },
     useAsTitle: 'name',
@@ -53,6 +65,7 @@ export const Orders: CollectionConfig = {
       'привязать к другому аккаунту Telegram, очистите поле «Аккаунт Telegram». Удалённые ' +
       'заказы лежат в корзине и не дают доступа в чаты; из корзины их можно только восстановить.',
   },
+  endpoints: [...bulkOrderEndpoints],
   defaultSort: '-createdOnSite',
   // Deleted orders go to the trash and can only be restored from there.
   trash: true,
@@ -63,6 +76,18 @@ export const Orders: CollectionConfig = {
     beforeDelete: [refuseDelete],
   },
   fields: [
+    {
+      name: 'botLink',
+      type: 'text',
+      virtual: true,
+      label: 'Персональная ссылка на бота',
+      admin: {
+        readOnly: true,
+        description:
+          'Ссылка появится после сохранения заказа. Отправьте её пользователю: оплаченный заказ привяжется при первом запуске бота.',
+      },
+      hooks: { afterRead: [profileBotLink] },
+    },
     { name: 'name', type: 'text', label: 'Имя' },
     {
       type: 'row',
@@ -85,10 +110,10 @@ export const Orders: CollectionConfig = {
       type: 'array',
       label: 'Позиции чека',
       labels: { singular: 'Позиция', plural: 'Позиции' },
-      // What the buyer paid for, as in the receipt: never edited, not tied to current prices.
-      access: setOnCreateOnly,
+      // Site receipt values remain protected; manually entered receipts can be corrected.
+      access: manualFinancialAccess,
       admin: {
-        readOnly: true,
+        description: 'Позиции ручного заказа можно менять после сохранения.',
         components: { RowLabel: '/components/OrderItemLabel#OrderItemLabel' },
       },
       fields: [
@@ -108,8 +133,8 @@ export const Orders: CollectionConfig = {
           name: 'total',
           type: 'number',
           label: 'Сумма, ₽',
-          access: setOnCreateOnly,
-          admin: { readOnly: true },
+          access: manualFinancialAccess,
+          admin: { description: 'Сумму ручного заказа можно менять в любой момент.' },
         },
         {
           name: 'promoCode',
@@ -135,10 +160,11 @@ export const Orders: CollectionConfig = {
           name: 'paidAt',
           type: 'date',
           label: 'Оплачен',
-          access: setOnCreateOnly,
+          access: manualFinancialAccess,
           admin: {
             date: { pickerAppearance: 'dayAndTime' },
-            description: 'Пусто — оплата не прошла. Задаётся только при создании.',
+            description:
+              'Пусто — не оплачен. У ручного заказа дату можно менять или очищать в любой момент.',
           },
         },
       ],
@@ -175,6 +201,8 @@ export const Orders: CollectionConfig = {
       name: 'siteCopy',
       type: 'json',
       label: 'Последняя копия с сайта',
+      // The browser cannot remove the import marker to unlock a site receipt.
+      access: { create: () => false, update: () => false },
       admin: { hidden: true },
     },
   ],

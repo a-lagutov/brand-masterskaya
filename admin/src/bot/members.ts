@@ -10,9 +10,14 @@ type TelegramUser = { id: number; username?: string; first_name?: string; last_n
  * refreshed when they change.
  * @param payload
  * @param user Telegram user; only the id is known for accounts bound by the earlier PHP bot.
+ * @param botStarted Whether this update proves the user has opened the private bot chat.
  * @returns The member.
  */
-export async function findOrCreateMember(payload: Payload, user: TelegramUser): Promise<Member> {
+export async function findOrCreateMember(
+  payload: Payload,
+  user: TelegramUser,
+  botStarted = false,
+): Promise<Member> {
   const telegramId = String(user.id);
   const existing = await payload.find({
     collection: 'members',
@@ -32,6 +37,7 @@ export async function findOrCreateMember(payload: Payload, user: TelegramUser): 
       collection: 'members',
       data: {
         telegramId,
+        botStarted,
         displayName: profile.displayName ?? telegramId,
         username: profile.username ?? '',
       },
@@ -41,8 +47,13 @@ export async function findOrCreateMember(payload: Payload, user: TelegramUser): 
   const changed =
     profile.displayName !== undefined &&
     (member.displayName !== profile.displayName || member.username !== profile.username);
-  return changed
-    ? payload.update({ collection: 'members', id: member.id, data: profile, depth: 0 })
+  return changed || (botStarted && !member.botStarted)
+    ? payload.update({
+        collection: 'members',
+        id: member.id,
+        data: { ...profile, ...(botStarted ? { botStarted: true } : {}) },
+        depth: 0,
+      })
     : member;
 }
 

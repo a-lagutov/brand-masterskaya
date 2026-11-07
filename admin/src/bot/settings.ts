@@ -5,6 +5,8 @@
 export const settings = {
   /** Bot token from @BotFather; without it the bot stays off and the panel still works. */
   botToken: process.env.TELEGRAM_BOT_TOKEN ?? '',
+  /** Explicit bot username for link generation, including local previews without a token. */
+  botUsername: process.env.TELEGRAM_BOT_USERNAME ?? '',
   /**
    * Only the launcher on the hosting sets RUN_BOT=1: a second copy polling the same bot
    * (a local dev server, `next build`) would steal its updates.

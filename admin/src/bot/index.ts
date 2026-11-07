@@ -12,6 +12,7 @@ import type { Payload } from 'payload';
 import { Bot, type Context } from 'grammy';
 
 import { allowedChats } from './access';
+import { dispatchBroadcasts } from './broadcasts';
 import { refreshCommandMenu } from './commands';
 import { findOrCreateMember } from './members';
 import { loadOrder, syncOrders, syncProducts } from './orders';
@@ -197,7 +198,7 @@ function createBot(payload: Payload): Bot {
   const privateChat = bot.chatType('private');
 
   privateChat.command('start', async (context) => {
-    const member = await findOrCreateMember(payload, context.from);
+    const member = await findOrCreateMember(payload, context.from, true);
     const orderId = context.match.trim();
     await (orderId
       ? claimOrder(context, payload, member, orderId)
@@ -205,7 +206,7 @@ function createBot(payload: Payload): Bot {
   });
 
   privateChat.on('message:text', async (context) => {
-    const member = await findOrCreateMember(payload, context.from);
+    const member = await findOrCreateMember(payload, context.from, true);
     const command = context.message.text.match(/^\/([a-z0-9_]+)(?:@\w+)?(?:\s|$)/)?.[1];
     const scenario = command
       ? (
@@ -228,7 +229,7 @@ function createBot(payload: Payload): Bot {
     if (!data.startsWith(SCENARIO_CALLBACK_PREFIX)) {
       return;
     }
-    const member = await findOrCreateMember(payload, context.from);
+    const member = await findOrCreateMember(payload, context.from, true);
     const scenarioId = Number(data.slice(SCENARIO_CALLBACK_PREFIX.length));
     const scenario = await payload
       .findByID({ collection: 'scenarios', id: scenarioId, depth: 0 })
@@ -299,6 +300,9 @@ export function startBackgroundWork(payload: Payload): void {
   }
   processState.brandMasterskayaBotStarted = true;
   payload.logger.info('background work: starting order sync and bot');
+
+  void dispatchBroadcasts(payload);
+  setInterval(() => void dispatchBroadcasts(payload), 5000);
 
   void syncFromSite(payload);
   setInterval(() => void syncFromSite(payload), ORDER_SYNC_INTERVAL_MS);

@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload';
+import { validateBotText } from '../bot/texts';
 
 const PLACEHOLDERS =
   'Подстановки: {name} — имя, {site} — адрес сайта, {contact} — телефон, Telegram и email из «Настроек сайта».' +
@@ -91,3 +92,16 @@ export const BotTexts: GlobalConfig = {
     },
   ],
 };
+
+// Keep all automatic replies on the shared editor while retaining their existing field names.
+for (const field of BotTexts.fields) {
+  if (field.type !== 'textarea') continue;
+  field.validate = (value) => validateBotText(value, field.name === 'paid');
+  field.admin = {
+    ...field.admin,
+    components: {
+      ...field.admin?.components,
+      Field: '/components/BroadcastMessageEditor#BotTextEditor',
+    },
+  };
+}

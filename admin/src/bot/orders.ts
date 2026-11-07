@@ -164,7 +164,7 @@ async function upsertOrder(payload: Payload, siteOrder: SiteOrder): Promise<Orde
   }
   // Orders bound by the earlier PHP bot keep their account.
   const member = siteOrder.telegramUserId
-    ? await findOrCreateMember(payload, { id: siteOrder.telegramUserId })
+    ? await findOrCreateMember(payload, { id: siteOrder.telegramUserId }, true)
     : null;
   return payload.create({
     collection: 'orders',
