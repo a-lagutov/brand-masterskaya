@@ -112,6 +112,8 @@ test('packaging uses bounded shell-free commands and separate encrypted segment 
     assert.equal(calls[0][1][calls[0][1].indexOf('-i') + 1], '/private/source;echo.mp4');
     assert.equal(calls[0][2].timeout, 3600000);
     assert.ok(calls[1][1].includes('--enable_raw_key_encryption'));
+    assert.ok(calls[1][1].includes('--generate_static_live_mpd'));
+    assert.equal(calls[1][1][calls[1][1].indexOf('--hls_playlist_type') + 1], 'VOD');
     assert.ok(calls[1][1].includes('manifest.mpd'));
     assert.ok(calls[1][1].includes('master.m3u8'));
   } finally {

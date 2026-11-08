@@ -279,6 +279,10 @@ jobs:
           ssh -i ~/.ssh/deploy_key "$SERVER" "tail -30 private/$ADMIN_SITE/app.log"
           exit 1
 
+      - name: Repair completed test VOD manifests
+        if: github.ref != 'refs/heads/main'
+        run: ssh -i ~/.ssh/deploy_key "$SERVER" "python3 - 'private/$ADMIN_SITE/lectures/streams'" < deploy/repair-vod-manifests.py
+
       - name: Verify cabinet and landing page
         run: |
           curl --fail --silent --show-error --max-time 60 "https://$SITE/cabinet/" -o cabinet-smoke.html

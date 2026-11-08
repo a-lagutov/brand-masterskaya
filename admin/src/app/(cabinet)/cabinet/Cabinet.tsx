@@ -112,7 +112,7 @@ function LecturePlayer({ lecture }: { lecture: LectureItem }) {
             'Не удалось воспроизвести видео. Проверьте соединение и откройте лекцию заново.',
           );
         });
-        await player.load(grant.manifest);
+        await player.load(grant.manifest, 0);
         if (cancelled) return;
         setLoading(false);
         renewal = setInterval(() => {
