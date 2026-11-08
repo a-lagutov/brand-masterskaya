@@ -12,6 +12,7 @@ import * as migration_20261023_142126_legal_documents from './20261023_142126_le
 import * as migration_20261107_035633_telegram_broadcasts from './20261107_035633_telegram_broadcasts';
 import * as migration_20261107_063906_broadcast_schedules from './20261107_063906_broadcast_schedules';
 import * as migration_20261108_033144_lecture_cabinet from './20261108_033144_lecture_cabinet';
+import * as migration_20261108_051734_lecture_products from './20261108_051734_lecture_products';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20261108_033144_lecture_cabinet.up,
     down: migration_20261108_033144_lecture_cabinet.down,
-    name: '20261108_033144_lecture_cabinet'
+    name: '20261108_033144_lecture_cabinet',
+  },
+  {
+    up: migration_20261108_051734_lecture_products.up,
+    down: migration_20261108_051734_lecture_products.down,
+    name: '20261108_051734_lecture_products'
   },
 ];

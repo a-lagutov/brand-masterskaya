@@ -148,7 +148,7 @@ function LecturePlayer({ lecture, telegramId }: { lecture: LectureItem; telegram
   );
 }
 
-/** Presents recordings using the landing page's paper palette, Helvetica and red graphic circle. */
+/** Presents the login screen and authorized recordings in the landing page's visual style. */
 export function Cabinet({
   member,
   lectures,
@@ -167,13 +167,13 @@ export function Cabinet({
       .includes(search.toLocaleLowerCase('ru')),
   );
   return (
-    <main className="cabinet">
+    <main className={`cabinet${member ? '' : ' cabinet--guest'}`}>
       <header className="cabinet__header">
-        <a className="cabinet__brand" href="https://brandmasterskaya.ru">
+        <a className="cabinet__brand" href="/">
           Мастерская
           <br />
           бренд-стратегии
-          <span className="cabinet__brand-dot" />
+          {member && <span className="cabinet__brand-dot" />}
         </a>
         <nav aria-label="Личный кабинет">
           {member ? (
@@ -184,18 +184,15 @@ export function Cabinet({
               </form>
             </>
           ) : (
-            <span>Личный кабинет</span>
+            <a className="cabinet__landing-link" href="/#pricing">
+              В мастерскую <span aria-hidden="true">↗</span>
+            </a>
           )}
         </nav>
       </header>
       {!member ? (
-        <section className="cabinet__welcome">
+        <section className="cabinet__welcome" aria-label="Вход в личный кабинет">
           <div>
-            <p className="cabinet__caption">Продолжаем работать с брендом</p>
-            <h1>
-              Мастерская
-              <br />в записи
-            </h1>
             <p className="cabinet__intro">
               Лекции вашей программы — в одном месте.
               <br />
@@ -210,14 +207,6 @@ export function Cabinet({
                 Кабинет готовится к открытию. Организаторы сообщат, когда можно будет войти.
               </p>
             )}
-          </div>
-          <div className="cabinet__art" aria-hidden="true">
-            <span>
-              Бренд начинается
-              <br />с ясной мысли.
-            </span>
-            <div className="cabinet__disc" />
-            <p>Смотреть. Думать. Применять.</p>
           </div>
         </section>
       ) : (
@@ -265,7 +254,8 @@ export function Cabinet({
               <div className="cabinet__empty">
                 <h3>Здесь появятся ваши лекции</h3>
                 <p>
-                  Записи станут доступны после публикации и добавления вас в учебную группу.
+                  Записи станут доступны после публикации, по оплаченным факультативам и тарифам или
+                  учебной группе.
                   <br />
                   Если доступ уже должен быть открыт, напишите организаторам в боте.
                 </p>

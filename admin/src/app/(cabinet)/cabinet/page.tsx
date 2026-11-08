@@ -1,7 +1,7 @@
 import { getPayload } from 'payload';
 import config from '../../../payload.config';
 import { cabinetSession } from '../../../cabinet/http';
-import { lectureFilter, memberGroupIds } from '../../../cabinet/access';
+import { lectureFilter, memberGroupIds, memberProductIds } from '../../../cabinet/access';
 import { Cabinet } from './Cabinet';
 
 export const dynamic = 'force-dynamic';
@@ -14,13 +14,19 @@ export default async function CabinetPage() {
     payload && session
       ? await payload.findByID({ collection: 'members', id: session.memberId!, depth: 0 })
       : null;
-  const groups = payload && member ? await memberGroupIds(payload, member.id) : [];
+  const [groups, products] =
+    payload && member
+      ? await Promise.all([
+          memberGroupIds(payload, member.id),
+          memberProductIds(payload, member.id),
+        ])
+      : [[], []];
   const lectures =
-    payload && groups.length
+    payload && (groups.length || products.length)
       ? (
           await payload.find({
             collection: 'lectures',
-            where: lectureFilter(groups),
+            where: lectureFilter(groups, products),
             sort: 'sortOrder',
             depth: 0,
             pagination: false,

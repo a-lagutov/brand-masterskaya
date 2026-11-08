@@ -476,9 +476,13 @@ export interface Lecture {
   description?: string | null;
   sortOrder?: number | null;
   /**
-   * Без групп лекция недоступна всем участникам.
+   * Доступ участникам любой выбранной группы или покупателям выбранных тарифов и факультативов.
    */
   groups?: (number | LearningGroup)[] | null;
+  /**
+   * Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без групп и покупок лекция недоступна.
+   */
+  products?: (number | Product)[] | null;
   published?: boolean | null;
   /**
    * Обработчик запускается отдельно. При ошибке загрузите исправленный MP4 заново.
@@ -826,6 +830,7 @@ export interface LecturesSelect<T extends boolean = true> {
   description?: T;
   sortOrder?: T;
   groups?: T;
+  products?: T;
   published?: T;
   processingStatus?: T;
   processingError?: T;

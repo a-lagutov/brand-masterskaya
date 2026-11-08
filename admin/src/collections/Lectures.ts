@@ -11,7 +11,7 @@ export const Lectures: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     group: 'Личный кабинет',
-    defaultColumns: ['title', 'groups', 'published', 'processingStatus'],
+    defaultColumns: ['title', 'groups', 'products', 'published', 'processingStatus'],
   },
   access: { read: cabinetAdmin, create: cabinetAdmin, update: cabinetAdmin, delete: cabinetAdmin },
   upload: {
@@ -45,7 +45,21 @@ export const Lectures: CollectionConfig = {
       relationTo: 'learning-groups',
       hasMany: true,
       label: 'Доступ для групп',
-      admin: { description: 'Без групп лекция недоступна всем участникам.' },
+      admin: {
+        description:
+          'Доступ участникам любой выбранной группы или покупателям выбранных тарифов и факультативов.',
+      },
+    },
+    {
+      name: 'products',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+      label: 'Доступ по тарифам и факультативам',
+      admin: {
+        description:
+          'Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без групп и покупок лекция недоступна.',
+      },
     },
     { name: 'published', type: 'checkbox', label: 'Опубликована', defaultValue: false },
     {

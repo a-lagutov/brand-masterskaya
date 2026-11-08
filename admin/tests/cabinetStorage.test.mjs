@@ -128,7 +128,95 @@ test('production migrations isolate lecture metadata, enforce group revocation a
       id: group.id,
       data: { members: [member.id] },
     });
-    await payload.update({ collection: 'lectures', id: lecture.id, data: { published: false } });
+    // Product access requires this member's paid, active order for the selected elective.
+    const elective = await payload.create({
+      collection: 'products',
+      data: { key: 'test-elective', title: 'Факультатив', kind: 'elective' },
+    });
+    const otherElective = await payload.create({
+      collection: 'products',
+      data: { key: 'test-other', title: 'Другой факультатив', kind: 'elective' },
+    });
+    await payload.update({
+      collection: 'lectures',
+      id: lecture.id,
+      data: { groups: [], products: [elective.id] },
+    });
+    const electiveOrder = await payload.create({
+      collection: 'orders',
+      data: { name: 'Факультатив', member: member.id, products: [elective.id], total: 100 },
+    });
+    await payload.create({
+      collection: 'orders',
+      data: {
+        name: 'Другой факультатив',
+        member: member.id,
+        products: [otherElective.id],
+        total: 100,
+        paidAt: '2026-11-08T00:00:00.000Z',
+      },
+    });
+    await payload.create({
+      collection: 'orders',
+      data: {
+        name: 'Чужой заказ',
+        member: outsider.id,
+        products: [elective.id],
+        total: 100,
+        paidAt: '2026-11-08T00:00:00.000Z',
+      },
+    });
+    assert.equal(await authorizedLecture(payload, member.id, lecture.id), null);
+    await payload.update({
+      collection: 'orders',
+      id: electiveOrder.id,
+      data: { paidAt: '2026-11-08T00:00:00.000Z' },
+    });
+    assert.equal((await playbackLecture(payload, session, lecture.id, token)).id, lecture.id);
+    const { memberProductIds, lectureFilter } = await import('../src/cabinet/access.ts');
+    const productIds = await memberProductIds(payload, member.id);
+    const catalogue = await payload.find({
+      collection: 'lectures',
+      where: lectureFilter([], productIds),
+      depth: 0,
+    });
+    assert.deepEqual(
+      catalogue.docs.map((document) => document.id),
+      [lecture.id],
+    );
+    await payload.update({
+      collection: 'orders',
+      id: electiveOrder.id,
+      data: { member: outsider.id },
+    });
+    assert.equal(await playbackLecture(payload, session, lecture.id, token), null);
+    await payload.update({
+      collection: 'orders',
+      id: electiveOrder.id,
+      data: { member: member.id },
+    });
+    assert.equal((await playbackLecture(payload, session, lecture.id, token)).id, lecture.id);
+    await payload.update({ collection: 'orders', id: electiveOrder.id, data: { paidAt: null } });
+    assert.equal(await playbackLecture(payload, session, lecture.id, token), null);
+    await payload.update({
+      collection: 'orders',
+      id: electiveOrder.id,
+      data: { paidAt: '2026-11-08T00:00:00.000Z', deletedAt: '2026-11-08T01:00:00.000Z' },
+    });
+    assert.equal(await playbackLecture(payload, session, lecture.id, token), null);
+    await payload.update({
+      collection: 'lectures',
+      id: lecture.id,
+      data: { groups: [group.id], products: [] },
+    });
+    assert.equal((await playbackLecture(payload, session, lecture.id, token)).id, lecture.id);
+    await payload.update({ collection: 'lectures', id: lecture.id, data: { groups: [] } });
+    assert.equal(await authorizedLecture(payload, member.id, lecture.id), null);
+    await payload.update({
+      collection: 'lectures',
+      id: lecture.id,
+      data: { groups: [group.id], published: false },
+    });
     assert.equal(await playbackLecture(payload, session, lecture.id, token), null);
     await payload.create({
       collection: 'payload-locked-documents',
@@ -188,9 +276,26 @@ fileSystem.writeFileSync('manifest.mpd', '<MPD/>');
       'pending',
       'old job must never publish a replacement upload',
     );
+    const productMigration = await import('../src/migrations/20261108_051734_lecture_products.ts');
+    await payload.update({
+      collection: 'lectures',
+      id: lecture.id,
+      data: { products: [elective.id] },
+    });
+    await productMigration.down({ db: payload.db.drizzle, payload, req: {} });
+    const { sql } = await import('@payloadcms/db-sqlite');
+    const retainedGroups = await payload.db.drizzle.all(
+      sql`SELECT learning_groups_id FROM lectures_rels WHERE parent_id = ${lecture.id} AND path = 'groups'`,
+    );
+    assert.equal(retainedGroups[0].learning_groups_id, group.id);
+    const removedProducts = await payload.db.drizzle.all(
+      sql`SELECT id FROM lectures_rels WHERE path = 'products'`,
+    );
+    assert.equal(removedProducts.length, 0);
     const migration = await import('../src/migrations/20261108_033144_lecture_cabinet.ts');
     await migration.down({ db: payload.db.drizzle, payload, req: {} });
     await migration.up({ db: payload.db.drizzle, payload, req: {} });
+    await productMigration.up({ db: payload.db.drizzle, payload, req: {} });
     assert.equal(
       (await payload.findByID({ collection: 'orders', id: preservedOrder.id })).total,
       100,
