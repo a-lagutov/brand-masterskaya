@@ -180,6 +180,16 @@ jobs:
             fi
             ~/apps/node/bin/node -v"
 
+      # Install and exercise private tools before allowing the test queue to consume uploads.
+      - name: Install test media tools
+        if: github.ref != 'refs/heads/main' && vars.TEST_RUN_LECTURE_WORKER != '0'
+        run: |
+          bash deploy/prepare-media-tools.sh media-tools
+          ssh -i ~/.ssh/deploy_key "$SERVER" "mkdir -p apps/$ADMIN_SITE/media && chmod 700 apps/$ADMIN_SITE/media"
+          rsync -az -e "ssh -i ~/.ssh/deploy_key" media-tools/ "$SERVER:apps/$ADMIN_SITE/media/"
+          scp -i ~/.ssh/deploy_key tests/fixtures/lecture.mp4 "$SERVER:apps/$ADMIN_SITE/media/fixture.mp4"
+          ssh -i ~/.ssh/deploy_key "$SERVER" "python3 - '$ADMIN_SITE'" < deploy/verify-media-tools.py
+
       # Secrets and paths for the app, outside the web root; read by passenger_wsgi.py.
       - name: Write app settings
         env:
@@ -191,7 +201,7 @@ jobs:
           CABINET_SECRET: ${{ github.ref == 'refs/heads/main' && secrets.CABINET_SECRET || github.ref != 'refs/heads/main' && secrets.TEST_CABINET_SECRET || '' }}
           TELEGRAM_LOGIN_CLIENT_ID: ${{ github.ref == 'refs/heads/main' && vars.TELEGRAM_LOGIN_CLIENT_ID || github.ref != 'refs/heads/main' && vars.TEST_TELEGRAM_LOGIN_CLIENT_ID || '' }}
           TELEGRAM_LOGIN_CLIENT_SECRET: ${{ github.ref == 'refs/heads/main' && secrets.TELEGRAM_LOGIN_CLIENT_SECRET || github.ref != 'refs/heads/main' && secrets.TEST_TELEGRAM_LOGIN_CLIENT_SECRET || '' }}
-          RUN_LECTURE_WORKER: ${{ github.ref == 'refs/heads/main' && vars.RUN_LECTURE_WORKER || github.ref != 'refs/heads/main' && vars.TEST_RUN_LECTURE_WORKER || '' }}
+          RUN_LECTURE_WORKER: ${{ github.ref == 'refs/heads/main' && vars.RUN_LECTURE_WORKER || github.ref != 'refs/heads/main' && (vars.TEST_RUN_LECTURE_WORKER || '1') || '' }}
           FFMPEG_PATH: ${{ vars.FFMPEG_PATH }}
           SHAKA_PACKAGER_PATH: ${{ vars.SHAKA_PACKAGER_PATH }}
         run: |
@@ -218,8 +228,8 @@ jobs:
               TELEGRAM_LOGIN_CLIENT_SECRET: process.env.TELEGRAM_LOGIN_CLIENT_SECRET,
               LECTURE_STORAGE_DIR: `${privateDir}/lectures`,
               RUN_LECTURE_WORKER: process.env.RUN_LECTURE_WORKER,
-              FFMPEG_PATH: process.env.FFMPEG_PATH,
-              SHAKA_PACKAGER_PATH: process.env.SHAKA_PACKAGER_PATH,
+              FFMPEG_PATH: process.env.FFMPEG_PATH || (process.env.ADMIN_SITE === "admin.test.brandmasterskaya.ru" ? `${home}/apps/${process.env.ADMIN_SITE}/media/ffmpeg` : ""),
+              SHAKA_PACKAGER_PATH: process.env.SHAKA_PACKAGER_PATH || (process.env.ADMIN_SITE === "admin.test.brandmasterskaya.ru" ? `${home}/apps/${process.env.ADMIN_SITE}/media/packager` : ""),
             }));
           ' "$(ssh -i ~/.ssh/deploy_key "$SERVER" 'echo $HOME')" > env.json
           ssh -i ~/.ssh/deploy_key "$SERVER" \
@@ -282,6 +292,10 @@ jobs:
           curl --fail --silent --show-error --max-time 60 "https://$SITE/" -o /dev/null
           rm cabinet-smoke.html
 
+      - name: Verify media worker configuration
+        if: github.ref != 'refs/heads/main'
+        run: ssh -i ~/.ssh/deploy_key "$SERVER" "python3 - '$ADMIN_SITE'" < deploy/read-media-status.py
+
       # Brings the app back after a server reboot: a request starts it through Passenger.
       - name: Keep-alive cron
         run: |
@@ -308,3 +322,9 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "python3 - '$ADMIN_SITE'" < admin/deploy/read-login-diagnostics.py
+
+      - name: Read bounded media status
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "python3 - '$ADMIN_SITE'" < admin/deploy/read-media-status.py

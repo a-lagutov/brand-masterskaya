@@ -6,6 +6,7 @@ import { BroadcastMessageEditor as BroadcastMessageEditor_bf142bcdfdaaa6bb58ede8
 import { BroadcastScheduleDateCell as BroadcastScheduleDateCell_070ed36d26c0888a646d96326ccd516f } from '../../../components/BroadcastScheduleDate'
 import { BroadcastScheduleDate as BroadcastScheduleDate_070ed36d26c0888a646d96326ccd516f } from '../../../components/BroadcastScheduleDate'
 import { BroadcastActions as BroadcastActions_ca49aa10eef1d7a8364b362fa6bc996c } from '../../../components/BroadcastActions'
+import { LectureProgress as LectureProgress_18499ff4ed58961d044205041be306c9 } from '../../../components/LectureProgress'
 import { BotTextEditor as BotTextEditor_bf142bcdfdaaa6bb58ede86f4298966e } from '../../../components/BroadcastMessageEditor'
 import { TelegramAccountConnect as TelegramAccountConnect_2984ec875393c1171863f81d846a485b } from '../../../components/TelegramAccountConnect'
 import { JsonRequests as JsonRequests_5896090b77af7e4a37ffe78e9f475f83 } from '../../../components/JsonRequests'
@@ -21,6 +22,7 @@ export const importMap = {
   "/components/BroadcastScheduleDate#BroadcastScheduleDateCell": BroadcastScheduleDateCell_070ed36d26c0888a646d96326ccd516f,
   "/components/BroadcastScheduleDate#BroadcastScheduleDate": BroadcastScheduleDate_070ed36d26c0888a646d96326ccd516f,
   "/components/BroadcastActions#BroadcastActions": BroadcastActions_ca49aa10eef1d7a8364b362fa6bc996c,
+  "/components/LectureProgress#LectureProgress": LectureProgress_18499ff4ed58961d044205041be306c9,
   "/components/BroadcastMessageEditor#BotTextEditor": BotTextEditor_bf142bcdfdaaa6bb58ede86f4298966e,
   "/components/TelegramAccountConnect#TelegramAccountConnect": TelegramAccountConnect_2984ec875393c1171863f81d846a485b,
   "/components/JsonRequests#JsonRequests": JsonRequests_5896090b77af7e4a37ffe78e9f475f83,

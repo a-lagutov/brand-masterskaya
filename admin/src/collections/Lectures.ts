@@ -28,6 +28,7 @@ export const Lectures: CollectionConfig = {
             ...data,
             revision: randomUUID(),
             processingStatus: 'pending',
+            processingProgress: 0,
             processingError: null,
           };
         return data;
@@ -61,6 +62,22 @@ export const Lectures: CollectionConfig = {
           'Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без групп и покупок лекция недоступна.',
       },
     },
+    {
+      name: 'processingJob',
+      type: 'text',
+      admin: { hidden: true },
+      access: { read: () => false, update: () => false },
+    },
+    {
+      name: 'processingProgress',
+      type: 'number',
+      defaultValue: 0,
+      min: 0,
+      max: 100,
+      label: 'Подготовка, %',
+      access: { update: ({ req }) => Boolean(req.context.lectureWorker) },
+      admin: { hidden: true },
+    },
     { name: 'published', type: 'checkbox', label: 'Опубликована', defaultValue: false },
     {
       name: 'processingStatus',
@@ -77,8 +94,7 @@ export const Lectures: CollectionConfig = {
       access: { update: ({ req }) => Boolean(req.context.lectureWorker) },
       admin: {
         readOnly: true,
-        description:
-          'Обработчик запускается отдельно. При ошибке загрузите исправленный MP4 заново.',
+        components: { Field: '/components/LectureProgress#LectureProgress' },
       },
     },
     {

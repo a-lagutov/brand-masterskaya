@@ -1,18 +1,47 @@
+import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { sql, type SQLiteAdapter } from '@payloadcms/db-sqlite';
 import type { Payload } from 'payload';
 import { cabinetSecret, videoDirectory } from './config';
 import { contentKeys } from './security';
+import { transcodeProgress } from './transcodeProgress';
 
-const executeFile = promisify(execFile);
 type CommandRunner = (
   command: string,
   args: string[],
-  options: { cwd: string; timeout: number; maxBuffer: number },
+  options: {
+    cwd: string;
+    timeout: number;
+    maxBuffer: number;
+    onProgress?: (percent: number) => Promise<void>;
+  },
 ) => Promise<unknown>;
+
+/** Executes tools without a shell and drains serialized progress writes before returning. */
+const executeFile: CommandRunner = async (command, args, options) => {
+  const { onProgress, ...processOptions } = options;
+  let updates = Promise.resolve();
+  let updateFailed = false;
+  const tracker = transcodeProgress((percent) => {
+    updates = updates
+      .then(() => onProgress?.(percent))
+      .catch(() => {
+        updateFailed = true;
+      });
+  });
+  const result = await new Promise((resolve, reject) => {
+    const child = execFile(command, args, processOptions, (error, stdout, stderr) => {
+      if (error) reject(error);
+      else resolve({ stdout, stderr });
+    });
+    child.stdout?.on('data', (chunk) => tracker.stdout(String(chunk)));
+    child.stderr?.on('data', (chunk) => tracker.stderr(String(chunk)));
+  }).finally(() => updates);
+  if (updateFailed) throw new Error('Progress update failed');
+  return result;
+};
 
 /** Transcodes one MP4 and packages encrypted six-second fragments without invoking a shell. */
 export async function packageLecture(
@@ -21,6 +50,7 @@ export async function packageLecture(
   directory: string,
   secret: string,
   run: CommandRunner = executeFile,
+  onProgress?: (percent: number) => Promise<void>,
 ): Promise<void> {
   const options = { cwd: directory, timeout: 3_600_000, maxBuffer: 2 * 1024 * 1024 };
   await run(
@@ -29,7 +59,12 @@ export async function packageLecture(
       '-nostdin',
       '-hide_banner',
       '-loglevel',
-      'error',
+      'info',
+      '-nostats',
+      '-progress',
+      'pipe:1',
+      '-filter_threads',
+      '1',
       '-y',
       '-threads',
       '2',
@@ -63,8 +98,9 @@ export async function packageLecture(
       '+faststart',
       'encoded.mp4',
     ],
-    options,
+    { ...options, onProgress },
   );
+  await onProgress?.(90);
   const { key, keyId } = contentKeys(revision, secret);
   // Fixed generated filenames keep user-controlled upload names out of packager descriptors.
   await run(
@@ -110,17 +146,42 @@ export async function packageLecture(
 /** Atomically claims one job across processes, then publishes complete output by directory rename. */
 export async function processNextLecture(payload: Payload): Promise<boolean> {
   const database = payload.db as unknown as SQLiteAdapter;
+  // A lease expires only after heartbeat stops; a new job token fences late writes from old workers.
+  await database.drizzle
+    .run(sql`UPDATE lectures SET processing_status = 'pending', processing_progress = 0,
+    processing_job = NULL WHERE processing_status = 'processing'
+    AND updated_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 minutes');`);
+  const job = randomUUID();
   const claimed = await database.drizzle
-    .run(sql`UPDATE lectures SET processing_status = 'processing'
+    .run(sql`UPDATE lectures SET processing_status = 'processing', processing_progress = 0, processing_job = ${job},
+    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = (SELECT id FROM lectures WHERE processing_status = 'pending' ORDER BY id LIMIT 1)
     AND processing_status = 'pending' RETURNING id, revision;`);
   const id = Number(claimed.rows[0]?.id);
   if (!id) return false;
-  const lecture = await payload.findByID({ collection: 'lectures', id, depth: 0 });
-  if (lecture.revision !== claimed.rows[0]?.revision || lecture.processingStatus !== 'processing')
-    return true;
+  const revision = String(claimed.rows[0]?.revision || '');
   let workingDirectory = '';
+  let heartbeat = Promise.resolve();
+  const timer = setInterval(() => {
+    heartbeat = heartbeat
+      .then(async () => {
+        await database.drizzle
+          .run(sql`UPDATE lectures SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE id = ${id} AND processing_job = ${job} AND processing_status = 'processing';`);
+      })
+      .catch(() => {
+        /* A failed heartbeat expires the lease; the job token still prevents stale publication. */
+      });
+  }, 10_000);
+  timer.unref();
   try {
+    const lecture = await payload.findByID({ collection: 'lectures', id, depth: 0 });
+    if (
+      lecture.revision !== revision ||
+      lecture.processingStatus !== 'processing' ||
+      lecture.processingJob !== job
+    )
+      return true;
     if (!lecture.filename || !lecture.revision || !/^[a-f0-9-]{36}$/.test(lecture.revision))
       throw new Error('Invalid source');
     const root = videoDirectory();
@@ -132,17 +193,31 @@ export async function processNextLecture(payload: Payload): Promise<boolean> {
       lecture.revision,
       workingDirectory,
       cabinetSecret(),
+      executeFile,
+      async (percent) => {
+        // A replacement upload must never inherit the old source's progress.
+        await database.drizzle.run(sql`UPDATE lectures SET processing_progress = ${percent},
+          updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+          WHERE id = ${id} AND revision = ${revision} AND processing_job = ${job} AND processing_status = 'processing';`);
+      },
     );
     // A replacement upload can arrive while transcoding. Never publish results for a stale source.
     const current = await payload.findByID({ collection: 'lectures', id, depth: 0 });
-    if (current.revision !== lecture.revision) return true;
-    await rename(workingDirectory, path.join(root, 'streams', lecture.revision));
-    workingDirectory = '';
+    if (current.revision !== revision || current.processingJob !== job) return true;
+    try {
+      await rename(workingDirectory, path.join(root, 'streams', revision));
+      workingDirectory = '';
+    } catch (error) {
+      // A fenced worker may already have atomically finished this same immutable revision.
+      if (!['EEXIST', 'ENOTEMPTY'].includes((error as NodeJS.ErrnoException).code || ''))
+        throw error;
+      await readFile(path.join(root, 'streams', revision, 'manifest.mpd'));
+    }
     // Compare and update in one SQL statement; a replacement may commit after the read above.
     await database.drizzle
-      .run(sql`UPDATE lectures SET processing_status = 'ready', processing_error = NULL,
+      .run(sql`UPDATE lectures SET processing_status = 'ready', processing_progress = 100, processing_error = NULL,
       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-      WHERE id = ${id} AND revision = ${lecture.revision} AND processing_status = 'processing';`);
+      WHERE id = ${id} AND revision = ${revision} AND processing_job = ${job} AND processing_status = 'processing';`);
   } catch {
     // Child-process errors include command arguments, including the content key. Do not log them.
     const message =
@@ -150,8 +225,10 @@ export async function processNextLecture(payload: Payload): Promise<boolean> {
     await database.drizzle
       .run(sql`UPDATE lectures SET processing_status = 'failed', processing_error = ${message},
       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-      WHERE id = ${id} AND revision = ${lecture.revision} AND processing_status = 'processing';`);
+      WHERE id = ${id} AND revision = ${revision} AND processing_job = ${job} AND processing_status = 'processing';`);
   } finally {
+    clearInterval(timer);
+    await heartbeat;
     if (workingDirectory) await rm(workingDirectory, { recursive: true, force: true });
   }
   return true;

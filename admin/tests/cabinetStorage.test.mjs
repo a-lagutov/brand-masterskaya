@@ -235,6 +235,8 @@ fileSystem.writeFileSync('encoded.mp4', 'synthetic');
 fileSystem.writeFileSync('video.m3u8', '#EXTM3U');
 fileSystem.writeFileSync('audio.m3u8', '#EXTM3U');
 fileSystem.writeFileSync('manifest.mpd', '<MPD/>');
+process.stderr.write('Duration: 00:01:40.00\\n');
+process.stdout.write('out_time_us=50000000\\n');
 `,
       { mode: 0o700 },
     );
@@ -276,12 +278,32 @@ fileSystem.writeFileSync('manifest.mpd', '<MPD/>');
       'pending',
       'old job must never publish a replacement upload',
     );
+    const { processNextLecture } = await import('../src/cabinet/processor.ts');
+    assert.equal(await processNextLecture(payload), true);
+    const prepared = await payload.findByID({ collection: 'lectures', id: lecture.id });
+    assert.equal(prepared.processingStatus, 'ready');
+    assert.equal(prepared.processingProgress, 100);
+    const { sql: leaseSql } = await import('@payloadcms/db-sqlite');
+    await payload.db.drizzle.run(leaseSql`UPDATE lectures SET processing_status = 'processing',
+      processing_job = 'active-worker', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id = ${lecture.id}`);
+    assert.equal(await processNextLecture(payload), false, 'a live lease must not be reclaimed');
+    await payload.db.drizzle
+      .run(leaseSql`UPDATE lectures SET updated_at = '2000-01-01T00:00:00.000Z'
+      WHERE id = ${lecture.id}`);
+    assert.equal(await processNextLecture(payload), true, 'an interrupted worker must be retried');
+    const recovered = await payload.findByID({ collection: 'lectures', id: lecture.id });
+    assert.equal(recovered.processingStatus, 'ready');
+    assert.equal(recovered.processingProgress, 100);
+    assert.notEqual(recovered.processingJob, 'active-worker');
+    const progressMigration = await import('../src/migrations/20261108_054116_lecture_progress.ts');
     const productMigration = await import('../src/migrations/20261108_051734_lecture_products.ts');
     await payload.update({
       collection: 'lectures',
       id: lecture.id,
       data: { products: [elective.id] },
     });
+    await progressMigration.down({ db: payload.db.drizzle, payload, req: {} });
     await productMigration.down({ db: payload.db.drizzle, payload, req: {} });
     const { sql } = await import('@payloadcms/db-sqlite');
     const retainedGroups = await payload.db.drizzle.all(
@@ -296,6 +318,7 @@ fileSystem.writeFileSync('manifest.mpd', '<MPD/>');
     await migration.down({ db: payload.db.drizzle, payload, req: {} });
     await migration.up({ db: payload.db.drizzle, payload, req: {} });
     await productMigration.up({ db: payload.db.drizzle, payload, req: {} });
+    await progressMigration.up({ db: payload.db.drizzle, payload, req: {} });
     assert.equal(
       (await payload.findByID({ collection: 'orders', id: preservedOrder.id })).total,
       100,

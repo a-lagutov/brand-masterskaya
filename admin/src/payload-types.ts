@@ -483,10 +483,9 @@ export interface Lecture {
    * Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без групп и покупок лекция недоступна.
    */
   products?: (number | Product)[] | null;
+  processingJob?: string | null;
+  processingProgress?: number | null;
   published?: boolean | null;
-  /**
-   * Обработчик запускается отдельно. При ошибке загрузите исправленный MP4 заново.
-   */
   processingStatus: 'pending' | 'processing' | 'ready' | 'failed';
   processingError?: string | null;
   revision?: string | null;
@@ -831,6 +830,8 @@ export interface LecturesSelect<T extends boolean = true> {
   sortOrder?: T;
   groups?: T;
   products?: T;
+  processingJob?: T;
+  processingProgress?: T;
   published?: T;
   processingStatus?: T;
   processingError?: T;
