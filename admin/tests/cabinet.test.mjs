@@ -178,3 +178,23 @@ test('bot offers exactly one configured cabinet button and stays unchanged while
     else process.env.CABINET_URL = previousUrl;
   }
 });
+
+test('login diagnostics never include credentials, token payloads or profile values', async () => {
+  const { loginFailureDetails } = await import('../src/cabinet/loginDiagnostics.ts');
+  const failure = {
+    code: 'ERR_JWT_CLAIM_VALIDATION_FAILED',
+    claim: 'aud',
+    message: 'fake-private-token',
+    payload: { name: 'Fake private profile' },
+  };
+  assert.deepEqual(loginFailureDetails('identity_verification', 200, failure), {
+    stage: 'identity_verification',
+    status: 200,
+    code: 'ERR_JWT_CLAIM_VALIDATION_FAILED',
+    claim: 'aud',
+  });
+  assert.deepEqual(
+    loginFailureDetails('token_request', 0, { code: 'private value', claim: 'private claim' }),
+    { stage: 'token_request', status: 0, code: 'unclassified' },
+  );
+});

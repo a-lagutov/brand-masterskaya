@@ -19,7 +19,10 @@ export async function verifyTelegramIdentity(
   });
   // OIDC sub is not the Telegram Bot API ID. The verified profile's id is the binding identity.
   if (!Number.isSafeInteger(payload.id) || Number(payload.id) <= 0)
-    throw new Error('Invalid Telegram identity');
+    throw Object.assign(new Error('Invalid Telegram identity'), {
+      code: 'ERR_TELEGRAM_ID_CLAIM',
+      claim: 'id',
+    });
   return {
     id: Number(payload.id),
     first_name: typeof payload.name === 'string' ? payload.name.slice(0, 200) : undefined,

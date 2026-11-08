@@ -12,6 +12,7 @@ import {
   cabinetError,
 } from '../../../../../cabinet/http';
 import { signToken, verifyToken } from '../../../../../cabinet/security';
+import { loginFailureDetails } from '../../../../../cabinet/loginDiagnostics';
 import { verifyTelegramIdentity } from '../../../../../cabinet/telegramLogin';
 
 /** Exchanges a one-use authorization code and creates a separate student session. */
@@ -30,6 +31,8 @@ export async function GET(request: Request): Promise<Response> {
   ) {
     return cabinetError('Не удалось подтвердить вход. Начните вход заново.', 400);
   }
+  let stage = 'token_request';
+  let tokenStatus = 0;
   try {
     const clientId = process.env.TELEGRAM_LOGIN_CLIENT_ID || '';
     const response = await fetch('https://oauth.telegram.org/token', {
@@ -48,12 +51,30 @@ export async function GET(request: Request): Promise<Response> {
         code_verifier: flow.verifier,
       }),
     });
+    tokenStatus = response.status;
+    stage = 'token_response';
     if (!response.ok) throw new Error('Token exchange rejected');
     const result = await response.json();
+    if (
+      [
+        'invalid_client',
+        'invalid_grant',
+        'invalid_request',
+        'unauthorized_client',
+        'unsupported_grant_type',
+      ].includes(result.error)
+    ) {
+      throw Object.assign(new Error('Telegram rejected token exchange'), {
+        code: `ERR_TELEGRAM_${result.error.toUpperCase()}`,
+      });
+    }
     if (typeof result.id_token !== 'string') throw new Error('Missing ID token');
+    stage = 'identity_verification';
     const identity = await verifyTelegramIdentity(result.id_token, clientId);
+    stage = 'member_storage';
     const payload = await getPayload({ config });
     const member = await findOrCreateMember(payload, identity);
+    stage = 'session_cookie';
     cookieStore.set(
       SESSION_COOKIE,
       signToken(
@@ -71,7 +92,11 @@ export async function GET(request: Request): Promise<Response> {
       status: 303,
       headers: { ...PRIVATE_HEADERS, Location: `${cabinetOrigin()}/cabinet` },
     });
-  } catch {
+  } catch (error) {
+    console.warn(
+      'cabinet login failed:',
+      JSON.stringify(loginFailureDetails(stage, tokenStatus, error)),
+    );
     // Never log authorization codes, tokens, profile claims or upstream response bodies.
     return cabinetError(
       'Не удалось войти через Telegram. Вернитесь в кабинет и повторите вход.',
