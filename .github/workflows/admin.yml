@@ -260,6 +260,19 @@ jobs:
           ssh -i ~/.ssh/deploy_key "$SERVER" "tail -30 private/$ADMIN_SITE/app.log"
           exit 1
 
+      - name: Verify cabinet and landing page
+        run: |
+          curl --fail --silent --show-error --max-time 60 "https://$SITE/cabinet/" -o cabinet-smoke.html
+          ASSET_PATH=$(node -e '
+            const html = require("node:fs").readFileSync("cabinet-smoke.html", "utf8");
+            const asset = html.match(/src="(\/cabinet\/_next\/static\/[^" ]+\.js)"/);
+            if (!html.includes("Личный кабинет") || !asset) process.exit(1);
+            process.stdout.write(asset[1]);
+          ')
+          curl --fail --silent --show-error --max-time 60 "https://$SITE$ASSET_PATH" -o /dev/null
+          curl --fail --silent --show-error --max-time 60 "https://$SITE/" -o /dev/null
+          rm cabinet-smoke.html
+
       # Brings the app back after a server reboot: a request starts it through Passenger.
       - name: Keep-alive cron
         run: |
