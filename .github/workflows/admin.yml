@@ -182,7 +182,7 @@ jobs:
 
       # Install and exercise private tools before allowing the test queue to consume uploads.
       - name: Install test media tools
-        if: github.ref != 'refs/heads/main' && vars.TEST_RUN_LECTURE_WORKER != '0'
+        if: github.ref != 'refs/heads/main' && (vars.TEST_RUN_LECTURE_WORKER || '1') == '1'
         run: |
           bash deploy/prepare-media-tools.sh media-tools
           ssh -i ~/.ssh/deploy_key "$SERVER" "mkdir -p apps/$ADMIN_SITE/media && chmod 700 apps/$ADMIN_SITE/media"
