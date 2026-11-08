@@ -139,6 +139,33 @@ test('Telegram login verifies signed numeric identity rather than trusting OIDC 
     async () => publicKey,
   );
   assert.equal(identity.id, 900003);
+  const stringIdentity = await verifyTelegramIdentity(
+    await signed({ id: '900003', name: 'Тест' }),
+    'test-client',
+    async () => publicKey,
+  );
+  assert.equal(
+    stringIdentity.id,
+    900003,
+    'verified decimal ID strings must normalize to Bot API numbers',
+  );
+  for (const invalidId of [
+    undefined,
+    null,
+    true,
+    0,
+    -1,
+    1.5,
+    '1.5',
+    '9e5',
+    ' 900003',
+    '9007199254740993',
+  ]) {
+    await assert.rejects(async () =>
+      verifyTelegramIdentity(await signed({ id: invalidId }), 'test-client', async () => publicKey),
+    );
+  }
+
   await assert.rejects(() =>
     verifyTelegramIdentity('not-a-token', 'test-client', async () => publicKey),
   );
@@ -150,7 +177,7 @@ test('Telegram login verifies signed numeric identity rather than trusting OIDC 
     ),
   );
   await assert.rejects(async () =>
-    verifyTelegramIdentity(await signed({ id: '900003' }), 'test-client', async () => publicKey),
+    verifyTelegramIdentity(await signed({ id: '900003x' }), 'test-client', async () => publicKey),
   );
 });
 

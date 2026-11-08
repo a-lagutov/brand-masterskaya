@@ -18,13 +18,21 @@ export async function verifyTelegramIdentity(
     maxTokenAge: '10m',
   });
   // OIDC sub is not the Telegram Bot API ID. The verified profile's id is the binding identity.
-  if (!Number.isSafeInteger(payload.id) || Number(payload.id) <= 0)
+  const userId =
+    typeof payload.id === 'string' && /^[1-9]\d*$/.test(payload.id)
+      ? Number(payload.id)
+      : payload.id;
+  if (!Number.isSafeInteger(userId) || Number(userId) <= 0) {
     throw Object.assign(new Error('Invalid Telegram identity'), {
-      code: 'ERR_TELEGRAM_ID_CLAIM',
+      code:
+        payload.id === undefined || payload.id === null
+          ? 'ERR_TELEGRAM_ID_CLAIM_MISSING'
+          : 'ERR_TELEGRAM_ID_CLAIM_FORMAT',
       claim: 'id',
     });
+  }
   return {
-    id: Number(payload.id),
+    id: Number(userId),
     first_name: typeof payload.name === 'string' ? payload.name.slice(0, 200) : undefined,
     username:
       typeof payload.preferred_username === 'string'
