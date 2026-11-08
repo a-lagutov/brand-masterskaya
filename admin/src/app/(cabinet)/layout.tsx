@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import 'shaka-player/dist/controls.css';
 import './cabinet.css';
 
 export const metadata = {

@@ -1,17 +1,9 @@
-import type { Payload, Where } from 'payload';
+import type { Access, Payload, Where } from 'payload';
 import { relationIds } from '../bot/relations';
 import type { Lecture } from '../payload-types';
 
-/** Resolves manually assigned learning groups, independently of Telegram chat membership. */
-export async function memberGroupIds(payload: Payload, memberId: number): Promise<number[]> {
-  const groups = await payload.find({
-    collection: 'learning-groups',
-    where: { members: { contains: memberId } },
-    pagination: false,
-    depth: 0,
-  });
-  return groups.docs.map((group) => group.id);
-}
+/** Student cookies never authenticate to Payload; only administrators manage lecture uploads. */
+export const cabinetAdmin: Access = ({ req }) => req.user?.collection === 'users';
 
 /** Resolves purchased products without mixing paid and unpaid orders or including trashed orders. */
 export async function memberProductIds(payload: Payload, memberId: number): Promise<number[]> {
@@ -38,35 +30,27 @@ export async function memberProductIds(payload: Payload, memberId: number): Prom
 }
 
 /** Filters at the database boundary so inaccessible metadata is never serialized to students. */
-export function lectureFilter(groupIds: number[], productIds: number[] = []): Where {
+export function lectureFilter(productIds: number[]): Where {
   return {
     and: [
       { published: { equals: true } },
       { processingStatus: { equals: 'ready' } },
-      {
-        or: [
-          { groups: { in: groupIds.length ? groupIds : [-1] } },
-          { products: { in: productIds.length ? productIds : [-1] } },
-        ],
-      },
+      { products: { in: productIds.length ? productIds : [-1] } },
     ],
   };
 }
 
-/** Rechecks current groups and purchases for every manifest, segment and license request, including revocations. */
+/** Rechecks current purchases for every manifest, segment and license request, including revocations. */
 export async function authorizedLecture(
   payload: Payload,
   memberId: number,
   lectureId: number,
 ): Promise<Lecture | null> {
-  const [groups, products] = await Promise.all([
-    memberGroupIds(payload, memberId),
-    memberProductIds(payload, memberId),
-  ]);
-  if (!groups.length && !products.length) return null;
+  const products = await memberProductIds(payload, memberId);
+  if (!products.length) return null;
   const result = await payload.find({
     collection: 'lectures',
-    where: { and: [lectureFilter(groups, products), { id: { equals: lectureId } }] },
+    where: { and: [lectureFilter(products), { id: { equals: lectureId } }] },
     limit: 1,
     depth: 0,
   });

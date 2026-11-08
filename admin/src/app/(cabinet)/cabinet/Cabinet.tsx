@@ -3,14 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Shaka's public distribution includes its own TypeScript declarations.
-import type shakaType from 'shaka-player';
+import type shakaType from 'shaka-player/dist/shaka-player.ui';
 
 type LectureItem = { id: number; title: string; speaker: string; description: string };
 type PlaybackGrant = { token: string; manifest: string; license: string };
 
-/** Plays encrypted DASH with renewable grants, live revocation checks and a visible viewer label. */
-function LecturePlayer({ lecture, telegramId }: { lecture: LectureItem; telegramId: string }) {
+/** Plays encrypted DASH with Shaka controls, renewable grants and live revocation checks. */
+function LecturePlayer({ lecture }: { lecture: LectureItem }) {
   const video = useRef<HTMLVideoElement>(null);
+  const container = useRef<HTMLDivElement>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -18,12 +19,13 @@ function LecturePlayer({ lecture, telegramId }: { lecture: LectureItem; telegram
     let cancelled = false;
     let failed = false;
     let player: shakaType.Player | undefined;
+    let overlay: shakaType.ui.Overlay | undefined;
     let renewal: ReturnType<typeof setInterval> | undefined;
     let grant: PlaybackGrant;
     let refreshing: Promise<void> | null = null;
     let grantRefreshAt = 0;
     const controller = new AbortController();
-    /** Fetches one grant at a time and fails closed when a group or publication is revoked. */
+    /** Fetches one grant at a time and fails closed when a purchase or publication is revoked. */
     async function refreshGrant() {
       if (!refreshing)
         refreshing = (async () => {
@@ -58,17 +60,34 @@ function LecturePlayer({ lecture, telegramId }: { lecture: LectureItem; telegram
     /** Loads the player only in the browser; no unencrypted fallback is offered. */
     async function start() {
       try {
-        const { default: shaka } = await import('shaka-player');
+        const { default: shaka } = await import('shaka-player/dist/shaka-player.ui.js');
         shaka.polyfill.installAll();
         if (!shaka.Player.isBrowserSupported())
           throw new Error(
             'Браузер не поддерживает защищённое видео. Откройте кабинет в актуальном Chrome или Firefox.',
           );
         await refreshGrant();
-        if (cancelled || !video.current) return;
+        if (cancelled || !video.current || !container.current) return;
         player = new shaka.Player();
         await player.attach(video.current);
         if (cancelled) return;
+        overlay = new shaka.ui.Overlay(player, container.current, video.current);
+        overlay.configure({
+          controlPanelElements: [
+            'play_pause',
+            'time_and_duration',
+            'spacer',
+            'mute',
+            'volume',
+            'overflow_menu',
+            'fullscreen',
+          ],
+          overflowMenuButtons: ['quality', 'playback_rate'],
+          addSeekBar: true,
+          bigButtons: ['play_pause'],
+          enableKeyboardPlaybackControls: true,
+        });
+        overlay.getControls()?.getLocalization()?.changeLocale(['ru']);
         player.configure({
           drm: {
             servers: { 'org.w3.clearkey': new URL(grant.license, window.location.origin).href },
@@ -109,25 +128,16 @@ function LecturePlayer({ lecture, telegramId }: { lecture: LectureItem; telegram
       cancelled = true;
       controller.abort();
       if (renewal) clearInterval(renewal);
-      void player?.destroy();
+      // Overlay owns the player and destroys it together with its controls.
+      if (overlay) void overlay.destroy();
+      else void player?.destroy();
     };
   }, [lecture.id]);
 
   return (
     <section className="cabinet__viewer" aria-label={`Просмотр: ${lecture.title}`}>
-      <div className="cabinet__screen">
-        <video
-          ref={video}
-          controls
-          playsInline
-          controlsList="nodownload"
-          aria-label={lecture.title}
-        />
-        {!error && (
-          <span className="cabinet__watermark" aria-hidden="true">
-            Для участника {telegramId}
-          </span>
-        )}
+      <div ref={container} className="cabinet__screen">
+        <video ref={video} playsInline aria-label={lecture.title} />
         {loading && (
           <p className="cabinet__player-message" role="status">
             Открываем запись…
@@ -154,7 +164,7 @@ export function Cabinet({
   lectures,
   loginConfigured,
 }: {
-  member: { name: string; telegramId: string } | null;
+  member: { name: string } | null;
   lectures: LectureItem[];
   loginConfigured: boolean;
 }) {
@@ -230,7 +240,7 @@ export function Cabinet({
               >
                 Закрыть запись
               </button>
-              <LecturePlayer key={selected.id} lecture={selected} telegramId={member.telegramId} />
+              <LecturePlayer key={selected.id} lecture={selected} />
             </>
           )}
           <section className="cabinet__library" aria-label="Доступные записи">
@@ -254,8 +264,7 @@ export function Cabinet({
               <div className="cabinet__empty">
                 <h3>Здесь появятся ваши лекции</h3>
                 <p>
-                  Записи станут доступны после публикации, по оплаченным факультативам и тарифам или
-                  учебной группе.
+                  Записи станут доступны после публикации, по оплаченным факультативам и тарифам.
                   <br />
                   Если доступ уже должен быть открыт, напишите организаторам в боте.
                 </p>

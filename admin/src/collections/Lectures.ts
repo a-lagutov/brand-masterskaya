@@ -2,7 +2,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { CollectionConfig } from 'payload';
 import { videoDirectory } from '../cabinet/config';
-import { cabinetAdmin } from './LearningGroups';
+import { cabinetAdmin } from '../cabinet/access';
 
 /** Private original videos and their publication metadata; packaged files use separate storage. */
 export const Lectures: CollectionConfig = {
@@ -11,7 +11,7 @@ export const Lectures: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     group: 'Личный кабинет',
-    defaultColumns: ['title', 'groups', 'products', 'published', 'processingStatus'],
+    defaultColumns: ['title', 'products', 'published', 'processingStatus'],
   },
   access: { read: cabinetAdmin, create: cabinetAdmin, update: cabinetAdmin, delete: cabinetAdmin },
   upload: {
@@ -41,17 +41,6 @@ export const Lectures: CollectionConfig = {
     { name: 'description', type: 'textarea', label: 'Описание' },
     { name: 'sortOrder', type: 'number', label: 'Порядок', defaultValue: 0 },
     {
-      name: 'groups',
-      type: 'relationship',
-      relationTo: 'learning-groups',
-      hasMany: true,
-      label: 'Доступ для групп',
-      admin: {
-        description:
-          'Доступ участникам любой выбранной группы или покупателям выбранных тарифов и факультативов.',
-      },
-    },
-    {
       name: 'products',
       type: 'relationship',
       relationTo: 'products',
@@ -59,7 +48,7 @@ export const Lectures: CollectionConfig = {
       label: 'Доступ по тарифам и факультативам',
       admin: {
         description:
-          'Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без групп и покупок лекция недоступна.',
+          'Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без выбранных тарифов и факультативов лекция недоступна.',
       },
     },
     {

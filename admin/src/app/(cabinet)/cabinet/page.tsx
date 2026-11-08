@@ -1,7 +1,7 @@
 import { getPayload } from 'payload';
 import config from '../../../payload.config';
 import { cabinetSession } from '../../../cabinet/http';
-import { lectureFilter, memberGroupIds, memberProductIds } from '../../../cabinet/access';
+import { lectureFilter, memberProductIds } from '../../../cabinet/access';
 import { Cabinet } from './Cabinet';
 
 export const dynamic = 'force-dynamic';
@@ -14,19 +14,13 @@ export default async function CabinetPage() {
     payload && session
       ? await payload.findByID({ collection: 'members', id: session.memberId!, depth: 0 })
       : null;
-  const [groups, products] =
-    payload && member
-      ? await Promise.all([
-          memberGroupIds(payload, member.id),
-          memberProductIds(payload, member.id),
-        ])
-      : [[], []];
+  const products = payload && member ? await memberProductIds(payload, member.id) : [];
   const lectures =
-    payload && (groups.length || products.length)
+    payload && products.length
       ? (
           await payload.find({
             collection: 'lectures',
-            where: lectureFilter(groups, products),
+            where: lectureFilter(products),
             sort: 'sortOrder',
             depth: 0,
             pagination: false,
@@ -35,9 +29,7 @@ export default async function CabinetPage() {
       : [];
   return (
     <Cabinet
-      member={
-        member ? { name: member.displayName || 'Участник', telegramId: member.telegramId } : null
-      }
+      member={member ? { name: member.displayName || 'Участник' } : null}
       lectures={lectures.map((lecture) => ({
         id: lecture.id,
         title: lecture.title,

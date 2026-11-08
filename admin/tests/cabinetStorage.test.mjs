@@ -24,10 +24,10 @@ for (const name of [
 ])
   process.env[name] = '';
 
-test('production migrations isolate lecture metadata, enforce group revocation and preserve existing data', async () => {
+test('production migrations isolate lecture metadata, enforce purchase revocation and preserve existing data', async () => {
   const { getPayload } = await import('payload');
   const { default: config } = await import('../src/payload.config.ts');
-  const { authorizedLecture, memberGroupIds } = await import('../src/cabinet/access.ts');
+  const { authorizedLecture } = await import('../src/cabinet/access.ts');
   const { signToken } = await import('../src/cabinet/security.ts');
   const { playbackLecture } = await import('../src/cabinet/playback.ts');
   const payload = await getPayload({ config });
@@ -54,15 +54,29 @@ test('production migrations isolate lecture metadata, enforce group revocation a
       collection: 'members',
       data: { telegramId: '900002', displayName: 'Другой участник' },
     });
-    const group = await payload.create({
-      collection: 'learning-groups',
-      data: { title: 'Тестовая группа', members: [member.id] },
+    const plan = await payload.create({
+      collection: 'products',
+      data: { key: 'test-plan', title: 'Тариф', kind: 'plan' },
     });
+    await payload.update({
+      collection: 'orders',
+      id: preservedOrder.id,
+      data: { products: [plan.id] },
+    });
+    // Legacy membership remains archived for rollback but must never grant access.
+    const { sql: legacySql } = await import('@payloadcms/db-sqlite');
+    const group = await payload.db.drizzle.run(
+      legacySql`INSERT INTO learning_groups (title) VALUES ('Archived test group') RETURNING id`,
+    );
+    const groupId = Number(group.rows[0].id);
+    await payload.db.drizzle.run(
+      legacySql`INSERT INTO learning_groups_rels (parent_id, path, members_id) VALUES (${groupId}, 'members', ${member.id})`,
+    );
     const lecture = await payload.create({
       collection: 'lectures',
       data: {
         title: 'Лекция для теста',
-        groups: [group.id],
+        products: [plan.id],
         published: true,
         revision: '11111111-1111-4111-8111-111111111111',
         processingStatus: 'ready',
@@ -74,6 +88,9 @@ test('production migrations isolate lecture metadata, enforce group revocation a
         size: 0,
       },
     });
+    await payload.db.drizzle.run(
+      legacySql`INSERT INTO lectures_rels (parent_id, path, learning_groups_id) VALUES (${lecture.id}, 'groups', ${groupId})`,
+    );
     assert.equal(lecture.processingStatus, 'pending');
     assert.notEqual(lecture.revision, '11111111-1111-4111-8111-111111111111');
     assert.equal(await authorizedLecture(payload, member.id, lecture.id), null);
@@ -86,8 +103,12 @@ test('production migrations isolate lecture metadata, enforce group revocation a
     const ready = await authorizedLecture(payload, member.id, lecture.id);
     assert.equal(ready.title, 'Лекция для теста');
     assert.equal(await authorizedLecture(payload, outsider.id, lecture.id), null);
-    assert.deepEqual(await memberGroupIds(payload, member.id), [group.id]);
-    for (const collection of ['lectures', 'learning-groups']) {
+    assert.equal(payload.collections['learning-groups'], undefined);
+    assert.equal(
+      payload.collections.lectures.config.fields.some((field) => field.name === 'groups'),
+      false,
+    );
+    for (const collection of ['lectures']) {
       await assert.rejects(
         () => payload.find({ collection, overrideAccess: false }),
         /not allowed|Forbidden/i,
@@ -121,12 +142,16 @@ test('production migrations isolate lecture metadata, enforce group revocation a
       await playbackLecture(payload, { ...session, sessionId: 'browser-two' }, lecture.id, token),
       null,
     );
-    await payload.update({ collection: 'learning-groups', id: group.id, data: { members: [] } });
-    assert.equal(await playbackLecture(payload, session, lecture.id, token), null);
+    await payload.update({ collection: 'orders', id: preservedOrder.id, data: { paidAt: null } });
+    assert.equal(
+      await playbackLecture(payload, session, lecture.id, token),
+      null,
+      'legacy membership must not grant access',
+    );
     await payload.update({
-      collection: 'learning-groups',
-      id: group.id,
-      data: { members: [member.id] },
+      collection: 'orders',
+      id: preservedOrder.id,
+      data: { paidAt: '2026-11-08T00:00:00.000Z' },
     });
     // Product access requires this member's paid, active order for the selected elective.
     const elective = await payload.create({
@@ -140,7 +165,7 @@ test('production migrations isolate lecture metadata, enforce group revocation a
     await payload.update({
       collection: 'lectures',
       id: lecture.id,
-      data: { groups: [], products: [elective.id] },
+      data: { products: [elective.id] },
     });
     const electiveOrder = await payload.create({
       collection: 'orders',
@@ -177,7 +202,7 @@ test('production migrations isolate lecture metadata, enforce group revocation a
     const productIds = await memberProductIds(payload, member.id);
     const catalogue = await payload.find({
       collection: 'lectures',
-      where: lectureFilter([], productIds),
+      where: lectureFilter(productIds),
       depth: 0,
     });
     assert.deepEqual(
@@ -207,15 +232,15 @@ test('production migrations isolate lecture metadata, enforce group revocation a
     await payload.update({
       collection: 'lectures',
       id: lecture.id,
-      data: { groups: [group.id], products: [] },
+      data: { products: [plan.id] },
     });
     assert.equal((await playbackLecture(payload, session, lecture.id, token)).id, lecture.id);
-    await payload.update({ collection: 'lectures', id: lecture.id, data: { groups: [] } });
+    await payload.update({ collection: 'lectures', id: lecture.id, data: { products: [] } });
     assert.equal(await authorizedLecture(payload, member.id, lecture.id), null);
     await payload.update({
       collection: 'lectures',
       id: lecture.id,
-      data: { groups: [group.id], published: false },
+      data: { products: [plan.id], published: false },
     });
     assert.equal(await playbackLecture(payload, session, lecture.id, token), null);
     await payload.create({
@@ -296,6 +321,10 @@ process.stdout.write('out_time_us=50000000\\n');
     assert.equal(recovered.processingStatus, 'ready');
     assert.equal(recovered.processingProgress, 100);
     assert.notEqual(recovered.processingJob, 'active-worker');
+    const retirementMigration =
+      await import('../src/migrations/20261108_060239_retire_learning_groups.ts');
+    await retirementMigration.down({ db: payload.db.drizzle, payload, req: {} });
+    await retirementMigration.up({ db: payload.db.drizzle, payload, req: {} });
     const progressMigration = await import('../src/migrations/20261108_054116_lecture_progress.ts');
     const productMigration = await import('../src/migrations/20261108_051734_lecture_products.ts');
     await payload.update({
@@ -309,7 +338,7 @@ process.stdout.write('out_time_us=50000000\\n');
     const retainedGroups = await payload.db.drizzle.all(
       sql`SELECT learning_groups_id FROM lectures_rels WHERE parent_id = ${lecture.id} AND path = 'groups'`,
     );
-    assert.equal(retainedGroups[0].learning_groups_id, group.id);
+    assert.equal(retainedGroups[0].learning_groups_id, groupId);
     const removedProducts = await payload.db.drizzle.all(
       sql`SELECT id FROM lectures_rels WHERE path = 'products'`,
     );

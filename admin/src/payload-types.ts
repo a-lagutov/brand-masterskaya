@@ -74,7 +74,6 @@ export interface Config {
     'promo-codes': PromoCode;
     scenarios: Scenario;
     broadcasts: Broadcast;
-    'learning-groups': LearningGroup;
     lectures: Lecture;
     users: User;
     'payload-kv': PayloadKv;
@@ -98,7 +97,6 @@ export interface Config {
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     scenarios: ScenariosSelect<false> | ScenariosSelect<true>;
     broadcasts: BroadcastsSelect<false> | BroadcastsSelect<true>;
-    'learning-groups': LearningGroupsSelect<false> | LearningGroupsSelect<true>;
     lectures: LecturesSelect<false> | LecturesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -453,20 +451,6 @@ export interface Broadcast {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "learning-groups".
- */
-export interface LearningGroup {
-  id: number;
-  title: string;
-  /**
-   * Добавьте участников после их входа через Telegram или обращения к боту.
-   */
-  members?: (number | Member)[] | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "lectures".
  */
 export interface Lecture {
@@ -476,11 +460,7 @@ export interface Lecture {
   description?: string | null;
   sortOrder?: number | null;
   /**
-   * Доступ участникам любой выбранной группы или покупателям выбранных тарифов и факультативов.
-   */
-  groups?: (number | LearningGroup)[] | null;
-  /**
-   * Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без групп и покупок лекция недоступна.
+   * Доступ при наличии оплаченного заказа с любым выбранным тарифом или факультативом. Заказ должен быть привязан к аккаунту Telegram и не находиться в корзине. Без выбранных тарифов и факультативов лекция недоступна.
    */
   products?: (number | Product)[] | null;
   processingJob?: string | null;
@@ -579,10 +559,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'broadcasts';
         value: number | Broadcast;
-      } | null)
-    | ({
-        relationTo: 'learning-groups';
-        value: number | LearningGroup;
       } | null)
     | ({
         relationTo: 'lectures';
@@ -811,16 +787,6 @@ export interface BroadcastsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "learning-groups_select".
- */
-export interface LearningGroupsSelect<T extends boolean = true> {
-  title?: T;
-  members?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "lectures_select".
  */
 export interface LecturesSelect<T extends boolean = true> {
@@ -828,7 +794,6 @@ export interface LecturesSelect<T extends boolean = true> {
   speaker?: T;
   description?: T;
   sortOrder?: T;
-  groups?: T;
   products?: T;
   processingJob?: T;
   processingProgress?: T;

@@ -14,6 +14,7 @@ import * as migration_20261107_063906_broadcast_schedules from './20261107_06390
 import * as migration_20261108_033144_lecture_cabinet from './20261108_033144_lecture_cabinet';
 import * as migration_20261108_051734_lecture_products from './20261108_051734_lecture_products';
 import * as migration_20261108_054116_lecture_progress from './20261108_054116_lecture_progress';
+import * as migration_20261108_060239_retire_learning_groups from './20261108_060239_retire_learning_groups';
 
 export const migrations = [
   {
@@ -94,6 +95,11 @@ export const migrations = [
   {
     up: migration_20261108_054116_lecture_progress.up,
     down: migration_20261108_054116_lecture_progress.down,
-    name: '20261108_054116_lecture_progress'
+    name: '20261108_054116_lecture_progress',
+  },
+  {
+    up: migration_20261108_060239_retire_learning_groups.up,
+    down: migration_20261108_060239_retire_learning_groups.down,
+    name: '20261108_060239_retire_learning_groups'
   },
 ];

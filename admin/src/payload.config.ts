@@ -11,7 +11,6 @@ import { videoDirectory } from './cabinet/config';
 import { startLectureWorker } from './cabinet/processor';
 import { startBackgroundWork } from './bot';
 import { Lectures } from './collections/Lectures';
-import { LearningGroups } from './collections/LearningGroups';
 import { Chats } from './collections/Chats';
 import { Members } from './collections/Members';
 import { Orders } from './collections/Orders';
@@ -49,7 +48,6 @@ export default buildConfig({
     PromoCodes,
     Scenarios,
     Broadcasts,
-    LearningGroups,
     Lectures,
     Users,
   ],
