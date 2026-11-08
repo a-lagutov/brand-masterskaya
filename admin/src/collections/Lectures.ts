@@ -1,0 +1,85 @@
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import type { CollectionConfig } from 'payload';
+import { videoDirectory } from '../cabinet/config';
+import { cabinetAdmin } from './LearningGroups';
+
+/** Private original videos and their publication metadata; packaged files use separate storage. */
+export const Lectures: CollectionConfig = {
+  slug: 'lectures',
+  labels: { singular: 'Лекция', plural: 'Лекции' },
+  admin: {
+    useAsTitle: 'title',
+    group: 'Личный кабинет',
+    defaultColumns: ['title', 'groups', 'published', 'processingStatus'],
+  },
+  access: { read: cabinetAdmin, create: cabinetAdmin, update: cabinetAdmin, delete: cabinetAdmin },
+  upload: {
+    staticDir: path.join(videoDirectory(), 'sources'),
+    mimeTypes: ['video/mp4'],
+    filesRequiredOnCreate: true,
+  },
+  hooks: {
+    // Replacing a source invalidates every issued URL and encryption key for the old revision.
+    beforeChange: [
+      ({ data, req }) => {
+        if (req.file)
+          return {
+            ...data,
+            revision: randomUUID(),
+            processingStatus: 'pending',
+            processingError: null,
+          };
+        return data;
+      },
+    ],
+  },
+  fields: [
+    { name: 'title', type: 'text', label: 'Название', required: true },
+    { name: 'speaker', type: 'text', label: 'Преподаватель' },
+    { name: 'description', type: 'textarea', label: 'Описание' },
+    { name: 'sortOrder', type: 'number', label: 'Порядок', defaultValue: 0 },
+    {
+      name: 'groups',
+      type: 'relationship',
+      relationTo: 'learning-groups',
+      hasMany: true,
+      label: 'Доступ для групп',
+      admin: { description: 'Без групп лекция недоступна всем участникам.' },
+    },
+    { name: 'published', type: 'checkbox', label: 'Опубликована', defaultValue: false },
+    {
+      name: 'processingStatus',
+      type: 'select',
+      label: 'Подготовка видео',
+      defaultValue: 'pending',
+      required: true,
+      options: [
+        { label: 'В очереди', value: 'pending' },
+        { label: 'Обрабатывается', value: 'processing' },
+        { label: 'Готово', value: 'ready' },
+        { label: 'Ошибка', value: 'failed' },
+      ],
+      access: { update: ({ req }) => Boolean(req.context.lectureWorker) },
+      admin: {
+        readOnly: true,
+        description:
+          'Обработчик запускается отдельно. При ошибке загрузите исправленный MP4 заново.',
+      },
+    },
+    {
+      name: 'processingError',
+      type: 'text',
+      label: 'Ошибка подготовки',
+      admin: { readOnly: true },
+      access: { update: ({ req }) => Boolean(req.context.lectureWorker) },
+    },
+    {
+      name: 'revision',
+      type: 'text',
+      label: 'Версия видео',
+      admin: { hidden: true },
+      access: { read: () => false, update: () => false },
+    },
+  ],
+};

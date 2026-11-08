@@ -11,6 +11,7 @@ import * as migration_20261023_141149_legal from './20261023_141149_legal';
 import * as migration_20261023_142126_legal_documents from './20261023_142126_legal_documents';
 import * as migration_20261107_035633_telegram_broadcasts from './20261107_035633_telegram_broadcasts';
 import * as migration_20261107_063906_broadcast_schedules from './20261107_063906_broadcast_schedules';
+import * as migration_20261108_033144_lecture_cabinet from './20261108_033144_lecture_cabinet';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20261107_063906_broadcast_schedules.up,
     down: migration_20261107_063906_broadcast_schedules.down,
-    name: '20261107_063906_broadcast_schedules'
+    name: '20261107_063906_broadcast_schedules',
+  },
+  {
+    up: migration_20261108_033144_lecture_cabinet.up,
+    down: migration_20261108_033144_lecture_cabinet.down,
+    name: '20261108_033144_lecture_cabinet'
   },
 ];

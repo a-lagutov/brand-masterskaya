@@ -11,6 +11,7 @@
 import type { Payload } from 'payload';
 import { Bot, type Context } from 'grammy';
 
+import { sendCabinetButton } from '../cabinet/bot';
 import { allowedChats } from './access';
 import { dispatchBroadcasts } from './broadcasts';
 import { refreshCommandMenu } from './commands';
@@ -203,6 +204,7 @@ function createBot(payload: Payload): Bot {
     await (orderId
       ? claimOrder(context, payload, member, orderId)
       : greet(context, payload, member));
+    await sendCabinetButton(context);
   });
 
   privateChat.on('message:text', async (context) => {

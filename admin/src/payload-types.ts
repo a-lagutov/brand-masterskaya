@@ -74,6 +74,8 @@ export interface Config {
     'promo-codes': PromoCode;
     scenarios: Scenario;
     broadcasts: Broadcast;
+    'learning-groups': LearningGroup;
+    lectures: Lecture;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -96,6 +98,8 @@ export interface Config {
     'promo-codes': PromoCodesSelect<false> | PromoCodesSelect<true>;
     scenarios: ScenariosSelect<false> | ScenariosSelect<true>;
     broadcasts: BroadcastsSelect<false> | BroadcastsSelect<true>;
+    'learning-groups': LearningGroupsSelect<false> | LearningGroupsSelect<true>;
+    lectures: LecturesSelect<false> | LecturesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -449,6 +453,53 @@ export interface Broadcast {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "learning-groups".
+ */
+export interface LearningGroup {
+  id: number;
+  title: string;
+  /**
+   * Добавьте участников после их входа через Telegram или обращения к боту.
+   */
+  members?: (number | Member)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lectures".
+ */
+export interface Lecture {
+  id: number;
+  title: string;
+  speaker?: string | null;
+  description?: string | null;
+  sortOrder?: number | null;
+  /**
+   * Без групп лекция недоступна всем участникам.
+   */
+  groups?: (number | LearningGroup)[] | null;
+  published?: boolean | null;
+  /**
+   * Обработчик запускается отдельно. При ошибке загрузите исправленный MP4 заново.
+   */
+  processingStatus: 'pending' | 'processing' | 'ready' | 'failed';
+  processingError?: string | null;
+  revision?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -525,6 +576,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'broadcasts';
         value: number | Broadcast;
+      } | null)
+    | ({
+        relationTo: 'learning-groups';
+        value: number | LearningGroup;
+      } | null)
+    | ({
+        relationTo: 'lectures';
+        value: number | Lecture;
       } | null)
     | ({
         relationTo: 'users';
@@ -746,6 +805,42 @@ export interface BroadcastsSelect<T extends boolean = true> {
   deliveries?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "learning-groups_select".
+ */
+export interface LearningGroupsSelect<T extends boolean = true> {
+  title?: T;
+  members?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lectures_select".
+ */
+export interface LecturesSelect<T extends boolean = true> {
+  title?: T;
+  speaker?: T;
+  description?: T;
+  sortOrder?: T;
+  groups?: T;
+  published?: T;
+  processingStatus?: T;
+  processingError?: T;
+  revision?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -326,6 +326,13 @@ async function copyApi() {
   console.log(`${API_DIR}/: ${files.join(', ')}, ${LEGAL_DIR}/`);
 }
 
+/** Copies the isolated student gateway; recordings and secrets remain outside the build. */
+async function copyCabinet() {
+  await mkdir(path.join(DIST_DIR, 'cabinet'), { recursive: true });
+  for (const filename of ['index.php', '.htaccess'])
+    await copyAsset(path.join('cabinet', filename));
+}
+
 /** Runs the full build. */
 async function build() {
   await rm(DIST_DIR, { recursive: true, force: true });
@@ -340,6 +347,7 @@ async function build() {
     outputBytes += sizes.outputBytes;
   }
   await copyApi();
+  await copyCabinet();
 
   console.log(`Total: ${formatKilobytes(sourceBytes)} -> ${formatKilobytes(outputBytes)}`);
 }

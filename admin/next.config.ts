@@ -8,6 +8,12 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   // A self-contained server with only the files it needs: the hosting allows 150 000 files.
   output: 'standalone',
+  // Keep cabinet assets under the PHP gateway while preserving /admin and /api on the admin host.
+  assetPrefix: '/cabinet',
+  skipTrailingSlashRedirect: true,
+  rewrites: async () => ({
+    beforeFiles: [{ source: '/cabinet/_next/:path*', destination: '/_next/:path*' }],
+  }),
   serverExternalPackages: ['teleproto', 'big-integer'],
   // The panel is the only page; the site itself lives elsewhere.
   redirects: async () => [{ source: '/', destination: '/admin', permanent: false }],

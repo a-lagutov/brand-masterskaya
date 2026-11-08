@@ -114,6 +114,6 @@ jobs:
         run: |
           rsync -avz --checksum --delete \
             --exclude '.well-known/' \
-            --exclude '.htaccess' \
+            --exclude '/.htaccess' \
             -e "ssh -i ~/.ssh/deploy_key" \
             dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:www/$SITE/"

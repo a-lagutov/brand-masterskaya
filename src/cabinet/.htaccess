@@ -1,0 +1,4 @@
+# Keep the landing page and PHP payment API outside this gateway.
+DirectoryIndex index.php
+RewriteEngine On
+RewriteRule ^ index.php [END]

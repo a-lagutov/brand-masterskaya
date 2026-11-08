@@ -7,7 +7,11 @@ import { ru } from '@payloadcms/translations/languages/ru';
 import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
+import { videoDirectory } from './cabinet/config';
+import { startLectureWorker } from './cabinet/processor';
 import { startBackgroundWork } from './bot';
+import { Lectures } from './collections/Lectures';
+import { LearningGroups } from './collections/LearningGroups';
 import { Chats } from './collections/Chats';
 import { Members } from './collections/Members';
 import { Orders } from './collections/Orders';
@@ -37,7 +41,18 @@ export default buildConfig({
     supportedLanguages: { ru },
     fallbackLanguage: 'ru',
   },
-  collections: [Orders, Members, Chats, Products, PromoCodes, Scenarios, Broadcasts, Users],
+  collections: [
+    Orders,
+    Members,
+    Chats,
+    Products,
+    PromoCodes,
+    Scenarios,
+    Broadcasts,
+    LearningGroups,
+    Lectures,
+    Users,
+  ],
   globals: [BotTexts, SiteSettings, LegalDocuments, TelegramAccount],
   editor: lexicalEditor(),
   graphQL: { disable: true },
@@ -48,10 +63,18 @@ export default buildConfig({
     // The hosting gets the schema from migrations (src/migrations), applied on start.
     prodMigrations: migrations,
   }),
+  upload: {
+    useTempFiles: true,
+    tempFileDir: path.join(videoDirectory(), 'uploads'),
+    limits: { fileSize: 128 * 1024 * 1024 },
+    requestSizeLimit: 130 * 1024 * 1024,
+    abortOnLimit: true,
+  },
   sharp,
   onInit: async (payload) => {
     await ensureFirstAdmin(payload);
     await seedLegalDocuments(payload);
     startBackgroundWork(payload);
+    startLectureWorker(payload);
   },
 });

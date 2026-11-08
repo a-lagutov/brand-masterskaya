@@ -11,11 +11,13 @@ on:
   push:
     paths:
       - 'admin/**'
+      - 'src/cabinet/**'
       - '.github/workflows/admin.yml'
   # Typecheck and build of every pull request, Dependabot's too; see the check job.
   pull_request:
     paths:
       - 'admin/**'
+      - 'src/cabinet/**'
       - '.github/workflows/admin.yml'
   workflow_dispatch:
 
@@ -177,6 +179,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.TG_BOT_MASTERSKAYA_TOKEN || secrets.TG_TESTBOT_MASTERSKAYA_TOKEN }}
           # Cloudflare relay from worker/: IPv4 connections from reg.ru to api.telegram.org hang.
           TELEGRAM_API_URL: ${{ vars.TELEGRAM_API_URL }}
+          CABINET_SECRET: ${{ github.ref == 'refs/heads/main' && secrets.CABINET_SECRET || github.ref != 'refs/heads/main' && secrets.TEST_CABINET_SECRET || '' }}
+          TELEGRAM_LOGIN_CLIENT_ID: ${{ github.ref == 'refs/heads/main' && vars.TELEGRAM_LOGIN_CLIENT_ID || github.ref != 'refs/heads/main' && vars.TEST_TELEGRAM_LOGIN_CLIENT_ID || '' }}
+          TELEGRAM_LOGIN_CLIENT_SECRET: ${{ github.ref == 'refs/heads/main' && secrets.TELEGRAM_LOGIN_CLIENT_SECRET || github.ref != 'refs/heads/main' && secrets.TEST_TELEGRAM_LOGIN_CLIENT_SECRET || '' }}
+          RUN_LECTURE_WORKER: ${{ github.ref == 'refs/heads/main' && vars.RUN_LECTURE_WORKER || github.ref != 'refs/heads/main' && vars.TEST_RUN_LECTURE_WORKER || '' }}
+          FFMPEG_PATH: ${{ vars.FFMPEG_PATH }}
+          SHAKA_PACKAGER_PATH: ${{ vars.SHAKA_PACKAGER_PATH }}
         run: |
           node -e '
             const home = process.argv[1];
@@ -195,6 +203,14 @@ jobs:
               PROMO_CODES_FILE: `${home}/private/${process.env.SITE}/promocodes.json`,
               SITE_SETTINGS_FILE: `${home}/private/${process.env.SITE}/site-settings.json`,
               SITE_URL: `https://${process.env.SITE}`,
+              CABINET_URL: `https://${process.env.SITE}`,
+              CABINET_SECRET: process.env.CABINET_SECRET,
+              TELEGRAM_LOGIN_CLIENT_ID: process.env.TELEGRAM_LOGIN_CLIENT_ID,
+              TELEGRAM_LOGIN_CLIENT_SECRET: process.env.TELEGRAM_LOGIN_CLIENT_SECRET,
+              LECTURE_STORAGE_DIR: `${privateDir}/lectures`,
+              RUN_LECTURE_WORKER: process.env.RUN_LECTURE_WORKER,
+              FFMPEG_PATH: process.env.FFMPEG_PATH,
+              SHAKA_PACKAGER_PATH: process.env.SHAKA_PACKAGER_PATH,
             }));
           ' "$(ssh -i ~/.ssh/deploy_key "$SERVER" 'echo $HOME')" > env.json
           ssh -i ~/.ssh/deploy_key "$SERVER" \
@@ -212,6 +228,21 @@ jobs:
           printf 'PassengerEnabled On\n' > deploy/.htaccess
           rsync -az -e "ssh -i ~/.ssh/deploy_key" deploy/passenger_wsgi.py deploy/.htaccess "$SERVER:www/$ADMIN_SITE/"
           ssh -i ~/.ssh/deploy_key "$SERVER" "rm -f www/$ADMIN_SITE/index.html && mkdir -p www/$ADMIN_SITE/tmp"
+
+      # The landing page keeps its own document root and PHP APIs. Only /cabinet uses the socket.
+      - name: Upload same-domain cabinet gateway
+        run: |
+          SERVER_HOME=$(ssh -i ~/.ssh/deploy_key "$SERVER" 'printf "%s" "$HOME"')
+          SOCKET_PATH="$SERVER_HOME/private/$ADMIN_SITE/app.sock" SITE_ORIGIN="https://$SITE" ADMIN_ORIGIN="https://$ADMIN_SITE" php -r '
+            echo "<?php\nreturn " . var_export([
+              "socketPath" => getenv("SOCKET_PATH"),
+              "siteOrigin" => getenv("SITE_ORIGIN"),
+              "adminOrigin" => getenv("ADMIN_ORIGIN"),
+            ], true) . ";\n";
+          ' > cabinet-proxy.php
+          ssh -i ~/.ssh/deploy_key "$SERVER" "mkdir -p private/$SITE www/$SITE/cabinet && umask 077 && cat > private/$SITE/cabinet-proxy.php" < cabinet-proxy.php
+          rm cabinet-proxy.php
+          rsync -az -e "ssh -i ~/.ssh/deploy_key" ../src/cabinet/ "$SERVER:www/$SITE/cabinet/"
 
       # Stops the old Node process and the Python proxy; the next request starts the new version
       # and applies database migrations.

@@ -27,7 +27,7 @@ Run before opening a pull request:
 ```bash
 npm run check
 npm run build
-for file in src/api/*.php config.example.php; do php -l "$file"; done
+for file in src/api/*.php src/cabinet/*.php config.example.php; do php -l "$file"; done
 ```
 
 `npm run check` runs JavaScript type checking, ESLint, Stylelint, the BEM checker, and Prettier. The landing page CI also builds the site and checks PHP syntax.

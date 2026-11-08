@@ -25,7 +25,7 @@ src/                исходники сайта
 scripts/build.mjs   сборка src/ → dist/
 scripts/og-image.*  шаблон и рендер превью для соцсетей → src/assets/images/og.jpg
 scripts/tochka.mjs  настройка Точки: customerCode, merchantId, вебхук
-admin/              админка Payload и Telegram-бот (Node.js), см. admin/README.md
+admin/              админка Payload, Telegram-бот и личный кабинет с записями лекций (Node.js), см. admin/README.md
 worker/             Cloudflare Worker — посредник между ботом и api.telegram.org
 config.example.php  образец настроек оплаты
 .github/workflows/  CI и деплой
@@ -192,7 +192,7 @@ Workflow **Deploy** запускается на пуш, если меняютс�
 2. запись `~/private/<сайт>/config.php` из секретов;
 3. загрузка `dist/` в `~/www/<сайт>/` через rsync по SSH.
 
-Rsync сравнивает файлы по содержимому и удаляет на сервере лишнее. Папка `.well-known/` и файл `.htaccess` на сервере не трогаются.
+Rsync сравнивает файлы по содержимому и удаляет на сервере лишнее. Папка `.well-known/` и корневой файл `.htaccess` на сервере не трогаются. Настройки `cabinet/.htaccess` входят в сборку.
 
 Админка и бот деплоятся отдельным workflow **Admin** при изменениях в `admin/`, см. [admin/README.md](admin/README.md#деплой).
 
