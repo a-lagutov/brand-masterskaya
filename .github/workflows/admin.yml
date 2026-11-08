@@ -20,6 +20,11 @@ on:
       - 'src/cabinet/**'
       - '.github/workflows/admin.yml'
   workflow_dispatch:
+    inputs:
+      diagnostics_only:
+        description: Read safe test-login failure stages without deploying
+        type: boolean
+        default: false
 
 # Read-only token: jobs only check out code; deploys use their own secrets.
 permissions:
@@ -72,7 +77,7 @@ jobs:
   deploy:
     # Dependabot gets no repository secrets, so its branches cannot deploy; the check job covers
     # them. Pull requests are only checked, never deployed.
-    if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
+    if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' && inputs.diagnostics_only != true
     # Shows each deploy under Deployments on GitHub: admin, live from main, test from other branches.
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'admin-production' || 'admin-test' }}
@@ -282,3 +287,24 @@ jobs:
         run: |
           line="*/5 * * * * curl -s -o /dev/null -m 60 https://$ADMIN_SITE/api/users/me"
           ssh -i ~/.ssh/deploy_key "$SERVER" "(crontab -l 2>/dev/null | grep -vF 'https://$ADMIN_SITE/'; echo '$line') | crontab -"
+
+  login-diagnostics:
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostics_only == true && github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: admin-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Read bounded login diagnostics
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "python3 - '$ADMIN_SITE'" < admin/deploy/read-login-diagnostics.py
