@@ -124,6 +124,10 @@ jobs:
           echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           echo "SERVER=${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" >> "$GITHUB_ENV"
 
+      - name: Diagnose test OAuth connectivity
+        if: github.ref != 'refs/heads/main'
+        run: ssh -i ~/.ssh/deploy_key "$SERVER" '~/apps/node/bin/node -' < deploy/diagnose-oauth.mjs
+
       # Keep an online SQLite snapshot before the new app can apply migrations.
       - name: Backup database
         run: |
